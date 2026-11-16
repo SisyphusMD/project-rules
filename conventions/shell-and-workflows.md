@@ -34,7 +34,9 @@ Every item below is a scar. Treat them as settled.
   `# renovate:` marker beside every pin** — remove it and that pin silently stops being updated.
 - Default workflow permissions read-only; write scope and secrets live on the consuming step only.
 - Self-hosted and persistent runners execute **only trusted same-repository code**. Gate PR jobs on
-  `github.event.pull_request.head.repo.full_name == github.repository`.
+  `github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.flow == 0`.
+  The second half matters on Forgejo: an AGit PR (pushed to `refs/for/<branch>`) reports the base
+  repository as its head, and a maintainer reopening one runs the base branch's workflows with secrets.
 - CI runs the literal floor interpreter, a current one, static checks, tests, installed artifacts,
   and the declared platform matrix. Hand-maintained file lists get a discovery invariant so a new
   shipped file cannot silently escape lint or tests.
