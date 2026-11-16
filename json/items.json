@@ -1,0 +1,932 @@
+[
+ {
+  "assignees": [],
+  "body": "_Recreated from bryantserver/project-rules#1 (issue, opened by cody on 2026-11-16)._\n\nDecisions for the house project rules, one per comment. Moved here from bryantserver/casa#38, where the playbook and skill were first written (cody/agents 04291e7).",
+  "closed_at": null,
+  "comments": [
+   {
+    "body": "_cody, 2026-11-16 06:49:_\n\nDecision: The rules live in their own repo, bryantserver/project-rules, not in cody/agents or any project's README. Repos carry them as enforced settings (branch protection, required checks) plus a short CONTRIBUTING-style file that points here and adds only repo-specific notes. Why: Centralized so the rules are not lost or copied out of date; Casa is just the first repo following them.\n\nDecided by: Cody, 2026-11-16.",
+    "created_at": "2026-11-16T14:07:18-08:00",
+    "id": 34998,
+    "updated_at": "2026-11-16T14:07:18-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "_cody, 2026-11-16 06:49:_\n\nDecision: The upstream small-teaching mode (small chunks, Cody approving every commit and PR) does not carry over yet, maybe one day. Only the upstream craft rules do: smallest correct diff, one concern per PR, every hunk maps to the issue, regression tests proven to fail first, declared checks run, docs in the same PR. CI and the AI review are the gate. Why: Per-PR approval would stall merges while Cody is away; the craft rules are what keep diffs reviewable.\n\nDecided by: Cody, 2026-11-16.",
+    "created_at": "2026-11-16T14:07:18-08:00",
+    "id": 34999,
+    "updated_at": "2026-11-16T14:07:18-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "_cody, 2026-11-16 06:52:_\n\nDecision: Every repo follows these rules; there is no list of following repos. Repos still being brought in are tracked as issues, not as a manifest. Why: Eventually all repos follow it.\n\nDecided by: Cody, 2026-11-16.",
+    "created_at": "2026-11-16T14:07:18-08:00",
+    "id": 35000,
+    "updated_at": "2026-11-16T14:07:18-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "_cody, 2026-11-16 06:52:_\n\nDecision: Every repo has a push mirror on annex (forgejo.lan), and that is a rule here, checked like the others. Why: The annex copy is how a repo survives losing the cluster Forgejo.\n\nDecided by: Cody, 2026-11-16.",
+    "created_at": "2026-11-16T14:07:19-08:00",
+    "id": 35001,
+    "updated_at": "2026-11-16T14:07:19-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "_cody, 2026-11-16 07:23:_\n\nTechnical call: Diff size limit is 400 changed lines, not counting tests, lockfiles and generated files; over it needs `Large diff: <reason>` in the PR description, judged by the AI review, rather than a warning-only check. Why: Casa's largest PR so far was 291 lines; a stated reason is cheap for a legitimate big diff, while a bare warning gets ignored. Cody asked whether it should be soft (2026-11-16); revisit if it blocks real work.\n\nDecided by: agent, 2026-11-16.",
+    "created_at": "2026-11-16T14:07:19-08:00",
+    "id": 35002,
+    "updated_at": "2026-11-16T14:07:19-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "_cody, 2026-11-16 13:25:_\n\nDecision: Outside contributors come in through Forgejo for every public repo; the GitHub copies become mirrors only. Why: One place where the rules and checks apply to everyone, outside contributors included.\n\nDecided by: Cody, 2026-11-16.",
+    "created_at": "2026-11-16T14:07:19-08:00",
+    "id": 35003,
+    "updated_at": "2026-11-16T14:07:19-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "_cody, 2026-11-16 13:52:_\n\nDecision: The rules move to a new public repo, SisyphusMD/project-rules, created from scratch (no transfer or git merge). Its first commit is written by hand and folds in SisyphusMD/project-standard, expanded from the two converged siblings to every public repo. The history of both repos is recreated as issues; then bryantserver/project-rules and SisyphusMD/project-standard are deleted. Why: One public rulebook every contributor can read, with a clean history.\n\nDecided by: Cody, 2026-11-16.",
+    "created_at": "2026-11-16T14:07:19-08:00",
+    "id": 35004,
+    "updated_at": "2026-11-16T14:07:19-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "_cody, 2026-11-16 13:52:_\n\nDecision: Leave the Forgejo account name as is; hiding the real name is not possible (login and past commits). Rules text says 'the maintainer'; other people's names stay out of everything public. Why: The name is already public in past commits and the login.\n\nDecided by: Cody, 2026-11-16.",
+    "created_at": "2026-11-16T14:07:20-08:00",
+    "id": 35005,
+    "updated_at": "2026-11-16T14:07:20-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "_cody, 2026-11-16 13:52:_\n\nTechnical call: Public repos get no ISSUE_READ_TOKEN: they read cross-repo issues unauthenticated only. The new repo is built private and made public only on Cody's yes, after a scan of its tree and recreated issues. Why: issue-link prints the linked issue's title in CI logs and the AI review posts from linked issue text, both public in a public repo; private issue content would leak.\n\nDecided by: agent, 2026-11-16.",
+    "created_at": "2026-11-16T14:07:20-08:00",
+    "id": 35006,
+    "updated_at": "2026-11-16T14:07:20-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "_cody, 2026-11-16 13:57:_\n\nDecision: Coverage stays at 99% branch coverage overall and 100% on safety-critical code in every repo; project-standard's measure-first rule is replaced. Why: One strict, simple bar every repo is held to.\n\nDecided by: Cody, 2026-11-16.",
+    "created_at": "2026-11-16T14:07:20-08:00",
+    "id": 35007,
+    "updated_at": "2026-11-16T14:07:20-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-16T14:07:18-08:00",
+  "kind": "issue",
+  "labels": [
+   "type:decision"
+  ],
+  "milestone": null,
+  "number": 1,
+  "state": "open",
+  "title": "Plan and decision log",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from bryantserver/project-rules#2 (issue, opened by cody on 2026-11-16, closed 2026-11-16)._\n\nCanonical home for docs/playbooks/issue-driven-projects.md and skills/project-issues/template/.forgejo (CI, AI review, issue archive), now in cody/agents. The skill stays in cody/agents as a thin pointer. Add the upstream craft rules (see the decision on #1), a Diff size check with a `Large diff: <reason>` hatch, and have the AI reviewer read these rules plus the repo's CONTRIBUTING.md and the linked issue instead of the README. Also: issue-link must accept cross-repo refs (owner/repo#n), and the playbook's 'revise after Casa phase 1' stays.",
+  "closed_at": "2026-11-16T14:07:21-08:00",
+  "comments": [
+   {
+    "body": "_cody, 2026-11-16 07:23:_\n\nRules text landed on main as d34843d (RULES.md, docs/new-project.md, templates/CONTRIBUTING.md); annex mirror confirmed at the same commit. Next: move the CI and AI-review workflows here as-is, then separate PRs for the Diff size check, cross-repo issue links, and the AI reviewer reading RULES.md, CONTRIBUTING.md and the linked issue.",
+    "created_at": "2026-11-16T14:07:20-08:00",
+    "id": 35011,
+    "updated_at": "2026-11-16T14:07:20-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "_cody, 2026-11-16 07:34:_\n\nStatus 2026-11-16: CI, AI review and issue-archive moved here (#10, merged 45b82e7; Issue link failed only at bootstrap because main had no scripts). Bootstrap trigger dropped (#11, 28ba85d), the first run of every gate from main, all green, AI review no findings. main is now protected like Casa (no direct push, admins included, up to date, 0 approvals; Issue link, Tests with code, Lint, Secrets, AI review). Issue archive dispatched once: issue-archive branch fefd68a, on annex too. Remaining on this issue, each its own PR: Diff size check, cross-repo issue links, the reviewer reading RULES.md + CONTRIBUTING.md + the linked issue, and cody/agents' skill template becoming a pointer here. Related: #8 lint config from main, #9 script tests.",
+    "created_at": "2026-11-16T14:07:20-08:00",
+    "id": 35012,
+    "updated_at": "2026-11-16T14:07:20-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "_cody, 2026-11-16 11:54:_\n\nTechnical call: Cross-repo issue links are checked with ISSUE_READ_TOKEN, an Actions secret on the bryantserver org and the cody user holding a read:issue-only token under cody (Forgejo name project-rules-issue-read). Verified: reads casa and cody/macos issues, write refused (403). Not stored elsewhere; re-mint with the admin CLI to rotate. Why: A probe showed the built-in Actions token gets 404 on any other private repo; Cody approved minting a token over a format-only check (2026-11-16).\n\nDecided by: agent, 2026-11-16.",
+    "created_at": "2026-11-16T14:07:21-08:00",
+    "id": 35013,
+    "updated_at": "2026-11-16T14:07:21-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "_cody, 2026-11-16 12:05:_\n\nDone. Moved and extended here: CI/AI review/archive (#10, #11), Diff size (#15, required on main after a pass in #18 and a deliberate fail in #16), owner/repo#n links (#18), reviewer reads RULES.md + CONTRIBUTING.md + linked issues and blocks scope creep (#20). cody/agents f8164fa: the project-issues skill points here; its template and the old playbook are deleted. Follow-ups: #3 apply-to-every-repo script (also syncs .forgejo/ and .forgejo/RULES.md), #7 Casa onto these copies, #8 lint config from main, #9 tests for the remaining scripts.",
+    "created_at": "2026-11-16T14:07:21-08:00",
+    "id": 35014,
+    "updated_at": "2026-11-16T14:07:21-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-16T14:07:20-08:00",
+  "kind": "issue",
+  "labels": [
+   "type:chore"
+  ],
+  "milestone": null,
+  "number": 2,
+  "state": "closed",
+  "title": "Move the playbook, skill template and shared CI into this repo",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from bryantserver/project-rules#3 (issue, opened by cody on 2026-11-16)._\n\nDepends on #2. No list of following repos (decision on #1): a script walks every repo on the primary Forgejo and applies or reports branch protection, required checks and the annex push mirror, with per-repo exceptions (bots, break-glass) declared here. Repos not yet brought in are tracked as issues (#4-#7) and reported, not silently skipped.",
+  "closed_at": null,
+  "comments": [],
+  "created_at": "2026-11-16T14:07:21-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:ready",
+   "type:feature"
+  ],
+  "milestone": null,
+  "number": 3,
+  "state": "open",
+  "title": "Apply the rules to every repo by script: protection, required checks and the annex mirror",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from bryantserver/project-rules#4 (issue, opened by cody on 2026-11-16)._\n\nDepends on #3. CONTRIBUTING.md pointing here plus repo-specific notes (what counts as a test, break-glass, bot exemptions), then protection from the manifest.",
+  "closed_at": null,
+  "comments": [],
+  "created_at": "2026-11-16T14:07:21-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:blocked",
+   "type:chore"
+  ],
+  "milestone": null,
+  "number": 4,
+  "state": "open",
+  "title": "Adopt the rules in cody/macos",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from bryantserver/project-rules#5 (issue, opened by cody on 2026-11-16)._\n\nDepends on #3. CONTRIBUTING.md pointing here plus repo-specific notes (what counts as a test, break-glass, bot exemptions), then protection from the manifest.",
+  "closed_at": null,
+  "comments": [],
+  "created_at": "2026-11-16T14:07:21-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:blocked",
+   "type:chore"
+  ],
+  "milestone": null,
+  "number": 5,
+  "state": "open",
+  "title": "Adopt the rules in bryantserver/annex",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from bryantserver/project-rules#6 (issue, opened by cody on 2026-11-16)._\n\nDepends on #3. CONTRIBUTING.md pointing here plus repo-specific notes (what counts as a test, break-glass, bot exemptions), then protection from the manifest.",
+  "closed_at": null,
+  "comments": [],
+  "created_at": "2026-11-16T14:07:22-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:blocked",
+   "type:chore"
+  ],
+  "milestone": null,
+  "number": 6,
+  "state": "open",
+  "title": "Adopt the rules in bryantserver/k8s",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from bryantserver/project-rules#7 (issue, opened by cody on 2026-11-16)._\n\nDepends on #2. Casa's README drops its rule list for a CONTRIBUTING.md pointing here; its .forgejo copies come from here.",
+  "closed_at": null,
+  "comments": [],
+  "created_at": "2026-11-16T14:07:22-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:ready",
+   "type:chore"
+  ],
+  "milestone": null,
+  "number": 7,
+  "state": "open",
+  "title": "Point bryantserver/casa at this repo",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from bryantserver/project-rules#8 (issue, opened by cody on 2026-11-16)._\n\na second-model review review of the CI move: Lint runs ruff and yamllint in the PR checkout, so a PR can add a ruff.toml (lint.ignore = [\"ALL\"]) or .yamllint and pass its own lint. Rule 15 says a PR cannot weaken the check that judges it. Fix: restore linter config from the base commit before linting, as Secrets does for gitleaks allowlists. Same gap in bryantserver/casa's copy.",
+  "closed_at": null,
+  "comments": [],
+  "created_at": "2026-11-16T14:07:22-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:ready",
+   "type:bug"
+  ],
+  "milestone": null,
+  "number": 8,
+  "state": "open",
+  "title": "Lint uses main's config, not the PR's",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from bryantserver/project-rules#9 (issue, opened by cody on 2026-11-16)._\n\nCONTRIBUTING.md names .forgejo/scripts as safety-critical (a bug there lets a PR past a rule in every repo), so they need tests at 100% branch coverage and a coverage job in CI. They arrived from bryantserver/casa without tests.",
+  "closed_at": null,
+  "comments": [],
+  "created_at": "2026-11-16T14:07:22-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:ready",
+   "type:chore"
+  ],
+  "milestone": null,
+  "number": 9,
+  "state": "open",
+  "title": "Tests for the gate scripts, 100% coverage",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from bryantserver/project-rules#10 (pull request, opened by cody on 2026-11-16, merged 2026-11-16). Branch `refs/pull/10/head` into `main`._\n\nRefs #2\n\nThe CI, AI review and issue-archive workflows and their scripts were canonical in cody/agents (`skills/project-issues/template`), with a copy in bryantserver/casa. This moves them here unchanged from Casa's copy, so every repo copies from this repo. The only edits: the \"Canonical copy\" comments point here, and `CI` also runs on `pull_request` for this PR only, because a `pull_request_target` workflow skips the PR that adds it. The next PR removes that trigger.\n\n`AI review` first runs on the next PR. Known gaps, each its own issue or PR: Diff size check and cross-repo issue links (#2), the reviewer reading RULES.md instead of README (#2), lint config from main (#8), tests for these scripts (#9).\n\nNo tests: moved unchanged from bryantserver/casa; their tests are #9.",
+  "closed_at": "2026-11-16T14:07:23-08:00",
+  "comments": [
+   {
+    "body": "_cody, 2026-11-16 07:31:_\n\nIssue link fails only because it runs main's copy of issue-link.py, and main has no scripts until this PR merges (log: `can't open file '.forgejo/scripts/issue-link.py'`). Lint, Secrets and Tests with code passed. main is not protected yet; merging, then the next PR runs every gate from main and protection follows once they pass.",
+    "created_at": "2026-11-16T14:07:22-08:00",
+    "id": 35048,
+    "updated_at": "2026-11-16T14:07:22-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-16T14:07:22-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 10,
+  "state": "closed",
+  "title": "ci: move the CI, AI review and issue-archive workflows here",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from bryantserver/project-rules#11 (pull request, opened by cody on 2026-11-16, merged 2026-11-16). Branch `refs/pull/11/head` into `main`._\n\nRefs #2\n\n`CI` ran on `pull_request` for #10 only, because a `pull_request_target` workflow skips the PR that adds it. This removes that trigger, so every gate runs from main's copy and a PR cannot change the check that judges it. This PR is also the first full run of every gate here, including `AI review`; main gets protected once all of them pass.\n\nNo tests: workflow trigger removal; this PR's own CI run is the proof.",
+  "closed_at": "2026-11-16T14:07:23-08:00",
+  "comments": [
+   {
+    "body": "_forgejo-actions, 2026-11-16 07:33:_\n\n**AI review** of `d4327c72cd`: Clean removal of the bootstrap `pull_request` trigger from CI, leaving only `pull_request_target` so that PRs cannot tamper with the workflow that judges them. The change is correct, minimal, and a security improvement; the PR's own CI run serves as validation for a workflow-config change.\n\nNo findings.\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.",
+    "created_at": "2026-11-16T14:07:23-08:00",
+    "id": 35054,
+    "updated_at": "2026-11-16T14:07:23-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-16T14:07:23-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 11,
+  "state": "closed",
+  "title": "ci: drop the bootstrap pull_request trigger",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from bryantserver/project-rules#12 (issue, opened by cody on 2026-11-16, closed 2026-11-16)._\n\nCody, 2026-11-16: there should be a rule about cleaning up branches etc. after merging. Rule 18 only says 'then delete the branch'. Expand it to the full cleanup once the merge is verified.",
+  "closed_at": "2026-11-16T14:07:24-08:00",
+  "comments": [
+   {
+    "body": "_cody, 2026-11-16 08:02:_\n\nDecision: Cleaning up after a merge (branches etc.) is a rule. Why: Merged branches and leftovers pile up and hide what is live.\n\nDecided by: Cody, 2026-11-16.",
+    "created_at": "2026-11-16T14:07:23-08:00",
+    "id": 35058,
+    "updated_at": "2026-11-16T14:07:23-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "_cody, 2026-11-16 08:02:_\n\nagent has it (this session).",
+    "created_at": "2026-11-16T14:07:23-08:00",
+    "id": 35059,
+    "updated_at": "2026-11-16T14:07:23-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "_cody, 2026-11-16 08:03:_\n\nMerged in #13 (4feb0f4): rule 18 now lists the full post-merge cleanup. Branch deleted on server and locally, local main fast-forwarded. Nothing unblocked.",
+    "created_at": "2026-11-16T14:07:24-08:00",
+    "id": 35060,
+    "updated_at": "2026-11-16T14:07:24-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-16T14:07:23-08:00",
+  "kind": "issue",
+  "labels": [
+   "type:chore"
+  ],
+  "milestone": null,
+  "number": 12,
+  "state": "closed",
+  "title": "Rule: clean up after every merge",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from bryantserver/project-rules#13 (pull request, opened by cody on 2026-11-16, merged 2026-11-16). Branch `refs/pull/13/head` into `main`._\n\nCloses #12\n\nRule 18 said only \"then delete the branch\", so leftovers depended on whoever merged remembering them. It now lists the cleanup that follows every verified merge: the branch on the server and locally, prune, fast-forward local `main` checkouts, worktrees and scratch, dependents moved to `status:ready`, and the status comment. It keeps the guard that a branch `main` does not contain is never deleted.\n\nNo tests: rule text only.",
+  "closed_at": "2026-11-16T14:07:24-08:00",
+  "comments": [
+   {
+    "body": "_forgejo-actions, 2026-11-16 08:02:_\n\n**AI review** of `c4394bc2f0`: Documentation-only change expanding rule 18 with explicit post-merge cleanup steps and a safety guard against deleting branches not yet in main. No code changes, no tests needed, no issues found.\n\nNo findings.\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.",
+    "created_at": "2026-11-16T14:07:24-08:00",
+    "id": 35065,
+    "updated_at": "2026-11-16T14:07:24-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-16T14:07:24-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 13,
+  "state": "closed",
+  "title": "docs: spell out post-merge cleanup in rule 18",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from bryantserver/project-rules#14 (issue, opened by cody on 2026-11-16, closed 2026-11-16)._\n\nPart of #2. Rule 8's 400-line limit as a CI job: lines changed outside tests and lockfiles, from base...head; over 400 fails unless the description says `Large diff: <reason>`. Script runs from main's copy like Tests with code. Ships with tests. After merge, add `CI / Diff size (pull_request_target)` to main's required checks once a real PR has shown a pass and a deliberate fail.",
+  "closed_at": "2026-11-16T14:07:25-08:00",
+  "comments": [
+   {
+    "body": "_cody, 2026-11-16 08:18:_\n\nMerged in #15 (6c372ed). Not required yet: next, one real PR must show Diff size passing and a throwaway PR over 400 lines must show it failing, then `CI / Diff size (pull_request_target)` joins main's required checks.",
+    "created_at": "2026-11-16T14:07:25-08:00",
+    "id": 35070,
+    "updated_at": "2026-11-16T14:07:25-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "_cody, 2026-11-16 11:57:_\n\nProven: throwaway PR #16 (401 lines, no reason) failed Diff size ('401 changed lines ... over the 400 limit'), then closed and its branch deleted; PR #18 passed it. `CI / Diff size (pull_request_target)` is now a required check on main.",
+    "created_at": "2026-11-16T14:07:25-08:00",
+    "id": 35071,
+    "updated_at": "2026-11-16T14:07:25-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-16T14:07:24-08:00",
+  "kind": "issue",
+  "labels": [
+   "type:feature"
+  ],
+  "milestone": null,
+  "number": 14,
+  "state": "closed",
+  "title": "Diff size check",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from bryantserver/project-rules#15 (pull request, opened by cody on 2026-11-16, merged 2026-11-16). Branch `refs/pull/15/head` into `main`._\n\nCloses #14\nRefs #2\n\nRule 8 set a 400-line limit, but nothing enforced it. New `Diff size` job: it sums added and deleted lines from `git diff --numstat base...head`, skipping test paths (same definition as Tests with code) and lockfiles, and fails over 400 unless the description has `Large diff: <reason>`. It runs main's copy of the script, so a PR cannot raise its own limit. Renames count only their edits; a rename from code into `tests/` still counts, so moving code into a test path is not a way around it. Rule 8 now says \"tests and lockfiles\": generated code goes through the `Large diff:` reason instead of an exclusion a PR could claim for itself.\n\nTests (`tests/test_diff_size.py`, 8): code counted, tests and lockfiles not; deletions counted; pure rename 0; rename into tests counted; binary 0; exactly 400 passes; 401 fails; 401 with a reason passes; an empty reason fails. Checked they fail with the rename rule or the test filter broken. CONTRIBUTING.md gets the test command.\n\nThis job does not run on this PR (main's ci.yml has no such job yet). It becomes a required check after the next PR shows it passing.",
+  "closed_at": "2026-11-16T14:07:26-08:00",
+  "comments": [
+   {
+    "body": "_cody, 2026-11-16 08:16:_\n\nRe-running the review: the first attempt failed closed on a DNS lookup of the LLM proxy (`Name or service not known`), not on the PR.",
+    "created_at": "2026-11-16T14:07:25-08:00",
+    "id": 35077,
+    "updated_at": "2026-11-16T14:07:25-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "_forgejo-actions, 2026-11-16 08:17:_\n\n**AI review** of `0a20ccf629`: Clean, well-tested CI gate for the 400-line diff-size rule. The script correctly parses `git diff --numstat -M -z` output (including renames and binary files), the base-commit script extraction prevents self-escalation, and the 8 tests cover the key behaviours (code vs. tests/lockfiles, deletions, rename-into-tests, binary, boundary, override, empty-reason). No correctness, security, or test-coverage gaps found.\n\nNo findings.\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.",
+    "created_at": "2026-11-16T14:07:25-08:00",
+    "id": 35078,
+    "updated_at": "2026-11-16T14:07:25-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-16T14:07:25-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 15,
+  "state": "closed",
+  "title": "ci: add the Diff size check",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from bryantserver/project-rules#16 (pull request, opened by cody on 2026-11-16, closed 2026-11-16). Branch `refs/pull/16/head` into `main`._\n\nRefs #14\n\nThrowaway: 401 counted lines, no `Large diff:` reason. Expect `CI / Diff size` to fail; then closed and the branch deleted.\n\nNo tests: throwaway check of the gate.",
+  "closed_at": "2026-11-16T14:07:26-08:00",
+  "comments": [
+   {
+    "body": "_forgejo-actions, 2026-11-16 08:18:_\n\n**AI review** of `e90162cb6b`: Throwaway PR that adds a 401-line text file solely to verify the CI diff-size gate rejects it; no code, no logic, no security or correctness concerns. No findings.\n\nNo findings.\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.",
+    "created_at": "2026-11-16T14:07:26-08:00",
+    "id": 35083,
+    "updated_at": "2026-11-16T14:07:26-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-16T14:07:26-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 16,
+  "state": "closed",
+  "title": "test: Diff size must fail (throwaway, do not merge)",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from bryantserver/project-rules#17 (issue, opened by cody on 2026-11-16, closed 2026-11-16)._\n\nPart of #2. RULES.md rule 6 allows `Closes owner/repo#n`, but issue-link.py accepts only same-repo #n, so a k8s or macos PR for Casa work fails. Check cross-repo refs with ISSUE_READ_TOKEN (technical call on #2); same-repo refs keep using the job token.",
+  "closed_at": "2026-11-16T14:07:26-08:00",
+  "comments": [
+   {
+    "body": "_cody, 2026-11-16 11:57:_\n\nMerged in #18 (f317a7a). Cross-repo refs are checked with ISSUE_READ_TOKEN.",
+    "created_at": "2026-11-16T14:07:26-08:00",
+    "id": 35088,
+    "updated_at": "2026-11-16T14:07:26-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-16T14:07:26-08:00",
+  "kind": "issue",
+  "labels": [
+   "type:feature"
+  ],
+  "milestone": null,
+  "number": 17,
+  "state": "closed",
+  "title": "Issue link accepts owner/repo#n",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from bryantserver/project-rules#18 (pull request, opened by cody on 2026-11-16, merged 2026-11-16). Branch `refs/pull/18/head` into `main`._\n\nCloses #17\nRefs #2\n\nRule 6 allows `Closes owner/repo#n`, but `Issue link` only matched `#n`, so a k8s or macos PR for Casa work could not name its issue. It now accepts both. Same-repo refs are read with the job token as before. Other repos are read with `ISSUE_READ_TOKEN`, a read:issue-only secret on the org and user (technical call on #2), because a probe showed the job token gets 404 on any other private repo. Writing the own repo out (`bryantserver/project-rules#2`) counts as same-repo, case-insensitively. A cross-repo ref with no secret set fails with that reason instead of a misleading \"does not exist\".\n\nTests (`tests/test_issue_link.py`, 9) run against a fake Forgejo where the job token cannot see other repos: which token reads which ref, mixed refs, no ref, a missing cross-repo issue, a PR number, the missing secret, and a 500 that must not pass. Against the old script 7 of them fail.\n\nThis PR's own `Issue link` runs main's old copy, which is why it also says `Closes #17`.",
+  "closed_at": "2026-11-16T14:07:27-08:00",
+  "comments": [
+   {
+    "body": "_forgejo-actions, 2026-11-16 11:57:_\n\n**AI review** of `9d19885645`: Clean, well-tested change that extends issue-link validation to accept `owner/repo#n` references with appropriate token routing and clear error messages. The 9 tests cover all meaningful paths (same-repo, cross-repo, case-insensitive own-repo, mixed, missing, PR, no-token, 500). No correctness, security, or test-coverage gaps found.\n\nNo findings.\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.",
+    "created_at": "2026-11-16T14:07:27-08:00",
+    "id": 35094,
+    "updated_at": "2026-11-16T14:07:27-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-16T14:07:27-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 18,
+  "state": "closed",
+  "title": "ci: accept owner/repo#n issue links",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from bryantserver/project-rules#19 (issue, opened by cody on 2026-11-16, closed 2026-11-16)._\n\nPart of #2. The reviewer reads only README.md, which here (and in every repo after adoption) no longer holds the rules, and it never sees the linked issue, so it cannot judge rule 7 (every hunk maps to the issue). Give it RULES.md (vendored as .forgejo/RULES.md in other repos, kept in sync by #3), CONTRIBUTING.md, README.md for what the project is, and each linked issue with its recent comments. Scope creep and an unsound `No tests:` or `Large diff:` reason become blocking.",
+  "closed_at": "2026-11-16T14:07:28-08:00",
+  "comments": [
+   {
+    "body": "_cody, 2026-11-16 12:01:_\n\nTechnical call: The AI review blocks on scope creep (a hunk that neither serves the linked issue nor is needed for it) and on a No tests: or Large diff: reason that does not hold. Why: Cody decided the craft rules carry over with CI and the AI review as the gate (#1); a suggestion-only finding would leave rules 7 and 8 unenforced.\n\nDecided by: agent, 2026-11-16.",
+    "created_at": "2026-11-16T14:07:27-08:00",
+    "id": 35100,
+    "updated_at": "2026-11-16T14:07:27-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-16T14:07:27-08:00",
+  "kind": "issue",
+  "labels": [
+   "type:feature"
+  ],
+  "milestone": null,
+  "number": 19,
+  "state": "closed",
+  "title": "AI review reads the rules, CONTRIBUTING.md and the linked issue",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from bryantserver/project-rules#20 (pull request, opened by cody on 2026-11-16, merged 2026-11-16). Branch `refs/pull/20/head` into `main`._\n\nCloses #19\nRefs #2\n\nThe reviewer read only README.md, which no longer holds the rules here (and won't anywhere once repos adopt them), and it never saw the issue a PR is for, so it could not judge rule 7 (every hunk maps to the issue). Now its prompt carries, all from main: the project rules (`.forgejo/RULES.md`, the synced copy other repos will carry, or `RULES.md` here), `CONTRIBUTING.md`, and README.md for what the project is. It also gets each issue the PR names, same-repo or `owner/repo#n` (read with `ISSUE_READ_TOKEN`), with its body and latest ten comments. Comments are paged so \"latest\" is right on long issues, and the body and each comment are capped separately so a long body never pushes out the newest decision. A missing or hidden issue is noted for the reviewer; any other error fails the review closed. Scope creep and an unsound `No tests:` or `Large diff:` reason are now blocking (technical call on #19). `docs/new-project.md` says to copy `RULES.md` to `.forgejo/RULES.md`.\n\nTests (`tests/test_ai_review_context.py`, 10): which rules file wins, missing files, the issue token per repo, the last ten comments across two pages, a 50,000-character body keeping the latest comment, a missing issue, a 503 that must raise, no refs. The context tests error against the old script (no `linked_issues`).\n\nThis PR is reviewed by main's old reviewer; the next PR is the first reviewed with the new context.",
+  "closed_at": "2026-11-16T14:07:28-08:00",
+  "comments": [
+   {
+    "body": "_forgejo-actions, 2026-11-16 12:02:_\n\n**AI review** of `b5c70bbe61`: Clean, well-tested PR that extends the AI reviewer's context with project rules, CONTRIBUTING.md, and linked issues. The regex, pagination, error handling, and fail-closed policy are all correct, and the 10 tests cover the important paths.\n\nNo findings.\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.",
+    "created_at": "2026-11-16T14:07:28-08:00",
+    "id": 35107,
+    "updated_at": "2026-11-16T14:07:28-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-16T14:07:28-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 20,
+  "state": "closed",
+  "title": "ci: AI review reads the rules, CONTRIBUTING.md and the linked issues",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from bryantserver/project-rules#21 (issue, opened by cody on 2026-11-16)._\n\nDecision on #1 (Cody, 2026-11-16). To work out before anything is opened:\n- Sign-up: who can register, spam and abuse limits (the Anubis gate already fronts Forgejo).\n- Fork PRs: the gates run on pull_request_target and never run PR code; confirm they check out a fork's head and that secrets stay out of anything the PR controls.\n- Cost: AI review and runner time spent on strangers' PRs (limit per user, or first-time contributors need a maintainer's go).\n- GitHub: disable issues and PRs on each public repo's GitHub copy and point its README to Forgejo. Outward-facing; each repo needs Cody's OK.\n- Public CONTRIBUTING.md in each public repo pointing to the public rules.",
+  "closed_at": null,
+  "comments": [],
+  "created_at": "2026-11-16T14:07:28-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:needs-decision",
+   "type:feature"
+  ],
+  "milestone": null,
+  "number": 21,
+  "state": "open",
+  "title": "Open Forgejo to outside contributors; GitHub copies mirror-only",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from bryantserver/project-rules#22 (issue, opened by cody on 2026-11-16)._\n\nDecisions on #1 (2026-11-16). Steps: build SisyphusMD/project-rules private; first commit by hand folding in project-standard (shared/ copied byte-for-byte, since consumer locks pin SHA-256s); recreate this repo's issues and PRs with the same numbers, project-standard's after them noting old numbers, Renovate bumps as one summary; scan for secrets and names; repoint whiskerless and dreame-valetudo; make public on Cody's yes; annex and GitHub mirrors (GitHub on Cody's yes); bundle and export both old repos, then delete them and their mirrors (GitHub deletion on Cody's yes). Rename the project-issues skill to project-rules.",
+  "closed_at": null,
+  "comments": [],
+  "created_at": "2026-11-16T14:07:29-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:in-progress",
+   "type:chore"
+  ],
+  "milestone": null,
+  "number": 22,
+  "state": "open",
+  "title": "Move to public SisyphusMD/project-rules and retire this repo and project-standard",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from SisyphusMD/project-standard#2 (pull request, opened by cody on 2026-08-23, merged 2026-08-23). Branch `refs/pull/2/head` into `main`._\n\nRenovate can raise `PROJECT_STANDARD` but cannot fetch the tag it then names, so every standard bump landed red and was closed as obsolete.\n\n- `revendor-standard.sh` reads the pin, clones that tag (bounded three ways) and runs its `vendor.py`\n- `vendor.py` now retires files the standard stopped shipping, and replaces by rename so a script can update itself mid-run\n- `CONVENTIONS.md` corrected: the pinned Renovate image does carry python3 (verified 3.12.3 against the digest), but a script must check rather than assume",
+  "closed_at": "2026-11-16T14:07:29-08:00",
+  "comments": [],
+  "created_at": "2026-11-16T14:07:29-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 23,
+  "state": "closed",
+  "title": "Re-vendor the standard when Renovate moves the pin",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from SisyphusMD/project-standard#3 (pull request, opened by cody on 2026-08-23, merged 2026-08-23). Branch `refs/pull/3/head` into `main`._\n\nConsumers enumerate Renovate `fileFilters`. A shared file outside that shape is written on the update branch, dropped before the commit, and leaves a lock describing content the branch does not have.\n\nOnly this end can refuse the first such file: the consumers can check what is already in their lock, not what a future tag will add.",
+  "closed_at": "2026-11-16T14:07:29-08:00",
+  "comments": [],
+  "created_at": "2026-11-16T14:07:29-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 24,
+  "state": "closed",
+  "title": "Refuse a shared file no consumer would keep",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from SisyphusMD/project-standard#4 (pull request, opened by cody on 2026-08-23, merged 2026-08-23). Branch `refs/pull/4/head` into `main`._\n\nThe last entry in \"Still open, and NOT justified\" is closed: both projects pick the release endpoint by channel and keep one marker per channel.\n\nRecords why the two halves have to land together - the marker leak only becomes possible once the candidate endpoint exists - and the trap the port laid, where four tests spelled a channel-derived marker literally and would have failed the next rc cut.",
+  "closed_at": "2026-11-16T14:07:29-08:00",
+  "comments": [],
+  "created_at": "2026-11-16T14:07:29-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 25,
+  "state": "closed",
+  "title": "Close the update nudge gap",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from SisyphusMD/project-standard#5 (pull request, opened by cody on 2026-08-23, merged 2026-08-23). Branch `refs/pull/5/head` into `main`._\n\nRecords where each project keeps its dev toolchain pin. Both are exact and both are raised by pep621; only the number of copies differs, and dreame's seven are held equal by an invariant that — until this round — read a single workflow.",
+  "closed_at": "2026-11-16T14:07:30-08:00",
+  "comments": [],
+  "created_at": "2026-11-16T14:07:30-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 26,
+  "state": "closed",
+  "title": "Record where each project keeps its toolchain pin",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from SisyphusMD/project-standard#6 (pull request, opened by cody on 2026-08-23, merged 2026-08-23). Branch `refs/pull/6/head` into `main`._\n\nDreame published one `.deb` and one `.rpm` for the whole family but installed each on exactly one host, so the rpm never touched Fedora or the Rocky 8 floor and the deb never touched a current Ubuntu. Whiskerless added those three channels on 2026-08-20; dreame now runs them too.",
+  "closed_at": "2026-11-16T14:07:30-08:00",
+  "comments": [],
+  "created_at": "2026-11-16T14:07:30-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 27,
+  "state": "closed",
+  "title": "Record the package matrix depth convergence",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from SisyphusMD/project-standard#7 (pull request, opened by cody on 2026-08-24, merged 2026-08-25). Branch `refs/pull/7/head` into `main`._\n\nThis entry merged two decisions, and the merge produced confident wrong answers — twice in one session, from me.\n\n**Decision 1, the bundle mode:** invisible in packaged channels, visible at runtime. macOS onefile is platform-driven (one Mach-O to codesign per frozen app, not an executable plus every `.so`; notarization acts on the `.pkg` either way, so it is not the reason). Linux onedir is **not** platform-driven and the entry now says so.\n\n**Decision 2, the standalone download shape:** whiskerless ships a bare binary, dreame a tarball, because dreame's download must carry `dreame-fastboot` and `sunxi-fel`.\n\nTwo rationales were retired for not surviving scrutiny: that helpers require onedir (macOS ships the same helpers beside a onefile app) and that dreame pays the unpack repeatedly (it pays it twice at start, then once per human rejoin — bounded, not recurring). What remains is one real property — onefile cannot run where `TMPDIR` is `noexec` — and the honest reason to leave it alone: not churning a shipped artifact.",
+  "closed_at": "2026-11-16T14:07:30-08:00",
+  "comments": [],
+  "created_at": "2026-11-16T14:07:30-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 28,
+  "state": "closed",
+  "title": "Separate the bundle mode from the download shape, and stop overclaiming the Linux mode",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from SisyphusMD/project-standard#8 (pull request, opened by cody on 2026-08-25, merged 2026-08-25). Branch `refs/pull/8/head` into `main`._\n\n`build-bottles.sh` waits for publish.yml first tap pass; publish second pass then waits for the bottles built here. That handshake is correct. The BUDGET was not: 90 x 20s = 30 minutes, against a publish measured at 37m18s. The tap appeared 60 seconds after the loop gave up, and a release lost its bottles and the install matrix that waits on them.\n\nNow 270 x 20s = 90 minutes. Widening is close to free: the loop breaks the moment the formula appears, so this is a FAILURE bound rather than a delay.\n\nThis applies to stable as much as to candidates - bottles.yml triggers on v*.*.* - and stable publish does more before the tap pass while a stable tag is permanent.\n\nBoth consumers gain a repo-local invariant failing under a 60-minute budget, mutation-tested against fewer iterations AND a shorter sleep.",
+  "closed_at": "2026-11-16T14:07:31-08:00",
+  "comments": [],
+  "created_at": "2026-11-16T14:07:30-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 29,
+  "state": "closed",
+  "title": "Wait 90 minutes for the tap, not 30",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from SisyphusMD/project-standard#10 (pull request, opened by cody on 2026-08-28, closed 2026-08-29). Branch `refs/pull/10/head` into `main`._\n\nBoth repos now gate their tree against committed hardware addresses with the same matcher. whiskerless additionally gates serials and dreame-valetudo does not — recorded here so a future convergence pass does not read it as accidental drift.\n\nAn LR4 serial has a fixed shape and doubles as the MQTT client-id and both topic segments. A Dreame serial is [A-Za-z0-9][A-Za-z0-9._-]{5,63}, so the same guard would match ordinary prose on every run, and a test that always fails is a test somebody deletes.",
+  "closed_at": "2026-11-16T14:07:31-08:00",
+  "comments": [],
+  "created_at": "2026-11-16T14:07:31-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 30,
+  "state": "closed",
+  "title": "Record why only the MAC half of the privacy guard converges",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from SisyphusMD/project-standard#11 (pull request, opened by cody on 2026-08-29, merged 2026-08-29). Branch `refs/pull/11/head` into `main`._\n\ndreame rc.41 failed its publish at \"tag never appeared on GitHub\": the push-mirror had errored with context deadline exceeded and Forgejo does not retry, so the job waiting for the tag timed out ten minutes later, far from the cause.\n\npush_mirrors-sync answers 403 to the repo-scoped token the release uses, which is why the call has always been best-effort — so a retry keyed on its result would never run. What is checkable without extra scope is the OUTCOME: the GitHub mirror is public, so an unauthenticated ref lookup says whether the tag arrived.\n\nOne bounded POST, then read-only polling, three-state: arrived / definitively absent / unknown. A check that cannot answer reports unknown rather than claiming failure. Still warn-only — a release whose refs already fanned out must not be failed by a mirror.\n\nAlso: ci.yml named one test file explicitly, so tests/*.sh added later never ran. It now discovers them.",
+  "closed_at": "2026-11-16T14:07:31-08:00",
+  "comments": [],
+  "created_at": "2026-11-16T14:07:31-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 31,
+  "state": "closed",
+  "title": "Confirm the tag reached the mirror instead of assuming the sync worked",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from SisyphusMD/project-standard#12 (pull request, opened by cody on 2026-08-29, merged 2026-08-29). Branch `refs/pull/12/head` into `main`._\n\n`$?` taken directly after a `[ ]`/`[[ ]]` is the condition's status, which shellcheck flags as SC2319 and which any command inserted before the read would silently replace. Builds `rc` explicitly instead.\n\nThis is what has been failing the Shell scripts job on main, so it blocks #10 and #11.",
+  "closed_at": "2026-11-16T14:07:31-08:00",
+  "comments": [],
+  "created_at": "2026-11-16T14:07:31-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 32,
+  "state": "closed",
+  "title": "test(release): build assertion status explicitly instead of reading it from a condition",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from SisyphusMD/project-standard#13 (pull request, opened by cody on 2026-08-29, merged 2026-08-29). Branch `refs/pull/13/head` into `main`._\n\nThe confirmation added in v0.1.22 checked only that GitHub answered 200 for the tag name. An rc number is derived from the source tags alone, so a name can be reused, and a ref left behind by a partial prune answers 200 while still pointing at the previous release - every job waiting on the mirror would then run against the wrong commit.\n\nCompares the object the mirror serves with the one just pushed. The test gains that case.",
+  "closed_at": "2026-11-16T14:07:32-08:00",
+  "comments": [],
+  "created_at": "2026-11-16T14:07:32-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 33,
+  "state": "closed",
+  "title": "fix(release): compare the mirrored tag object, since a reused tag name answers 200 while stale",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from SisyphusMD/project-standard#14 (pull request, opened by cody on 2026-08-29, merged 2026-08-29). Branch `refs/pull/14/head` into `main`._\n\nUnauthenticated github.com allows 60 requests an hour per IP and every runner, mirror probe and CI poller shares one. Several helpers treated their token as optional, so once the budget was gone they did not fail - they answered 403, and the checks built on them stopped deciding anything while still reporting success. The republish guard did exactly that on its first real run.\n\nEvery GitHub caller now makes its token mandatory: push-tag.sh, check-mirror-ci.sh, check-rc-install-matrix.sh, reconcile-releases.sh, github-release.sh. reconcile also authenticates the asset download, which was reaching GitHub bare.\n\npush-tag.sh asserts its token BEFORE `git push --atomic`, since discovering it afterwards would leave the tag published and the run failed - and only when a mirror is configured, so the documented no-project.env mode still pushes.\n\n`tests/test-github-auth.sh` pins all of it, including the shapes that previously slipped through: a credential-free `auth` array that keeps its name, an auth helper whose github arm is gone, a sourced library that drops the inherited array, and the guard being moved below the push. Each has a negative control.",
+  "closed_at": "2026-11-16T14:07:32-08:00",
+  "comments": [],
+  "created_at": "2026-11-16T14:07:32-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 34,
+  "state": "closed",
+  "title": "fix(release): require a credential on every GitHub call instead of degrading to unauthenticated",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from SisyphusMD/project-standard#17 (pull request, opened by cody on 2026-09-16, merged 2026-09-16). Branch `refs/pull/17/head` into `main`._\n\nObserved on whiskerless run 35055059591: `brew test` bootstrapped Homebrew's Ruby harness and the macOS runner could not resolve rubygems.org. The failure landed in one of our named steps, so the step-name rule refused the retry and the run stayed red until Renovate pushed again.\n\nThe discriminator now also reads each failed job's log. A step of ours is retryable only when its closing lines, bounded to its own timestamps with boundary seconds excluded, carry an exact resolver-failure spelling AND name a host CI is known to reach. Tests pin the refusals: a log printed by another step, a resolver error the step survived, a typo'd hostname, timeouts and refusals, a missing log, and a genuine failure elsewhere in the run.\n\nConsumers need `gh api --allow-escape-sequences .../jobs/<id>/logs` per failed job and to pass the logs directory; that lands with the pin bump in each.",
+  "closed_at": "2026-11-16T14:07:32-08:00",
+  "comments": [],
+  "created_at": "2026-11-16T14:07:32-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 35,
+  "state": "closed",
+  "title": "feat(retry): also retry a step the runner's resolver failed",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from SisyphusMD/project-standard#21 (pull request, opened by cody on 2026-10-09, merged 2026-10-09). Branch `refs/pull/21/head` into `main`._\n\nplatformAutomerge: false, so Renovate merges an automerge PR itself once its checks are green. With platform automerge Forgejo merged immediately when main required no checks: archiver #192 (an rclone bump) merged 3 seconds after opening and broke the image build. Cody approved this change across the bryantserver and SisyphusMD repos (2026-10-09).",
+  "closed_at": "2026-11-16T14:07:33-08:00",
+  "comments": [],
+  "created_at": "2026-11-16T14:07:32-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 36,
+  "state": "closed",
+  "title": "chore(renovate): automerge only after CI passes",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from SisyphusMD/project-standard#27 (pull request, opened by cody on 2026-10-26, merged 2026-10-26). Branch `refs/pull/27/head` into `main`._\n\nHomebrew stopped building Intel macOS bottles in 2026-09, so both consumers drop the `sequoia` bottle leg. `update-tap.sh` now demands 3 tags. `bottle-block.py` keeps `sequoia` in `TAG_ORDER` (ordering only, not required).",
+  "closed_at": "2026-11-16T14:07:33-08:00",
+  "comments": [],
+  "created_at": "2026-11-16T14:07:33-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 37,
+  "state": "closed",
+  "title": "fix(packaging): demand three bottles, not four",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from SisyphusMD/project-standard#29 (pull request, opened by cody on 2026-10-26, merged 2026-10-26). Branch `refs/pull/29/head` into `main`._\n\nEvery push to main makes Renovate rebase its whole backlog, and each rebased branch queued two macOS runs on the GitHub mirror (~30 per main push), most for Dockerfile digests or Forgejo workflows no Mac reads. Real verdicts waited hours behind them.\n\n`macos-scope.sh <ref>` prints true/false. Only `refs/heads/renovate/*` can be skipped, and only when every changed path (renames split with --no-renames) is on an anchored Linux-only list. Anything undecidable runs.\n\nConsumers gate their ci-macos.yml / formula-macos.yml jobs on it next, and let renovate/* runs cancel superseded ones.",
+  "closed_at": "2026-11-16T14:07:33-08:00",
+  "comments": [],
+  "created_at": "2026-11-16T14:07:33-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 38,
+  "state": "closed",
+  "title": "feat(packaging): macos-scope.sh — let Renovate branches skip the GitHub macOS workflows when only Linux-side files change",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from SisyphusMD/project-standard#30 (pull request, opened by cody on 2026-10-26, merged 2026-10-26). Branch `refs/pull/30/head` into `main`._\n\nBoth consumers had their own wait-for-release.sh and they had drifted: dreame treated the tap as ready on a `bottle do` block plus a version substring, never comparing bottle sha256s to the release manifests; whiskerless hardcoded its names and had a garbled section.\n\nThis is one project-agnostic script (union of both checks), parameterised from project.env (`PROJECT_REPO_SLUG`, new `PROJECT_TAP_SLUG`) and a per-repo `asset-roles.sh` data file. `fetch()` is confined to `$FORGE` and follows no redirects. Also: release-output entries in gitignore.base, VARIANCE contribution-routing line corrected (dreame has ci-pr.yml).",
+  "closed_at": "2026-11-16T14:07:34-08:00",
+  "comments": [],
+  "created_at": "2026-11-16T14:07:34-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 39,
+  "state": "closed",
+  "title": "feat(packaging): share wait-for-release.sh and release-output gitignore entries",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from SisyphusMD/project-standard#31 (pull request, opened by cody on 2026-10-26, merged 2026-10-26). Branch `refs/pull/31/head` into `main`._\n\nKilling the watchdog subshell orphaned its `sleep`, which inherited stdout. Anything reading the output (a pipe, Renovate post-upgrade capture) waited the full 300 s clone deadline after the vendor was done. The watchdog now traps TERM and kills its own sleep, and its output goes to /dev/null. tests/test-revendor-watchdog.sh times it (old script: 30 s stall at a 30 s deadline; new: 0 s).",
+  "closed_at": "2026-11-16T14:07:34-08:00",
+  "comments": [],
+  "created_at": "2026-11-16T14:07:34-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 40,
+  "state": "closed",
+  "title": "fix(packaging): revendor-standard.sh no longer holds its output open after finishing",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from SisyphusMD/project-standard#35 (pull request, opened by cody on 2026-11-13, merged 2026-11-13). Branch `refs/pull/35/head` into `main`._\n\nGitHub cancels a macOS arm64 job it cannot place after 15 minutes (\"not acquired by Runner\"). It ends `cancelled`, which the triage treated as a veto, so whiskerless rc.74 and rc.75 sat red until rerun by hand. This adds that class with exact evidence (no steps, no runner, GitHub annotation), and lets it alone retry up to attempt 5.",
+  "closed_at": "2026-11-16T14:07:34-08:00",
+  "comments": [],
+  "created_at": "2026-11-16T14:07:34-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 41,
+  "state": "closed",
+  "title": "fix(triage): retry a job no runner ever took",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from SisyphusMD/project-standard#36 (pull request, opened by cody on 2026-11-16). Branch `docs/contribute-on-forgejo` into `main`._\n\nHELD: merge only once sign-in with GitHub is live and tested on Forgejo.\n\nRecords in VARIANCE.md that whiskerless and dreame-valetudo both take issues and pull requests on Forgejo now, with GitHub a read-only mirror for both.\n\n_Still open when project-standard was retired: its change is not in this repo. It lands here as a new pull request that closes this issue._",
+  "closed_at": null,
+  "comments": [],
+  "created_at": "2026-11-16T14:07:34-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 42,
+  "state": "open",
+  "title": "WIP: docs: send issues and pull requests to Forgejo",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated from SisyphusMD/project-standard#37 (pull request, opened by cody on 2026-11-16). Branch `ci/agit-pr-guard` into `main`._\n\nForgejo treats an AGit pull request (pushed to `refs/for/main`, no fork needed) as untrusted and holds its runs for approval, but its payload reports this repository as the head (`head.repo.full_name == github.repository`), so the existing fork gate let it through. When a maintainer acts on an outsider's PR (reopen), Forgejo 17 runs this branch's workflows, with secrets, against the PR's commit (services/actions/trust.go). Outside contributors are about to be able to sign in with GitHub and open AGit PRs, so the gate now also requires `github.event.pull_request.flow == 0`.\n\nProof (throwaway SisyphusMD/agit-guard-proof-20261116): an AGit PR's payload has `flow=1` and head repo = base repo, and the gated job was skipped (run 37485); a branch PR has `flow=0` and the gated job ran (run 37486).\n\nOutside PRs get CI when a maintainer, after reading the diff, pushes the head to a branch here.\n\nCONVENTIONS.md states the gate the same way, so new projects copy the full condition.\n\n_Still open when project-standard was retired: its change is not in this repo. It lands here as a new pull request that closes this issue._",
+  "closed_at": null,
+  "comments": [],
+  "created_at": "2026-11-16T14:07:35-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record"
+  ],
+  "milestone": null,
+  "number": 43,
+  "state": "open",
+  "title": "ci: keep AGit pull requests off the self-hosted runner (they report this repo as their head, so the fork gate let them through, and a maintainer's reopen runs this branch's workflows with secrets)",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "_Recreated summary of SisyphusMD/project-standard's Renovate items, kept as one record rather than one issue each._\n\n| Was | State | Opened | Title |\n| --- | --- | --- | --- |\n| project-standard#1 | open | 2026-08-22 | Dependency Dashboard |\n| project-standard#9 | merged | 2026-08-27 | chore(deps): update dependency ruff to v0.16.5 |\n| project-standard#15 | merged | 2026-09-03 | chore(deps): update dependency ruff to v0.16.6 |\n| project-standard#16 | merged | 2026-09-10 | chore(deps): update dependency ruff to v0.16.7 |\n| project-standard#18 | merged | 2026-09-16 | chore(deps): update dependency ruff to v0.16.8 |\n| project-standard#19 | merged | 2026-09-24 | chore(deps): update dependency ruff to v0.16.9 |\n| project-standard#20 | merged | 2026-10-01 | chore(deps): update dependency ruff to v0.16.10 |\n| project-standard#22 | merged | 2026-10-09 | chore(deps): update dependency ruff to v0.17.0 |\n| project-standard#23 | merged | 2026-10-10 | chore(deps): update dependency python to 3.15 |\n| project-standard#24 | merged | 2026-10-15 | chore(deps): update dependency ruff to v0.17.1 |\n| project-standard#25 | merged | 2026-10-21 | chore(deps): update actions/setup-python action to v7.1.0 |\n| project-standard#26 | merged | 2026-10-22 | chore(deps): update dependency ruff to v0.17.2 |\n| project-standard#28 | merged | 2026-10-26 | chore(deps): update dependency ruff to v0.17.3 |\n| project-standard#32 | merged | 2026-10-27 | chore(deps): update dependency pytest to v9.2.0 |\n| project-standard#33 | merged | 2026-11-05 | chore(deps): update dependency ruff to v0.17.4 |\n| project-standard#34 | merged | 2026-11-12 | chore(deps): update dependency ruff to v0.17.5 |",
+  "closed_at": "2026-11-16T14:07:35-08:00",
+  "comments": [],
+  "created_at": "2026-11-16T14:07:35-08:00",
+  "kind": "issue",
+  "labels": [
+   "pr-record",
+   "renovate"
+  ],
+  "milestone": null,
+  "number": 44,
+  "state": "closed",
+  "title": "Renovate history from project-standard",
+  "user": "cody"
+ }
+]
