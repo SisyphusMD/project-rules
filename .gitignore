@@ -1,0 +1,54 @@
+# The floor every SisyphusMD project's .gitignore must contain, checked by
+# packaging/check-gitignore-base.py. Project-specific artifacts go in the project's own
+# .gitignore below its base block — this file is only the shared minimum.
+#
+# Ignore files are NOT a security control. Secrets are kept out by allowlisted build contexts and
+# by not writing them into the tree in the first place. These patterns are the last net, not the
+# first, and they exist because the cost of one slip is unbounded.
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Environments
+.venv*/
+venv/
+
+# Tool caches and coverage
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# OS
+.DS_Store
+
+# Key and certificate material. *.p12 and *.p8 matter for any project that signs or notarises a
+# macOS artifact: an Apple signing certificate and an App Store Connect key are exactly the two
+# files a release engineer ends up with locally, and neither belongs in a repository.
+*.pem
+*.key
+*.p12
+*.p8
+
+# Locally built distributables
+*.deb
+*.rpm
+*.pkg
+*.tar
+*.tar.gz
+
+# Release and smoke outputs the shared release machinery writes at the repository root: buildx
+# --output destinations (out/ for CI, out-<arch>/ for a release leg, package-smoke-<fmt>-<arch>/,
+# homebrew-smoke-result/) and the release notes publish.yml renders before uploading them. Each is
+# recreated from scratch on every run, so a copy in the tree is always stale.
+/out/
+/out-*/
+/package-smoke-*/
+/homebrew-smoke-result/
+/notes.md
