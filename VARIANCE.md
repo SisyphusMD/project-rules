@@ -283,13 +283,13 @@ collision, and it is what the rest of this table should eventually look like.
 
 | | Whiskerless | Dreame Valetudo |
 |---|---|---|
-| Issues and PRs | **GitHub** — it is the mirror HACS installs from, and where users already are | **GitHub** — outside contributors have no Forgejo account (CONTRIBUTING.md) |
-| Fork-PR CI | `.github/workflows/ci-pr.yml` on GitHub-hosted runners | `.github/workflows/ci-pr.yml` on GitHub-hosted runners |
+| Issues and PRs | **Forgejo** — sign in with GitHub; the GitHub mirror (which HACS installs from) is read-only | **Forgejo** — sign in with GitHub; the GitHub mirror is read-only |
+| Fork-PR CI | Forgejo CI, once a maintainer has read the change and reopened it from a branch here | Forgejo CI, the same way |
 
-Both projects' Forgejo CI skips a fork PR behind the same trust gate, because that runner holds
-release credentials, so both need `ci-pr.yml` to give an outsider's PR any checks at all. This entry
-once recorded Dreame as Forgejo-routed with no GitHub PR CI; Dreame has carried `ci-pr.yml` since
-2026-08-21, and the earlier line read as a variance that no longer existed.
+Both projects' Forgejo CI holds a fork PR behind the same trust gate, because that runner holds
+release credentials. This entry once recorded both as GitHub-routed with `ci-pr.yml` testing fork
+PRs on GitHub-hosted runners; contributions moved to Forgejo when it opened sign-in with GitHub
+accounts, and GitHub became a read-only mirror for both.
 
 ### Coverage floors — now converged
 
