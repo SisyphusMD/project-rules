@@ -283,13 +283,17 @@ collision, and it is what the rest of this table should eventually look like.
 
 | | Whiskerless | Dreame Valetudo |
 |---|---|---|
-| Issues and PRs | **GitHub** — it is the mirror HACS installs from, and where users already are | **GitHub** — outside contributors have no Forgejo account (CONTRIBUTING.md) |
-| Fork-PR CI | `.github/workflows/ci-pr.yml` on GitHub-hosted runners | `.github/workflows/ci-pr.yml` on GitHub-hosted runners |
+| Issues and PRs | **Forgejo** — sign in with GitHub; the GitHub mirror (which HACS installs from) is read-only | **Forgejo** — sign in with GitHub; the GitHub mirror is read-only |
+| Outside-PR CI | Nothing from the pull request's own tree and nothing on the self-hosted runners; the full suite once a maintainer has read the change and pushed it to a branch here | The same |
 
-Both projects' Forgejo CI skips a fork PR behind the same trust gate, because that runner holds
-release credentials, so both need `ci-pr.yml` to give an outsider's PR any checks at all. This entry
-once recorded Dreame as Forgejo-routed with no GitHub PR CI; Dreame has carried `ci-pr.yml` since
-2026-08-21, and the earlier line read as a variance that no longer existed.
+Since 2026-11-16, outside contributors sign in with GitHub, wait for a maintainer to activate the
+account, and send AGit pull requests (`refs/for/main`); new accounts cannot create repositories, so
+there are no forks. Both projects' Forgejo CI skips an AGit pull request behind the same trust gate
+(`pull_request.flow == 0`), because those runners are trusted with release credentials. The
+maintainer moves a change they have read onto a branch here and opens it from there, rather than
+reopening the AGit pull request, which would still be AGit. Until then this entry recorded both as
+GitHub-routed, with `ci-pr.yml` testing fork PRs on GitHub-hosted runners; GitHub is now a
+read-only mirror for both.
 
 ### Coverage floors — now converged
 
