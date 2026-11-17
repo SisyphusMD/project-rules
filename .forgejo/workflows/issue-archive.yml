@@ -1,6 +1,6 @@
 # Nightly export of issues, PRs, comments and reviews to the issue-archive branch.
 # Push mirrors carry git only; this branch is how issue history reaches the annex mirror.
-# Canonical copy: bryantserver/project-rules; repos get a copy.
+# Canonical copy: SisyphusMD/project-rules; repos get a copy.
 name: Issue archive
 on:
   schedule:

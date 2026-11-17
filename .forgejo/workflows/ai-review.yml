@@ -1,7 +1,7 @@
 # CodeRabbit-style review on the house LLM; main's protection requires its `AI review` status.
 # pull_request_target and issue_comment both run this file and the script from main, so a PR
 # cannot change how it is reviewed. A reply on the PR re-runs the review, which can withdraw a
-# finding. Canonical copy: bryantserver/project-rules; repos get a copy.
+# finding. Canonical copy: SisyphusMD/project-rules; repos get a copy.
 name: AI review
 on:
   pull_request_target:
