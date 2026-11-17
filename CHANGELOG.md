@@ -6,10 +6,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### Added
-
 - `LICENSE` (MIT), this changelog, and SPDX licence metadata and project URLs in
   `pyproject.toml`.
+- A Renovate config, so the pins here are updated at all, with every update PR naming the
+  standing dependency-updates issue (#67) the issue-link check requires.
+- `ci.yml`'s ruff, yamllint and gitleaks pins carry `# renovate:` annotations, and the workflows'
+  Python is pinned to an exact `3.15.2`. Repos that copy `ci.yml` pick these up on their next copy.
 
 ## [0.3.0] - 2026-11-16
 

@@ -32,6 +32,10 @@ Every item below is a scar. Treat them as settled.
   `mktemp` file with a cleanup trap, copied to its own path.
 - Third-party actions are pinned to full commit SHAs with a readable version comment. **Keep the
   `# renovate:` marker beside every pin** — remove it and that pin silently stops being updated.
+- Renovate's own PRs must pass the required checks: a `prFooter` naming a standing
+  dependency-updates issue for the issue-link check, and, for a pin inside a code file (the
+  shellcheck image in `shellcheck-all.sh`), a `No tests:` line in `prBodyNotes` and no automerge
+  unless the job that runs the new pin is required. This repo's `.renovaterc.json` shows both.
 - Default workflow permissions read-only; write scope and secrets live on the consuming step only.
 - Self-hosted and persistent runners execute **only trusted same-repository code**. Gate PR jobs on
   `github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.flow == 0`.
