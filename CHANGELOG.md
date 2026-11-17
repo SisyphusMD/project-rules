@@ -6,6 +6,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- `RULES.md` links to the conventions and the CONTRIBUTING template by absolute URL, so a
+  repo's `.forgejo/RULES.md` copy no longer fails its doc-link check (#77).
 - `LICENSE` (MIT), this changelog, and SPDX licence metadata and project URLs in
   `pyproject.toml`.
 - A Renovate config, so the pins here are updated at all, with every update PR naming the
