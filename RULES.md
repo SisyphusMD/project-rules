@@ -88,9 +88,10 @@ and nowhere else. How code, tests and docs are written is in [conventions/][conv
     backup forge, synced on every commit, and a nightly `issue-archive` branch that carries its
     issues and PRs there too, because mirrors carry git only. A public repo's GitHub copy is a
     read-only mirror: issues and pull requests are opened on Forgejo.
-22. **A `CONTRIBUTING.md`** that points here, from
-    [templates/CONTRIBUTING.md][contributing-template], and a synced copy of this file at
-    `.forgejo/RULES.md`, which the AI review reads.
+22. **A `CONTRIBUTING.md` and a `SECURITY.md`.** The first points here, from
+    [templates/CONTRIBUTING.md][contributing-template]; the second is copied from
+    `templates/SECURITY.md`, so vulnerabilities are reported privately. Plus a synced copy of this
+    file at `.forgejo/RULES.md`, which the AI review reads.
 23. **A public repo's checks never see private data.** Its CI reads other repos anonymously, so
     a linked private issue is reported as not found rather than quoted in a public log or
     review.
@@ -103,7 +104,7 @@ A PR to this repo that closes an issue here, with the maintainer's decision reco
 
 | Who or what | Exception | Decided |
 | --- | --- | --- |
-| _none yet_ | | |
+| Security fixes | Until the fix is released, the issue lives in a private repo (linked as `Closes owner/repo#n`, rule 23) and the PR describes the change, not how to exploit it | #62 |
 
 <!-- Absolute, not relative: every repo carries this file as .forgejo/RULES.md, where a relative
      link points at nothing. tests/test_rules_links.py checks that this repo's targets exist. -->
