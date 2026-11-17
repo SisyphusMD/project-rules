@@ -91,7 +91,8 @@ and nowhere else. How code, tests and docs are written is in [conventions/][conv
 21. **The primary is forgejo.bryantserver.com.** Each repo has a push mirror on the maintainer's
     backup forge, synced on every commit, and a nightly `issue-archive` branch that carries its
     issues and PRs there too, because mirrors carry git only. A public repo's GitHub copy is a
-    read-only mirror: issues and pull requests are opened on Forgejo.
+    read-only mirror: issues and pull requests are opened on Forgejo, and the mirror-lockdown
+    workflow closes any pull request opened there with a pointer to Forgejo.
 22. **A `CONTRIBUTING.md` and a `SECURITY.md`.** The first points here, from
     [templates/CONTRIBUTING.md][contributing-template]; the second is copied from
     `templates/SECURITY.md`, so vulnerabilities are reported privately. Plus a synced copy of this
