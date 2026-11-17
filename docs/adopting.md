@@ -17,6 +17,9 @@
 ## An existing repo
 
 1. **Mirror**: the backup-forge push mirror and the nightly `issue-archive` branch (rule 21).
+   A public repo also copies [`mirror-lockdown.yml`](../.github/workflows/mirror-lockdown.yml)
+   to `.github/workflows/`, and its GitHub copy has Actions on, limited to that one action, with
+   a read-only default token.
 2. **Workflows**: copy this repo's `.forgejo/` workflows, scripts and issue templates in, create
    the labels listed above, and copy `RULES.md` as
    `.forgejo/RULES.md`: the AI review reads the rules from there, since it cannot follow a link.
