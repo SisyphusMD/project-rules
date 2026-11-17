@@ -7,6 +7,7 @@
   "platformAutomerge": false,
   "separateMinorPatch": true,
   "fetchChangeLogs": "pr",
+  "prFooter": "Refs #67: the standing issue for dependency updates, which the issue-link check requires every pull request to name.",
   "enabledManagers": ["github-actions", "custom.regex"],
   "github-actions": {
     "managerFilePatterns": ["/(\\.github|\\.forgejo)/workflows/.+\\.ya?ml$/"]
@@ -18,10 +19,17 @@
       "automerge": true
     },
     {
+      "description": "The shellcheck image is the one pin in a code file (shared/packaging/shellcheck-all.sh), so its PR needs the tests-with-code escape hatch. The job that runs the new image (Tests / Shell scripts) is not a required check, so a person merges it after reading that job.",
+      "matchDepNames": ["koalaman/shellcheck"],
+      "automerge": false,
+      "prBodyNotes": ["No tests: an image pin bump; the Shell scripts job runs shellcheck-all.sh with the new image on this pull request. That job is not required, so check it passed before merging."]
+    },
+    {
       "description": "setup-python installs from actions/python-versions' manifest, which lands over an hour after the CPython release Renovate reads. A bump raised in that gap fails every Python job at setup, so hold it until the manifest is certain to list it.",
       "matchManagers": ["github-actions"],
       "matchDepNames": ["python"],
-      "minimumReleaseAge": "3 days"
+      "minimumReleaseAge": "3 days",
+      "prBodyNotes": ["Held three days after the CPython release, so setup-python's manifest lists it before this runs."]
     },
     {
       "description": "The gitleaks download is checked against GITLEAKS_SHA256 beside it, which Renovate cannot compute, so the bump PR fails the Secrets job until a person updates the checksum. Never automerge it.",
