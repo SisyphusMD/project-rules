@@ -123,7 +123,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
-      - name: gitleaks over the full history
+      - name: gitleaks over the PR head's history
         env:
           # renovate: datasource=github-tags depName=gitleaks/gitleaks
           GITLEAKS_VERSION: 8.28.0
@@ -139,4 +139,8 @@ jobs:
           rm -f .gitleaks.toml .gitleaksignore
           git show "${{ github.event.pull_request.base.sha }}:.gitleaks.toml" > .gitleaks.toml 2>/dev/null || rm -f .gitleaks.toml
           git show "${{ github.event.pull_request.base.sha }}:.gitleaksignore" > .gitleaksignore 2>/dev/null || rm -f .gitleaksignore
-          /tmp/gitleaks git --no-banner --redact .
+          # Only the PR head's history: the clone also holds issue-archive (rule 21), whose nightly
+          # copy of issue text is not code and would fail every PR on a hex string quoted in an
+          # issue. gitleaks exits 0 when it scans nothing, so re-prove both directions (a head
+          # secret fails, an archive-only one passes) on any version bump; proven on 8.28.0.
+          /tmp/gitleaks git --no-banner --redact --log-opts="${{ github.event.pull_request.head.sha }}" .
