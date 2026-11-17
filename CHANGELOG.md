@@ -6,6 +6,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Release-helper comments describe the current Forgejo build and publication flow (#91).
 - `.github/workflows/mirror-lockdown.yml`: a public repo's GitHub copy closes new pull requests
   with a pointer to Forgejo, since GitHub cannot turn them off (#88).
 - CI `Secrets` scans only the PR head's history, so issue text copied into the nightly
