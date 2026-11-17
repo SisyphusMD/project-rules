@@ -1,6 +1,6 @@
 # #42 WIP: docs: send issues and pull requests to Forgejo
 
-- Kind: issue, state: open, by cody, created 2026-11-16T14:07:34-08:00
+- Kind: issue, state: closed, by cody, created 2026-11-16T14:07:34-08:00
 - Labels: pr-record; milestone: none
 
 _Recreated from SisyphusMD/project-standard#36 (pull request, opened by cody on 2026-11-16). Branch `docs/contribute-on-forgejo` into `main`._

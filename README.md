@@ -25,7 +25,7 @@ Generated nightly from the primary Forgejo; do not edit. `json/` holds the full 
 | 19 | issue | closed | [AI review reads the rules, CONTRIBUTING.md and the linked issue](items/0019-ai-review-reads-the-rules-contributing-md-and-the-linked-iss.md) |
 | 20 | issue | closed | [ci: AI review reads the rules, CONTRIBUTING.md and the linked issues](items/0020-ci-ai-review-reads-the-rules-contributing-md-and-the-linked-.md) |
 | 21 | issue | open | [Open Forgejo to outside contributors; GitHub copies mirror-only](items/0021-open-forgejo-to-outside-contributors-github-copies-mirror-on.md) |
-| 22 | issue | open | [Move to public SisyphusMD/project-rules and retire this repo and project-standard](items/0022-move-to-public-sisyphusmd-project-rules-and-retire-this-repo.md) |
+| 22 | issue | closed | [Move to public SisyphusMD/project-rules and retire this repo and project-standard](items/0022-move-to-public-sisyphusmd-project-rules-and-retire-this-repo.md) |
 | 23 | issue | closed | [Re-vendor the standard when Renovate moves the pin](items/0023-re-vendor-the-standard-when-renovate-moves-the-pin.md) |
 | 24 | issue | closed | [Refuse a shared file no consumer would keep](items/0024-refuse-a-shared-file-no-consumer-would-keep.md) |
 | 25 | issue | closed | [Close the update nudge gap](items/0025-close-the-update-nudge-gap.md) |
@@ -45,6 +45,20 @@ Generated nightly from the primary Forgejo; do not edit. `json/` holds the full 
 | 39 | issue | closed | [feat(packaging): share wait-for-release.sh and release-output gitignore entries](items/0039-feat-packaging-share-wait-for-release-sh-and-release-output-.md) |
 | 40 | issue | closed | [fix(packaging): revendor-standard.sh no longer holds its output open after finishing](items/0040-fix-packaging-revendor-standard-sh-no-longer-holds-its-outpu.md) |
 | 41 | issue | closed | [fix(triage): retry a job no runner ever took](items/0041-fix-triage-retry-a-job-no-runner-ever-took.md) |
-| 42 | issue | open | [WIP: docs: send issues and pull requests to Forgejo](items/0042-wip-docs-send-issues-and-pull-requests-to-forgejo.md) |
-| 43 | issue | open | [ci: keep AGit pull requests off the self-hosted runner (they report this repo as their head, so the fork gate let them through, and a maintainer's reopen runs this branch's workflows with secrets)](items/0043-ci-keep-agit-pull-requests-off-the-self-hosted-runner-they-r.md) |
+| 42 | issue | closed | [WIP: docs: send issues and pull requests to Forgejo](items/0042-wip-docs-send-issues-and-pull-requests-to-forgejo.md) |
+| 43 | issue | closed | [ci: keep AGit pull requests off the self-hosted runner (they report this repo as their head, so the fork gate let them through, and a maintainer's reopen runs this branch's workflows with secrets)](items/0043-ci-keep-agit-pull-requests-off-the-self-hosted-runner-they-r.md) |
 | 44 | issue | closed | [Renovate history from project-standard](items/0044-renovate-history-from-project-standard.md) |
+| 45 | pull | closed | [docs: record that both projects take contributions on Forgejo](items/0045-docs-record-that-both-projects-take-contributions-on-forgejo.md) |
+| 46 | pull | closed | [ci: keep AGit pull requests off the self-hosted runner (they report this repo as their head, so the fork gate let them through, and a maintainer's reopen runs this branch's workflows with secrets)](items/0046-ci-keep-agit-pull-requests-off-the-self-hosted-runner-they-r.md) |
+| 47 | issue | open | [vendor.py follows a symlinked parent of a destination](items/0047-vendor-py-follows-a-symlinked-parent-of-a-destination.md) |
+| 48 | issue | open | [check-standard-sync passes on an empty lock](items/0048-check-standard-sync-passes-on-an-empty-lock.md) |
+| 49 | issue | closed | [check-mirror-ci.sh calls curl with no timeout](items/0049-check-mirror-ci-sh-calls-curl-with-no-timeout.md) |
+| 50 | issue | closed | [Gate scripts and workflows still name bryantserver/project-rules as canonical](items/0050-gate-scripts-and-workflows-still-name-bryantserver-project-r.md) |
+| 51 | issue | closed | [Retire the helpers that bridge to GitHub's runners](items/0051-retire-the-helpers-that-bridge-to-github-s-runners.md) |
+| 52 | pull | closed | [docs: name this repo as the canonical copy in the gate comments](items/0052-docs-name-this-repo-as-the-canonical-copy-in-the-gate-commen.md) |
+| 53 | pull | closed | [feat(shared): gate releases on Forgejo's macOS run and retire the GitHub-runner helpers](items/0053-feat-shared-gate-releases-on-forgejo-s-macos-run-and-retire-.md) |
+| 54 | issue | open | [AI review reads its saved state from the first marker, so model-echoed text can wipe carried findings](items/0054-ai-review-reads-its-saved-state-from-the-first-marker-so-mod.md) |
+| 55 | issue | open | [AI review can leave its required check stuck at pending](items/0055-ai-review-can-leave-its-required-check-stuck-at-pending.md) |
+| 56 | issue | open | [issue-archive puts the job token in a global git header](items/0056-issue-archive-puts-the-job-token-in-a-global-git-header.md) |
+| 57 | issue | open | [Decide whether ci.yml and ai-review.yml need the AGit gate tests.yml has](items/0057-decide-whether-ci-yml-and-ai-review-yml-need-the-agit-gate-t.md) |
+| 58 | issue | open | [AI review robustness: bound human replies, report truncated answers, pin the checkout ref](items/0058-ai-review-robustness-bound-human-replies-report-truncated-an.md) |

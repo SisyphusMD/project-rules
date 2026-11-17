@@ -5,4 +5,4 @@
 
 _Recreated from bryantserver/project-rules#8 (issue, opened by cody on 2026-11-16)._
 
-a second-model review review of the CI move: Lint runs ruff and yamllint in the PR checkout, so a PR can add a ruff.toml (lint.ignore = ["ALL"]) or .yamllint and pass its own lint. Rule 15 says a PR cannot weaken the check that judges it. Fix: restore linter config from the base commit before linting, as Secrets does for gitleaks allowlists. Same gap in bryantserver/casa's copy.
+Second-model review of the CI move: Lint runs ruff and yamllint in the PR checkout, so a PR can add a ruff.toml (lint.ignore = ["ALL"]) or .yamllint and pass its own lint. Rule 15 says a PR cannot weaken the check that judges it. Fix: restore linter config from the base commit before linting, as Secrets does for gitleaks allowlists. Same gap in bryantserver/casa's copy.

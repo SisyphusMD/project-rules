@@ -218,7 +218,7 @@
  },
  {
   "assignees": [],
-  "body": "_Recreated from bryantserver/project-rules#8 (issue, opened by cody on 2026-11-16)._\n\na second-model review review of the CI move: Lint runs ruff and yamllint in the PR checkout, so a PR can add a ruff.toml (lint.ignore = [\"ALL\"]) or .yamllint and pass its own lint. Rule 15 says a PR cannot weaken the check that judges it. Fix: restore linter config from the base commit before linting, as Secrets does for gitleaks allowlists. Same gap in bryantserver/casa's copy.",
+  "body": "_Recreated from bryantserver/project-rules#8 (issue, opened by cody on 2026-11-16)._\n\nSecond-model review of the CI move: Lint runs ruff and yamllint in the PR checkout, so a PR can add a ruff.toml (lint.ignore = [\"ALL\"]) or .yamllint and pass its own lint. Rule 15 says a PR cannot weaken the check that judges it. Fix: restore linter config from the base commit before linting, as Secrets does for gitleaks allowlists. Same gap in bryantserver/casa's copy.",
   "closed_at": null,
   "comments": [],
   "created_at": "2026-11-16T14:07:22-08:00",
@@ -562,8 +562,30 @@
  {
   "assignees": [],
   "body": "_Recreated from bryantserver/project-rules#22 (issue, opened by cody on 2026-11-16)._\n\nDecisions on #1 (2026-11-16). Steps: build SisyphusMD/project-rules private; first commit by hand folding in project-standard (shared/ copied byte-for-byte, since consumer locks pin SHA-256s); recreate this repo's issues and PRs with the same numbers, project-standard's after them noting old numbers, Renovate bumps as one summary; scan for secrets and names; repoint whiskerless and dreame-valetudo; make public on Cody's yes; annex and GitHub mirrors (GitHub on Cody's yes); bundle and export both old repos, then delete them and their mirrors (GitHub deletion on Cody's yes). Rename the project-issues skill to project-rules.",
-  "closed_at": null,
-  "comments": [],
+  "closed_at": "2026-11-16T22:47:24-08:00",
+  "comments": [
+   {
+    "body": "Status: this repo is public (2026-11-16) and tagged v0.2.0 (156f8c1). Its annex push mirror is live (SisyphusMD/project-rules on forgejo.lan, scoped write:repository token; first sync verified). Consumers re-vendored from v0.2.0 with Renovate pointed here: SisyphusMD/whiskerless#177 and SisyphusMD/dreame-valetudo#279, CI running. The /project-rules skill (renamed from project-issues) and the group maps point here. Next: merge both consumer PRs, then retire SisyphusMD/project-standard (Forgejo, annex, GitHub) and bryantserver/project-rules (Forgejo, annex, its mirror token), each bundled and exported first. Still open: this repo's GitHub read-only mirror, after the maintainer's go-ahead.",
+    "created_at": "2026-11-16T16:27:11-08:00",
+    "id": 35338,
+    "updated_at": "2026-11-16T16:27:11-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Status 2026-11-16: retired. SisyphusMD/project-standard and bryantserver/project-rules are deleted on Forgejo and annex, with the old push-mirror token; full bundles and the issue exports are kept off-repo with restore steps. All consumers moved first: whiskerless#177, dreame-valetudo#279, appliance-job-monitor#4 (v0.2.0), and cody/macos#47 (clones this repo, retires the old checkouts on the Macs). v0.3.0 tagged after #53 and #45. Open: project-standard's GitHub copy and a GitHub read-only mirror of this repo, both waiting on the maintainer. merach-ble (local only, no remote) still vendors from v0.1.28 and moves when it is published.",
+    "created_at": "2026-11-16T19:37:36-08:00",
+    "id": 35494,
+    "updated_at": "2026-11-16T19:37:36-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Done 2026-11-16. project-standard's GitHub copy is deleted (it held nothing Forgejo lacked: no issues, releases or GitHub-only refs). This repo now has a read-only GitHub copy at github.com/SisyphusMD/project-rules (issues, wiki, projects and Actions off; description points here), pushed by a Forgejo SSH push mirror over ssh.github.com:443 with a write deploy key scoped to that repo; first sync matched every ref. Annex backup also live. Nothing left on this issue.",
+    "created_at": "2026-11-16T22:47:24-08:00",
+    "id": 35602,
+    "updated_at": "2026-11-16T22:47:24-08:00",
+    "user": "cody"
+   }
+  ],
   "created_at": "2026-11-16T14:07:29-08:00",
   "kind": "issue",
   "labels": [
@@ -572,7 +594,7 @@
   ],
   "milestone": null,
   "number": 22,
-  "state": "open",
+  "state": "closed",
   "title": "Move to public SisyphusMD/project-rules and retire this repo and project-standard",
   "user": "cody"
  },
@@ -883,7 +905,7 @@
  {
   "assignees": [],
   "body": "_Recreated from SisyphusMD/project-standard#36 (pull request, opened by cody on 2026-11-16). Branch `docs/contribute-on-forgejo` into `main`._\n\nHELD: merge only once sign-in with GitHub is live and tested on Forgejo.\n\nRecords in VARIANCE.md that whiskerless and dreame-valetudo both take issues and pull requests on Forgejo now, with GitHub a read-only mirror for both.\n\n_Still open when project-standard was retired: its change is not in this repo. It lands here as a new pull request that closes this issue._",
-  "closed_at": null,
+  "closed_at": "2026-11-16T18:25:09-08:00",
   "comments": [],
   "created_at": "2026-11-16T14:07:34-08:00",
   "kind": "issue",
@@ -892,14 +914,14 @@
   ],
   "milestone": null,
   "number": 42,
-  "state": "open",
+  "state": "closed",
   "title": "WIP: docs: send issues and pull requests to Forgejo",
   "user": "cody"
  },
  {
   "assignees": [],
   "body": "_Recreated from SisyphusMD/project-standard#37 (pull request, opened by cody on 2026-11-16). Branch `ci/agit-pr-guard` into `main`._\n\nForgejo treats an AGit pull request (pushed to `refs/for/main`, no fork needed) as untrusted and holds its runs for approval, but its payload reports this repository as the head (`head.repo.full_name == github.repository`), so the existing fork gate let it through. When a maintainer acts on an outsider's PR (reopen), Forgejo 17 runs this branch's workflows, with secrets, against the PR's commit (services/actions/trust.go). Outside contributors are about to be able to sign in with GitHub and open AGit PRs, so the gate now also requires `github.event.pull_request.flow == 0`.\n\nProof (throwaway SisyphusMD/agit-guard-proof-20261116): an AGit PR's payload has `flow=1` and head repo = base repo, and the gated job was skipped (run 37485); a branch PR has `flow=0` and the gated job ran (run 37486).\n\nOutside PRs get CI when a maintainer, after reading the diff, pushes the head to a branch here.\n\nCONVENTIONS.md states the gate the same way, so new projects copy the full condition.\n\n_Still open when project-standard was retired: its change is not in this repo. It lands here as a new pull request that closes this issue._",
-  "closed_at": null,
+  "closed_at": "2026-11-16T14:14:50-08:00",
   "comments": [],
   "created_at": "2026-11-16T14:07:35-08:00",
   "kind": "issue",
@@ -908,7 +930,7 @@
   ],
   "milestone": null,
   "number": 43,
-  "state": "open",
+  "state": "closed",
   "title": "ci: keep AGit pull requests off the self-hosted runner (they report this repo as their head, so the fork gate let them through, and a maintainer's reopen runs this branch's workflows with secrets)",
   "user": "cody"
  },
@@ -927,6 +949,289 @@
   "number": 44,
   "state": "closed",
   "title": "Renovate history from project-standard",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "base": "main",
+  "body": "Closes #42\n\nTrigger: the \"Contribution routing\" entry in VARIANCE.md says whiskerless and dreame-valetudo take issues and pull requests on GitHub, because outside contributors had no Forgejo account. Forgejo now lets anyone sign in with a GitHub account, and the GitHub repositories become read-only mirrors.\n\nNow: the entry records both projects as taking issues and pull requests on Forgejo. A fork pull request still never runs CI by itself; a maintainer reads it and reopens it from a branch in the repository, which runs the suite. Doc-only change (VARIANCE.md, 6 lines changed). Same change as the retired project-standard#36.\n\n\nUpdate (2026-11-16, after GitHub sign-in went live):\n- The entry now describes the real flow. Accounts wait for activation and can't fork, so pull requests come in as AGit (`refs/for/main`). Forgejo CI skips them behind the `flow == 0` gate. The maintainer moves a change they have read onto a branch here; reopening the AGit pull request isn't how CI gets run.\n- `templates/CONTRIBUTING.md` gets the same flow in one sentence.\n- Not verified: that an activated outside account can push `refs/for/main`. Cody skipped the test account, so only the push syntax was checked, and that was with a maintainer account on a private repo.",
+  "closed_at": "2026-11-16T18:25:09-08:00",
+  "comments": [
+   {
+    "body": "<!-- ai-review -->\n**AI review** of `376a14a972`: Doc-only change updating VARIANCE.md and templates/CONTRIBUTING.md to record that both projects now route contributions through Forgejo with AGit pull requests. The change is well-scoped to issue #42 and the content is accurate except for one unverified claim already flagged in the prior review.\n\n### Open\n\n- **F1** (suggestion, `templates/CONTRIBUTING.md:6`) AGit push instructions stated as fact but unverified for outside accounts: The template tells contributors to run `git push origin HEAD:refs/for/main -o topic=<short-name>`, and VARIANCE.md states outside contributors \"send AGit pull requests (`refs/for/main`)\" as settled fact. The PR description itself notes: \"Not verified: that an activated outside account can push `refs/for/main`.\" Rule 10 says docs state only what the code guarantees. Either verify the flow with an activated outside account before merging, or add a short caveat (e.g. \"(not yet confirmed for outside accounts)\") so a contributor who hits a permission error knows it is a known gap rather than a mystery.\n  - Reviewer: The PR description is transparent about the gap, which is good, but the shipped docs don't carry that caveat. A contributor following the template's instructions and getting a 403 has no way to tell whether they made a mistake or the flow is untested. A one-line parenthetical in the template and a matching note in VARIANCE.md would satisfy rule 10 without blocking the merge.\n\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W3siaWQiOiAiRjEiLCAiZmlsZSI6ICJ0ZW1wbGF0ZXMvQ09OVFJJQlVUSU5HLm1kIiwgImxpbmUiOiA2LCAic2V2ZXJpdHkiOiAic3VnZ2VzdGlvbiIsICJzdGF0dXMiOiAib3BlbiIsICJ0aXRsZSI6ICJBR2l0IHB1c2ggaW5zdHJ1Y3Rpb25zIHN0YXRlZCBhcyBmYWN0IGJ1dCB1bnZlcmlmaWVkIGZvciBvdXRzaWRlIGFjY291bnRzIiwgImRldGFpbCI6ICJUaGUgdGVtcGxhdGUgdGVsbHMgY29udHJpYnV0b3JzIHRvIHJ1biBgZ2l0IHB1c2ggb3JpZ2luIEhFQUQ6cmVmcy9mb3IvbWFpbiAtbyB0b3BpYz08c2hvcnQtbmFtZT5gLCBhbmQgVkFSSUFOQ0UubWQgc3RhdGVzIG91dHNpZGUgY29udHJpYnV0b3JzIFwic2VuZCBBR2l0IHB1bGwgcmVxdWVzdHMgKGByZWZzL2Zvci9tYWluYClcIiBhcyBzZXR0bGVkIGZhY3QuIFRoZSBQUiBkZXNjcmlwdGlvbiBpdHNlbGYgbm90ZXM6IFwiTm90IHZlcmlmaWVkOiB0aGF0IGFuIGFjdGl2YXRlZCBvdXRzaWRlIGFjY291bnQgY2FuIHB1c2ggYHJlZnMvZm9yL21haW5gLlwiIFJ1bGUgMTAgc2F5cyBkb2NzIHN0YXRlIG9ubHkgd2hhdCB0aGUgY29kZSBndWFyYW50ZWVzLiBFaXRoZXIgdmVyaWZ5IHRoZSBmbG93IHdpdGggYW4gYWN0aXZhdGVkIG91dHNpZGUgYWNjb3VudCBiZWZvcmUgbWVyZ2luZywgb3IgYWRkIGEgc2hvcnQgY2F2ZWF0IChlLmcuIFwiKG5vdCB5ZXQgY29uZmlybWVkIGZvciBvdXRzaWRlIGFjY291bnRzKVwiKSBzbyBhIGNvbnRyaWJ1dG9yIHdobyBoaXRzIGEgcGVybWlzc2lvbiBlcnJvciBrbm93cyBpdCBpcyBhIGtub3duIGdhcCByYXRoZXIgdGhhbiBhIG15c3RlcnkuIiwgInJlc3BvbnNlIjogIlRoZSBQUiBkZXNjcmlwdGlvbiBpcyB0cmFuc3BhcmVudCBhYm91dCB0aGUgZ2FwLCB3aGljaCBpcyBnb29kLCBidXQgdGhlIHNoaXBwZWQgZG9jcyBkb24ndCBjYXJyeSB0aGF0IGNhdmVhdC4gQSBjb250cmlidXRvciBmb2xsb3dpbmcgdGhlIHRlbXBsYXRlJ3MgaW5zdHJ1Y3Rpb25zIGFuZCBnZXR0aW5nIGEgNDAzIGhhcyBubyB3YXkgdG8gdGVsbCB3aGV0aGVyIHRoZXkgbWFkZSBhIG1pc3Rha2Ugb3IgdGhlIGZsb3cgaXMgdW50ZXN0ZWQuIEEgb25lLWxpbmUgcGFyZW50aGV0aWNhbCBpbiB0aGUgdGVtcGxhdGUgYW5kIGEgbWF0Y2hpbmcgbm90ZSBpbiBWQVJJQU5DRS5tZCB3b3VsZCBzYXRpc2Z5IHJ1bGUgMTAgd2l0aG91dCBibG9ja2luZyB0aGUgbWVyZ2UuIn1d -->",
+    "created_at": "2026-11-16T14:11:07-08:00",
+    "id": 35203,
+    "updated_at": "2026-11-16T18:24:35-08:00",
+    "user": "forgejo-actions"
+   }
+  ],
+  "created_at": "2026-11-16T14:08:55-08:00",
+  "head": "refs/pull/45/head",
+  "kind": "pull",
+  "labels": [],
+  "merge_commit_sha": "77782734b8426342ff0ad5651a93174f443845bd",
+  "merged": true,
+  "milestone": null,
+  "number": 45,
+  "reviews": [],
+  "state": "closed",
+  "title": "docs: record that both projects take contributions on Forgejo",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "base": "main",
+  "body": "Closes #43\n\nRe-lands SisyphusMD/project-standard#37 here.\n\nForgejo treats an AGit pull request (pushed to `refs/for/main`, no fork needed) as untrusted and holds its runs for approval, but its payload reports this repository as the head (`head.repo.full_name == github.repository`), so the fork gate in `Tests` let it through. When a maintainer acts on an outsider's PR (reopen), Forgejo 17 runs the base branch's workflows, with secrets, against the PR's commit (services/actions/trust.go). Outside contributors are about to be able to sign in with GitHub and open AGit PRs, so the gate now also requires `github.event.pull_request.flow == 0`.\n\nProof on a throwaway private repo: an AGit PR's payload had `flow=1` with head repo = base repo, and the gated job was skipped on both open and reopen; a branch PR had `flow=0` and the gated job ran.\n\nconventions/shell-and-workflows.md states the gate the same way, so new projects copy the full condition. Only CI config and docs change, so no tests are added; actionlint and the Lint job's yamllint pass locally.",
+  "closed_at": "2026-11-16T14:14:50-08:00",
+  "comments": [
+   {
+    "body": "<!-- ai-review -->\n**AI review** of `71f9c9a878`: Focused security fix adding `flow == 0` to the fork gate in all three jobs of the Tests workflow, preventing AGit PRs (which report the base repo as their head) from running on the self-hosted runner with secrets. Documentation in conventions is updated to match. The fix is correct, properly parenthesized, scoped to the issue, and the CI-config change is appropriately validated by the author's proof on a throwaway repo rather than unit tests.\n\nNo findings.\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W10= -->",
+    "created_at": "2026-11-16T14:11:34-08:00",
+    "id": 35205,
+    "updated_at": "2026-11-16T14:11:34-08:00",
+    "user": "forgejo-actions"
+   }
+  ],
+  "created_at": "2026-11-16T14:09:07-08:00",
+  "head": "refs/pull/46/head",
+  "kind": "pull",
+  "labels": [],
+  "merge_commit_sha": "156f8c1211ca514f86ab02b4ab44ccbe124387eb",
+  "merged": true,
+  "milestone": null,
+  "number": 46,
+  "reviews": [],
+  "state": "closed",
+  "title": "ci: keep AGit pull requests off the self-hosted runner (they report this repo as their head, so the fork gate let them through, and a maintainer's reopen runs this branch's workflows with secrets)",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Found in the second-model review of the first commit. tools/vendor.py writes each vendored file under the consumer checkout, but only checks the final path, not its parents. If a consumer has a directory on the destination path that is a symlink (say packaging/ -> /somewhere), vendoring writes outside the checkout. Fix: resolve every destination and refuse unless it stays under the consumer root, with a test that plants a symlinked parent. Safety-critical code: 100% branch coverage.",
+  "closed_at": null,
+  "comments": [],
+  "created_at": "2026-11-16T14:17:55-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:ready",
+   "type:bug"
+  ],
+  "milestone": null,
+  "number": 47,
+  "state": "open",
+  "title": "vendor.py follows a symlinked parent of a destination",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Found in the second-model review of the first commit. shared/packaging/check-standard-sync.py reports in sync when STANDARD.lock lists no files, so a consumer whose lock was emptied (by mistake or by a PR) passes the drift check with nothing checked. Fix: an empty or missing file list fails, with a test.",
+  "closed_at": null,
+  "comments": [],
+  "created_at": "2026-11-16T14:17:55-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:ready",
+   "type:bug"
+  ],
+  "milestone": null,
+  "number": 48,
+  "state": "open",
+  "title": "check-standard-sync passes on an empty lock",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Found in the second-model review of the first commit. shared/packaging/check-mirror-ci.sh runs curl without --max-time or --connect-timeout, so a hung mirror host stalls the release job until the runner's job timeout. Fix: bounded timeouts and a retry, failing closed, with a test that points it at a port that never answers.",
+  "closed_at": "2026-11-16T18:25:28-08:00",
+  "comments": [
+   {
+    "body": "Obsolete: #53 (merged, 6d37364) deleted check-mirror-ci.sh with the GitHub-runner helpers; its replacement check-forgejo-ci.sh is new code with its own tests.",
+    "created_at": "2026-11-16T18:25:28-08:00",
+    "id": 35434,
+    "updated_at": "2026-11-16T18:25:28-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-16T14:17:56-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:ready",
+   "type:bug"
+  ],
+  "milestone": null,
+  "number": 49,
+  "state": "closed",
+  "title": "check-mirror-ci.sh calls curl with no timeout",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Four comments say the canonical copy lives in bryantserver/project-rules, which is being deleted (#22): .forgejo/scripts/ai-review.py (RULE_FILES), and the headers of .forgejo/workflows/ai-review.yml, ci.yml and issue-archive.yml. Comments only; no logic names the repo.",
+  "closed_at": "2026-11-16T18:05:40-08:00",
+  "comments": [],
+  "created_at": "2026-11-16T17:53:21-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:in-progress",
+   "type:chore"
+  ],
+  "milestone": null,
+  "number": 50,
+  "state": "closed",
+  "title": "Gate scripts and workflows still name bryantserver/project-rules as canonical",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Cody has decided (2026-11-16) that no SisyphusMD job will run on GitHub-hosted runners. The macOS CI, the release builds and the install matrix all move to our own runners, and the GitHub mirrors stop running Actions.\n\nSeveral shared helpers exist only to bridge to GitHub's runners, and they become dead weight once the product repos stop using them:\n- `check-mirror-ci.sh`: waits for GitHub's ci-macos and formula-macos verdict on a SHA.\n- `triage-infra-failure.py`: classifies failures for GitHub's retry-infra-failures workflow.\n- `forgejo-preflight.sh`: lets GitHub-hosted runners probe for a CrowdSec ban on Forgejo.\n- the GitHub half of `check-rc-install-matrix.sh`.\n\n`macos-scope.sh` also has a gap: it treats every `.forgejo/` path as Linux-only. A Renovate branch that changes only `.forgejo/workflows/macos.yml` therefore skips the Mac run that would test that very change.\n\nWanted:\n- a Forgejo-side gate that waits for a workflow's run on a SHA, replacing `check-mirror-ci.sh`;\n- `check-rc-install-matrix.sh` reading the single Forgejo `install-matrix.yml` run for the candidate;\n- the GitHub-only helpers and their tests retired;\n- `macos-scope.sh` running the Mac whenever `macos.yml` changes;\n- docs and VARIANCE updated to match.",
+  "closed_at": "2026-11-16T18:23:49-08:00",
+  "comments": [],
+  "created_at": "2026-11-16T18:01:55-08:00",
+  "kind": "issue",
+  "labels": [],
+  "milestone": null,
+  "number": 51,
+  "state": "closed",
+  "title": "Retire the helpers that bridge to GitHub's runners",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "base": "main",
+  "body": "Closes #50\n\nFour comments named bryantserver/project-rules as the canonical copy of the gate workflows and scripts. It is this repo now, and the old one is being deleted (#22). Comments only.\n\nNo tests: comment-only change; no code path differs.",
+  "closed_at": "2026-11-16T18:05:40-08:00",
+  "comments": [
+   {
+    "body": "<!-- ai-review -->\n**AI review** of `021936aeff`: Clean comment-only change updating four references from the old repo name to the current one, directly addressing issue #50. No code paths are affected and the No-tests justification is valid.\n\nNo findings.\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W10= -->",
+    "created_at": "2026-11-16T18:04:54-08:00",
+    "id": 35403,
+    "updated_at": "2026-11-16T18:04:54-08:00",
+    "user": "forgejo-actions"
+   }
+  ],
+  "created_at": "2026-11-16T18:04:33-08:00",
+  "head": "refs/pull/52/head",
+  "kind": "pull",
+  "labels": [],
+  "merge_commit_sha": "15b1d66567a1e927706f60309e24c61bf621afae",
+  "merged": true,
+  "milestone": null,
+  "number": 52,
+  "reviews": [],
+  "state": "closed",
+  "title": "docs: name this repo as the canonical copy in the gate comments",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "base": "main",
+  "body": "Closes #51\n\nLarge diff: most of it is deletion. Three retired helpers and their tests go (about 1,200 lines). What's added is a replacement gate and two stub-driven test scripts.\n\n**Trigger:** Cody decided on 2026-11-16 that no SisyphusMD job runs on GitHub-hosted runners. These shared helpers existed only to bridge to those runners:\n- `check-mirror-ci.sh` waited for GitHub's ci-macos/formula-macos verdict;\n- `triage-infra-failure.py` drove GitHub's retry-infra-failures workflow;\n- `forgejo-preflight.sh` was the CrowdSec edge-ban probe for GitHub-hosted runners;\n- `check-rc-install-matrix.sh` read the GitHub half of the install matrix.\n\n**What changes:**\n- **`check-forgejo-ci.sh <sha> <workflow-file>`** (new) waits for that workflow's run on that exact commit on Forgejo.\n  - A run counts only if it concluded `success` AND every job in it succeeded. A run whose macOS jobs were scoped out (a Renovate branch) also concludes `success` and tested nothing. cx review reproduced that against whiskerless 7c8605f, and the gate now refuses it; checked live, it rejects 7c8605f and accepts whiskerless main e595096.\n  - A 401/403 fails at once. 5xx and curl failures are retried until the timeout.\n  - The SHA and workflow name are validated before they go into a URL.\n  - `FORGEJO_CI_TOKEN` is optional, since the repos are public.\n- **`check-rc-install-matrix.sh`** is Forgejo only.\n  - Every workflow in `INSTALL_MATRIX_WORKFLOWS` must be green for the newest candidate (default `install-matrix.yml`; a blank list is refused).\n  - The newest-candidate check asks Forgejo's tag refs instead of GitHub's (a 404 there means there are none).\n  - Re-dispatch recognition by job name is unchanged.\n  - Checked live: dreame v0.3.0-rc.50 passes with both of its matrix workflows.\n- **`macos-scope.sh`:** a Renovate branch that touches `.forgejo/workflows/macos.yml` now runs the Mac. Before, all of `.forgejo/` counted as Linux-only, so a bump to the macOS workflow skipped the run that tests it. The GitHub workflow entries are gone from the skip list.\n- **`tools/capability-diff.py`:** drops the GitHub-only probes (ci-pr, infra retry) and adds the AGit trust gate. It currently flags dreame, whose AGit guard #275 hasn't merged yet.\n- **VARIANCE.md** records the move.\n\n**Tests:**\n- `shared/tests/release/forgejo-ci.sh` and the new `shared/tests/release/rc-install-matrix.sh` stub curl.\n- `macos-scope.sh`'s test gains the macos.yml cases. The old script fails them, and mutations of the new gate (skipped jobs accepted, workflow-name check removed, 403 retried, workflow filter dropped) are each caught.\n- The consumers run these through their `tests/release/*.sh` loops.\n- Checks run here: pytest, ruff, `tests/test-*.sh`, `shellcheck-all.sh`, the scratch vendor sync. cx review is clean after two rounds of fixes.\n\n**Consumers:** dreame-valetudo and whiskerless re-vendor this once it's tagged, in the PR that moves their macOS gate here.",
+  "closed_at": "2026-11-16T18:23:49-08:00",
+  "comments": [
+   {
+    "body": "<!-- ai-review -->\n**AI review** of `1d101e3bf0`: Well-structured retirement of GitHub-runner helpers with a solid Forgejo replacement gate. Tests are comprehensive and cover the key failure modes (scoped-out runs, credential refusal, stale checkouts, unclassifiable runs). One pre-existing suggestion remains open; one minor inconsistency in the new test file's permissions.\n\n### Open\n\n- **F1** (suggestion, `shared/packaging/check-forgejo-ci.sh:35`) GITHUB_SERVER_URL fallback can silently point at the wrong host: The server default is `${FORGEJO_CI_SERVER:-${GITHUB_SERVER_URL:-https://forgejo.bryantserver.com}}`. `GITHUB_SERVER_URL` is a GitHub Actions built-in (set to `https://github.com` in every GH-hosted job). If this script is ever invoked in a context where that variable lingers and `FORGEJO_CI_SERVER` is unset, it would query `https://github.com/api/v1/repos/…` (not GitHub's real API host), get a 404 or connection error, retry to the deadline, and blame the run. The failure is fail-closed so no bad release ships, but the diagnosis is misleading. Since the PR's premise is that GitHub runners are retired, the fallback is dead weight; dropping it and keeping only `${FORGEJO_CI_SERVER:-https://forgejo.bryantserver.com}` removes the footgun.\n  - Reviewer: Still applies. The PR's own VARIANCE.md entry says \"no job in either project runs on GitHub's runners\" and the GitHub copies are \"read-only mirrors with Actions turned off.\" A fallback that reads a GitHub-Actions-only variable contradicts that premise and creates a silent misdirection path. One-line fix: `server=\"${FORGEJO_CI_SERVER:-https://forgejo.bryantserver.com}\"`.\n- **F2** (suggestion, `shared/tests/release/rc-install-matrix.sh:1`) Test file missing execute bit, inconsistent with siblings: The new test file is created with mode 100644, while every other test in `shared/tests/release/` (including the new `forgejo-ci.sh` in this same PR) is 100755. The documented invocation is `bash \"$t\"` so it works today, but a consumer that iterates with `\"$t\"` or a future `shellcheck-all.sh` that checks the exec bit would trip on it. Add the execute bit (`chmod +x`) to match the directory's convention.\n\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W3siaWQiOiAiRjEiLCAiZmlsZSI6ICJzaGFyZWQvcGFja2FnaW5nL2NoZWNrLWZvcmdlam8tY2kuc2giLCAibGluZSI6IDM1LCAic2V2ZXJpdHkiOiAic3VnZ2VzdGlvbiIsICJzdGF0dXMiOiAib3BlbiIsICJ0aXRsZSI6ICJHSVRIVUJfU0VSVkVSX1VSTCBmYWxsYmFjayBjYW4gc2lsZW50bHkgcG9pbnQgYXQgdGhlIHdyb25nIGhvc3QiLCAiZGV0YWlsIjogIlRoZSBzZXJ2ZXIgZGVmYXVsdCBpcyBgJHtGT1JHRUpPX0NJX1NFUlZFUjotJHtHSVRIVUJfU0VSVkVSX1VSTDotaHR0cHM6Ly9mb3JnZWpvLmJyeWFudHNlcnZlci5jb219fWAuIGBHSVRIVUJfU0VSVkVSX1VSTGAgaXMgYSBHaXRIdWIgQWN0aW9ucyBidWlsdC1pbiAoc2V0IHRvIGBodHRwczovL2dpdGh1Yi5jb21gIGluIGV2ZXJ5IEdILWhvc3RlZCBqb2IpLiBJZiB0aGlzIHNjcmlwdCBpcyBldmVyIGludm9rZWQgaW4gYSBjb250ZXh0IHdoZXJlIHRoYXQgdmFyaWFibGUgbGluZ2VycyBhbmQgYEZPUkdFSk9fQ0lfU0VSVkVSYCBpcyB1bnNldCwgaXQgd291bGQgcXVlcnkgYGh0dHBzOi8vZ2l0aHViLmNvbS9hcGkvdjEvcmVwb3MvXHUyMDI2YCAobm90IEdpdEh1YidzIHJlYWwgQVBJIGhvc3QpLCBnZXQgYSA0MDQgb3IgY29ubmVjdGlvbiBlcnJvciwgcmV0cnkgdG8gdGhlIGRlYWRsaW5lLCBhbmQgYmxhbWUgdGhlIHJ1bi4gVGhlIGZhaWx1cmUgaXMgZmFpbC1jbG9zZWQgc28gbm8gYmFkIHJlbGVhc2Ugc2hpcHMsIGJ1dCB0aGUgZGlhZ25vc2lzIGlzIG1pc2xlYWRpbmcuIFNpbmNlIHRoZSBQUidzIHByZW1pc2UgaXMgdGhhdCBHaXRIdWIgcnVubmVycyBhcmUgcmV0aXJlZCwgdGhlIGZhbGxiYWNrIGlzIGRlYWQgd2VpZ2h0OyBkcm9wcGluZyBpdCBhbmQga2VlcGluZyBvbmx5IGAke0ZPUkdFSk9fQ0lfU0VSVkVSOi1odHRwczovL2Zvcmdlam8uYnJ5YW50c2VydmVyLmNvbX1gIHJlbW92ZXMgdGhlIGZvb3RndW4uIiwgInJlc3BvbnNlIjogIlN0aWxsIGFwcGxpZXMuIFRoZSBQUidzIG93biBWQVJJQU5DRS5tZCBlbnRyeSBzYXlzIFwibm8gam9iIGluIGVpdGhlciBwcm9qZWN0IHJ1bnMgb24gR2l0SHViJ3MgcnVubmVyc1wiIGFuZCB0aGUgR2l0SHViIGNvcGllcyBhcmUgXCJyZWFkLW9ubHkgbWlycm9ycyB3aXRoIEFjdGlvbnMgdHVybmVkIG9mZi5cIiBBIGZhbGxiYWNrIHRoYXQgcmVhZHMgYSBHaXRIdWItQWN0aW9ucy1vbmx5IHZhcmlhYmxlIGNvbnRyYWRpY3RzIHRoYXQgcHJlbWlzZSBhbmQgY3JlYXRlcyBhIHNpbGVudCBtaXNkaXJlY3Rpb24gcGF0aC4gT25lLWxpbmUgZml4OiBgc2VydmVyPVwiJHtGT1JHRUpPX0NJX1NFUlZFUjotaHR0cHM6Ly9mb3JnZWpvLmJyeWFudHNlcnZlci5jb219XCJgLiJ9LCB7ImlkIjogIkYyIiwgImZpbGUiOiAic2hhcmVkL3Rlc3RzL3JlbGVhc2UvcmMtaW5zdGFsbC1tYXRyaXguc2giLCAibGluZSI6IDEsICJzZXZlcml0eSI6ICJzdWdnZXN0aW9uIiwgInN0YXR1cyI6ICJvcGVuIiwgInRpdGxlIjogIlRlc3QgZmlsZSBtaXNzaW5nIGV4ZWN1dGUgYml0LCBpbmNvbnNpc3RlbnQgd2l0aCBzaWJsaW5ncyIsICJkZXRhaWwiOiAiVGhlIG5ldyB0ZXN0IGZpbGUgaXMgY3JlYXRlZCB3aXRoIG1vZGUgMTAwNjQ0LCB3aGlsZSBldmVyeSBvdGhlciB0ZXN0IGluIGBzaGFyZWQvdGVzdHMvcmVsZWFzZS9gIChpbmNsdWRpbmcgdGhlIG5ldyBgZm9yZ2Vqby1jaS5zaGAgaW4gdGhpcyBzYW1lIFBSKSBpcyAxMDA3NTUuIFRoZSBkb2N1bWVudGVkIGludm9jYXRpb24gaXMgYGJhc2ggXCIkdFwiYCBzbyBpdCB3b3JrcyB0b2RheSwgYnV0IGEgY29uc3VtZXIgdGhhdCBpdGVyYXRlcyB3aXRoIGBcIiR0XCJgIG9yIGEgZnV0dXJlIGBzaGVsbGNoZWNrLWFsbC5zaGAgdGhhdCBjaGVja3MgdGhlIGV4ZWMgYml0IHdvdWxkIHRyaXAgb24gaXQuIEFkZCB0aGUgZXhlY3V0ZSBiaXQgKGBjaG1vZCAreGApIHRvIG1hdGNoIHRoZSBkaXJlY3RvcnkncyBjb252ZW50aW9uLiIsICJyZXNwb25zZSI6ICIifV0= -->",
+    "created_at": "2026-11-16T18:18:16-08:00",
+    "id": 35421,
+    "updated_at": "2026-11-16T18:23:25-08:00",
+    "user": "forgejo-actions"
+   }
+  ],
+  "created_at": "2026-11-16T18:15:39-08:00",
+  "head": "refs/pull/53/head",
+  "kind": "pull",
+  "labels": [],
+  "merge_commit_sha": "6d373643bc774f252b12bcf681989f23e3872e75",
+  "merged": true,
+  "milestone": null,
+  "number": 53,
+  "reviews": [],
+  "state": "closed",
+  "title": "feat(shared): gate releases on Forgejo's macOS run and retire the GitHub-runner helpers",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "From a house-model review on 2026-11-16, confirmed on main: ai-review.py:243 takes STATE_RE.search (first match), while render() writes the real state line last, after model-supplied finding text that is not escaped. A forged `<!-- ai-review-state ... -->` echoed into a finding comes first and replaces prior, so open blocking findings are forgotten on the next run. Fix: take the last match (or put the state line first) and escape `<!--` in model strings. Test: a body with a forged marker ahead of the real one keeps the real state.",
+  "closed_at": null,
+  "comments": [],
+  "created_at": "2026-11-16T19:37:16-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:ready",
+   "type:bug"
+  ],
+  "milestone": null,
+  "number": 54,
+  "state": "open",
+  "title": "AI review reads its saved state from the first marker, so model-echoed text can wipe carried findings",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "From a house-model review on 2026-11-16, confirmed on main: the status goes to pending first and only paths inside the try clear it. The job has timeout-minutes: 20 but ask_model may wait 900 s plus API calls, so a slow model gets the job killed with the check left pending; binascii.Error from a trimmed state marker is not caught; and the final set_status calls are unguarded. A pending required check blocks every merge until break-glass. Fix: job timeout above the script's worst case, catch everything at the top to set error, guard the terminal set_status. Tests for each path.",
+  "closed_at": null,
+  "comments": [],
+  "created_at": "2026-11-16T19:37:17-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:ready",
+   "type:bug"
+  ],
+  "milestone": null,
+  "number": 55,
+  "state": "open",
+  "title": "AI review can leave its required check stuck at pending",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "From a house-model review on 2026-11-16, confirmed on main: issue-archive.yml:26 runs `git config --global http.extraHeader \"Authorization: Basic ...\"`, so the token rides on every host git contacts for the life of that runner home, and user.name/email stay set. ci.yml already scopes it per command (`git -c http.extraHeader=...`); do the same here, or scope it to the Forgejo URL.",
+  "closed_at": null,
+  "comments": [],
+  "created_at": "2026-11-16T19:37:17-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:ready",
+   "type:bug"
+  ],
+  "milestone": null,
+  "number": 56,
+  "state": "open",
+  "title": "issue-archive puts the job token in a global git header",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "From a house-model review on 2026-11-16. tests.yml gates on `flow == 0` (#43) because an AGit PR reports this repo as its head. ci.yml and ai-review.yml are pull_request_target with no such gate, on the same runners, and ai-review holds ISSUE_READ_TOKEN in private repos. They run main's scripts and only read PR files (ruff, yamllint and gitleaks over the head; the model reads the diff), never execute them, which is why this may be fine. Record the reasoning in conventions/shell-and-workflows.md either way, and if a gate is added, make tools/capability-diff.py check the flow half too.",
+  "closed_at": null,
+  "comments": [],
+  "created_at": "2026-11-16T19:37:17-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:needs-decision",
+   "type:decision"
+  ],
+  "milestone": null,
+  "number": 57,
+  "state": "open",
+  "title": "Decide whether ci.yml and ai-review.yml need the AGit gate tests.yml has",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "From a house-model review on 2026-11-16: (1) ai-review.py interpolates human reply bodies uncapped, while everything else in the prompt is capped; cap them, oldest dropped first. (2) ask_model ignores finish_reason, so a length cut shows up as a JSON parse error; name the cause. (3) ai-review.yml's checkout has no ref and no persist-credentials: false, unlike ci.yml; pin the base sha explicitly. Smaller: workflows declare no permissions, checkout pins lack version comments and renovate markers, ai-review.yml hardcodes forgejo-actions while BOT_LOGIN is configurable, a bool passes the line-number check, and a closed PR keeps a stale status. Coverage for the gate scripts is #9.",
+  "closed_at": null,
+  "comments": [],
+  "created_at": "2026-11-16T19:37:17-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:ready",
+   "type:chore"
+  ],
+  "milestone": null,
+  "number": 58,
+  "state": "open",
+  "title": "AI review robustness: bound human replies, report truncated answers, pin the checkout ref",
   "user": "cody"
  }
 ]

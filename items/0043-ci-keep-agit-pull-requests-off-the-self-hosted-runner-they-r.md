@@ -1,6 +1,6 @@
 # #43 ci: keep AGit pull requests off the self-hosted runner (they report this repo as their head, so the fork gate let them through, and a maintainer's reopen runs this branch's workflows with secrets)
 
-- Kind: issue, state: open, by cody, created 2026-11-16T14:07:35-08:00
+- Kind: issue, state: closed, by cody, created 2026-11-16T14:07:35-08:00
 - Labels: pr-record; milestone: none
 
 _Recreated from SisyphusMD/project-standard#37 (pull request, opened by cody on 2026-11-16). Branch `ci/agit-pr-guard` into `main`._
