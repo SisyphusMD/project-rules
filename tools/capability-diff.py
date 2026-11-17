@@ -54,13 +54,10 @@ PROBES: dict[str, tuple[str, str]] = {
     # failed upload to one registry is otherwise permanent and silent.
     "cross-registry reconcile": (r"present", "reconcile"),
     "multi-distro install matrix": (r"present", "install_matrix"),
-    # Retrying a GitHub runner that died in `Set up job`, before any of our steps ran. Nothing
-    # project-specific about it, and re-running by hand trains people to re-run red builds.
-    "automatic infra-failure retry": (r"present", "infra_retry"),
-    # The gate SKIPS a fork PR so untrusted code never runs beside release credentials. That is
-    # only half the answer: without a mirror workflow the contributor then gets no checks at all.
-    "PR CI for outside contributors": (r"present", "pr_ci"),
+    # The gate SKIPS a fork PR so untrusted code never runs beside release credentials.
     "fork-PR trust gate": (r"head\.repo\.full_name\s*==\s*github\.repository", "workflows"),
+    # An AGit PR reports this repo as its head, so the fork gate alone lets it through.
+    "AGit-PR trust gate": (r"pull_request\.flow\s*==\s*0", "workflows"),
     # --- product surface, not just infrastructure. The first inventory stopped at channels and
     # gates, which is why UX and safety differences stayed invisible.
     # Not that a CONTRIBUTING file exists — that it names what will not be broken. Without it
@@ -98,12 +95,8 @@ PROBES: dict[str, tuple[str, str]] = {
 # Some probes are about a file EXISTING rather than a pattern appearing.
 PRESENCE = {
     "contributing": ("CONTRIBUTING.md",),
-    # The FILE, not a mention of it: prose describing the workflow is not the workflow, and a probe
-    # that reads file contents happily matches the sentence in CONTRIBUTING.md that documents it.
-    "pr_ci": (".github/workflows/ci-pr.yml",),
     "install_matrix": (".forgejo/workflows/install-matrix.yml",),
     "reconcile": ("packaging/reconcile-releases.sh",),
-    "infra_retry": (".github/workflows/retry-infra-failures.yml",),
     "issue_templates": (".github/ISSUE_TEMPLATE",),
 }
 #: scope -> the single file to read, for probes about one document's contents.
