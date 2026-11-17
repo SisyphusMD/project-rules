@@ -6,6 +6,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- `SECURITY.md`: vulnerabilities are reported privately to security@bryantserver.com, and
+  `templates/SECURITY.md` is the copy every repo carries (#62).
 - Rule 9: no AI attribution in commits, pull requests or comments, and the CONTRIBUTING
   template says so (#80). Repos pick it up when they next copy `RULES.md`; an existing
   `CONTRIBUTING.md` takes the line by hand.
