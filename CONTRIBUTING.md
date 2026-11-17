@@ -18,6 +18,22 @@ maintainer's decision recorded on that issue.
 The standard set from the rules, plus the `Tests` workflow: lint and unit tests, shell scripts, and
 a scratch vendor that `tools/check.py` must report in sync.
 
+## Releases
+
+Consumers pin a tag (`STANDARD.lock`, `release-pins.env`), so a release is a tag on `main`. In the
+pull request before it, move the `Unreleased` entries in `CHANGELOG.md` under the new version and
+set the same version in `pyproject.toml`; tag `vX.Y.Z` once it merges. A test holds the two files
+to the same version, and the tag's Tests run checks the tag against them.
+
 ## Break-glass
 
 As in the rules.
+
+## License
+
+MIT. The consumers are the SisyphusMD projects, which copy files from `shared/` and `.forgejo/`
+into their own trees: whiskerless and appliance-job-monitor are MIT, dreame-valetudo is
+GPL-3.0-or-later. A vendored file has to sit under either licence without changing it, and only a
+permissive licence does that; MIT matches the majority of the consumers. Anyone adopting these
+rules for their own project copies them the same way, so the same reasoning holds for them. No
+third-party code ships here: CI only runs third-party tools and images, pinned, and links none.

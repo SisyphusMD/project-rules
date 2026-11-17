@@ -53,6 +53,8 @@ jobs:
         # failure downstream, into a repo whose author did not write the file.
         run: ruff check $(git ls-files '*.py' | tr '\n' ' ')
       - name: Test
+        env:
+          RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || '' }}
         run: pytest -q tests/
 
   hygiene:
