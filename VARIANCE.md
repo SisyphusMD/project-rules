@@ -371,8 +371,8 @@ variance, recorded above under *Layout and dependencies*.
 
 Both lint and shellcheck **discover** their inputs (`git ls-files`) rather than enumerating them.
 Both previously used hand-maintained lists, and in both a newly added file went unchecked with no
-symptom. Every ruff invocation — CI, fork-PR CI, the release and prerelease gates, and native macOS
-CI where it lints — is the same line in both projects: `ruff check $(git ls-files '*.py' | tr '\n' ' ')`.
+symptom. Every ruff invocation — CI, the release and prerelease gates, and the macOS jobs
+where they lint — is the same line in both projects: `ruff check $(git ls-files '*.py' | tr '\n' ' ')`.
 The release gates were the last to converge; they linted a fixed directory list, so a release could
 pass on less than CI held `main` to. An exclusion lives in `pyproject.toml` (`extend-exclude`, made
 binding on named files by `force-exclude = true` in both). Dreame's one, `docs/research/tools/`, is
@@ -398,7 +398,7 @@ Dreame `rc.13`. Neither fix reached the other until this audit.
 | Cost | Held back on an old PyInstaller; needed a standing watch script | No single-file Linux download; ships bundle trees inside packages |
 
 **Neither fix is load-bearing any more.** Both projects now build each architecture on its own
-hardware — amd64 on the Forgejo runner, arm64 on GitHub's native arm runner, nothing emulated
+hardware — amd64 on the Forgejo runner, arm64 on our own arm64 Linux runner, nothing emulated
 anywhere — and a natively-built onefile app's parent is the app. The bug cannot occur. So the pin is
 gone from Whiskerless along with its watch script, and PyInstaller tracks upstream in both.
 
@@ -497,8 +497,13 @@ Intel Macs were then dropped from both entirely on 2026-10-28: no Intel `.pkg`, 
 `ci-macos.yml`, `formula-macos.yml`, `release-macos.yml` or `install-matrix.yml`. The trigger was
 the formula smoke, where a Whiskerless Intel lane compiling rust and llvm ran past GitHub's six-hour
 job limit; Homebrew treats Intel as Tier 3, macOS 26 is Apple's last Intel release, and GitHub
-retires its Intel runners in 2027. `test_github_workflows_have_no_intel_runners` holds both repos
-to it. Runtime install detection still knows Intel Homebrew's `/usr/local` prefix, because such
+retires its Intel runners in 2027. Both repos' invariant tests hold them to it.
+
+Since 2026-11-16 no job in either project runs on GitHub's runners: the macOS legs run in our own
+macOS 15 and macOS 27 VMs, the arm64 Linux legs on our own arm64 runner, and the GitHub copies are
+read-only mirrors with Actions turned off. The helpers that bridged to GitHub's runners
+(`check-mirror-ci.sh`, `triage-infra-failure.py`, `forgejo-preflight.sh`) are retired;
+`check-forgejo-ci.sh` gates a release on the macOS run instead. Runtime install detection still knows Intel Homebrew's `/usr/local` prefix, because such
 installs survive on users' machines.
 
 **The benefit is not equal, and pretending otherwise would be the dishonest version of parity:**
