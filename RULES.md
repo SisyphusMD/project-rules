@@ -4,7 +4,7 @@ These rules apply to every SisyphusMD repository, public or private, and to ever
 one: the maintainer, agents working for the maintainer, and outside contributors. A repo's
 `CONTRIBUTING.md` adds what is specific to it (how to run its tests, what counts as a test there,
 its safety-critical code). It never loosens a rule; exceptions are listed at the end of this file
-and nowhere else. How code, tests and docs are written is in [conventions/](conventions/).
+and nowhere else. How code, tests and docs are written is in [conventions/][conventions].
 
 ## Issues and decisions
 
@@ -50,7 +50,7 @@ and nowhere else. How code, tests and docs are written is in [conventions/](conv
     without the fix: run it against the old code, then the new, and check the failure comes
     from the defect, not broken setup. Assert what the real code produces, not a value the
     test or its mock supplied. Pin time zones and env flags the test depends on. A check that
-    has never been seen to fail is not evidence ([conventions/code.md](conventions/code.md)).
+    has never been seen to fail is not evidence ([conventions/code.md][code]).
 13. **Coverage stays at 99%** (branch coverage) overall and **100%** on the safety-critical
     code the repo's `CONTRIBUTING.md` names. `# pragma: no cover` needs a reason on its line.
     Where code can only be tested on real hardware, `CONTRIBUTING.md` says what counts as its
@@ -88,8 +88,9 @@ and nowhere else. How code, tests and docs are written is in [conventions/](conv
     backup forge, synced on every commit, and a nightly `issue-archive` branch that carries its
     issues and PRs there too, because mirrors carry git only. A public repo's GitHub copy is a
     read-only mirror: issues and pull requests are opened on Forgejo.
-22. **A `CONTRIBUTING.md`** that points here, from [templates/CONTRIBUTING.md](templates/CONTRIBUTING.md),
-    and a synced copy of this file at `.forgejo/RULES.md`, which the AI review reads.
+22. **A `CONTRIBUTING.md`** that points here, from
+    [templates/CONTRIBUTING.md][contributing-template], and a synced copy of this file at
+    `.forgejo/RULES.md`, which the AI review reads.
 23. **A public repo's checks never see private data.** Its CI reads other repos anonymously, so
     a linked private issue is reported as not found rather than quoted in a public log or
     review.
@@ -103,3 +104,9 @@ A PR to this repo that closes an issue here, with the maintainer's decision reco
 | Who or what | Exception | Decided |
 | --- | --- | --- |
 | _none yet_ | | |
+
+<!-- Absolute, not relative: every repo carries this file as .forgejo/RULES.md, where a relative
+     link points at nothing. tests/test_rules_links.py checks that this repo's targets exist. -->
+[conventions]: https://forgejo.bryantserver.com/SisyphusMD/project-rules/src/branch/main/conventions/
+[code]: https://forgejo.bryantserver.com/SisyphusMD/project-rules/src/branch/main/conventions/code.md
+[contributing-template]: https://forgejo.bryantserver.com/SisyphusMD/project-rules/src/branch/main/templates/CONTRIBUTING.md
