@@ -32,7 +32,8 @@
    name Forgejo reports (`CI / <job> (pull_request_target)`, `AI review`). A
    `pull_request_target` workflow does not run on the PR that adds it, so prove each new check
    on the next PR, one passing run and one deliberate failure, before requiring it. A
-   misnamed required check blocks every PR.
+   misnamed required check blocks every PR. Set up [releases from protected main](releasing.md)
+   before blocking direct pushes on a repository that publishes releases.
 6. Leave `issue-archive` unprotected: Forgejo refuses the Actions token's push to a protected
    branch, and the branch is regenerated nightly.
 7. **Vendoring**, for a project that ships releases: run `tools/vendor.py` against it, write its
