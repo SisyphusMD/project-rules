@@ -97,7 +97,7 @@ PRESENCE = {
     "contributing": ("CONTRIBUTING.md",),
     "install_matrix": (".forgejo/workflows/install-matrix.yml",),
     "reconcile": ("packaging/reconcile-releases.sh",),
-    "issue_templates": (".github/ISSUE_TEMPLATE",),
+    "issue_templates": (".github/ISSUE_TEMPLATE", ".forgejo/issue_template"),
 }
 #: scope -> the single file to read, for probes about one document's contents.
 SINGLE_FILE = {"changelog": "CHANGELOG.md", "pyproject": "pyproject.toml",
