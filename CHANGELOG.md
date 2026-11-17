@@ -6,6 +6,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- CI `Secrets` scans only the PR head's history, so issue text copied into the nightly
+  `issue-archive` branch no longer fails every PR (#69).
 - `SECURITY.md`: vulnerabilities are reported privately to security@bryantserver.com, and
   `templates/SECURITY.md` is the copy every repo carries (#62).
 - Rule 9: no AI attribution in commits, pull requests or comments, and the CONTRIBUTING
