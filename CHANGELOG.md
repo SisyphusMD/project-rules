@@ -6,6 +6,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-17
+
 - Document the two-step stable release flow and verify and tag the exact merged release PR. (#86)
 - Tests reject weakened AGit and fork workflow conditions. The CONTRIBUTING template tells
   maintainers how to run the full suite on a branch PR after reviewing the change (#90).
@@ -49,6 +51,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - AGit pull requests no longer run on the self-hosted runner: they report this repository as
   their head, so the fork gate let them through (#46).
 
-[Unreleased]: https://forgejo.bryantserver.com/SisyphusMD/project-rules/compare/v0.3.0...main
+[Unreleased]: https://forgejo.bryantserver.com/SisyphusMD/project-rules/compare/v0.3.1...main
+[0.3.1]: https://forgejo.bryantserver.com/SisyphusMD/project-rules/compare/v0.3.0...v0.3.1
 [0.3.0]: https://forgejo.bryantserver.com/SisyphusMD/project-rules/compare/v0.2.0...v0.3.0
 [0.2.0]: https://forgejo.bryantserver.com/SisyphusMD/project-rules/src/tag/v0.2.0

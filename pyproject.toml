@@ -7,7 +7,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "project-rules"
-version = "0.3.0"
+version = "0.3.1"
 description = "How SisyphusMD projects are run, and the shared tooling that holds them to it"
 readme = "README.md"
 license = "MIT"
