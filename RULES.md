@@ -38,7 +38,11 @@ and nowhere else. How code, tests and docs are written is in [conventions/][conv
    (generated code, for one), which the AI review judges.
 9. **Describe the actual change.** Lead with the trigger, what went wrong and what happens
    now; say what the new test rejects, not how many tests passed. No stock intros, summaries
-   or claims like "improves reliability" without the specific behaviour.
+   or claims like "improves reliability" without the specific behaviour. **No AI attribution**:
+   commit messages and trailers, PR titles and descriptions, and issue and PR comments carry no
+   `Co-Authored-By` for an assistant, no "Generated with …" line, no 🤖 and no AI tool named as
+   an author. Whoever submits the change is its author and answers for every line. The required
+   AI review's own comments and a rule 2 `Technical call:` label are not attribution.
 10. **Docs change in the same PR** as the behaviour they describe. Comments and docs state only
     what the code guarantees: limits as upper bounds, no timing the code does not enforce.
 11. **Run the repo's declared checks before opening the PR**, plus the linter for each changed
