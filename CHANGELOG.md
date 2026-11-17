@@ -6,6 +6,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Rule 9: no AI attribution in commits, pull requests or comments, and the CONTRIBUTING
+  template says so (#80). Repos pick it up when they next copy `RULES.md`; an existing
+  `CONTRIBUTING.md` takes the line by hand.
 - `RULES.md` links to the conventions and the CONTRIBUTING template by absolute URL, so a
   repo's `.forgejo/RULES.md` copy no longer fails its doc-link check (#77).
 - `LICENSE` (MIT), this changelog, and SPDX licence metadata and project URLs in
