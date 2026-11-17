@@ -99,7 +99,7 @@ def changed_files(diff):
 
 
 REF = re.compile(r"(?i)\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?|refs?):?\s+(?:([\w.-]+/[\w.-]+))?#(\d+)\b")
-# Project rules: RULES.md in bryantserver/project-rules itself, a synced copy everywhere else.
+# Project rules: RULES.md in SisyphusMD/project-rules itself, a synced copy everywhere else.
 RULE_FILES = (("Project rules", (".forgejo/RULES.md", "RULES.md")),
               ("CONTRIBUTING.md", ("CONTRIBUTING.md",)),
               ("README.md (what the project is)", ("README.md",)))
