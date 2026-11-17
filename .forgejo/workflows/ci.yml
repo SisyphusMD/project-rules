@@ -1,7 +1,7 @@
 # PR checks for issue-first repos; main's protection rule requires every job.
 # pull_request_target runs this file from main, not from the PR, so a PR cannot weaken a check
 # by editing it. Jobs check out the PR head only as data (lint, scan, diff); none runs its code.
-# Canonical copy: bryantserver/project-rules; repos get a copy.
+# Canonical copy: SisyphusMD/project-rules; repos get a copy.
 name: CI
 on:
   pull_request_target:
