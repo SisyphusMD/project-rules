@@ -284,12 +284,16 @@ collision, and it is what the rest of this table should eventually look like.
 | | Whiskerless | Dreame Valetudo |
 |---|---|---|
 | Issues and PRs | **Forgejo** — sign in with GitHub; the GitHub mirror (which HACS installs from) is read-only | **Forgejo** — sign in with GitHub; the GitHub mirror is read-only |
-| Fork-PR CI | Forgejo CI, once a maintainer has read the change and reopened it from a branch here | Forgejo CI, the same way |
+| Outside-PR CI | Nothing from the pull request's own tree and nothing on the self-hosted runners; the full suite once a maintainer has read the change and pushed it to a branch here | The same |
 
-Both projects' Forgejo CI holds a fork PR behind the same trust gate, because that runner holds
-release credentials. This entry once recorded both as GitHub-routed with `ci-pr.yml` testing fork
-PRs on GitHub-hosted runners; contributions moved to Forgejo when it opened sign-in with GitHub
-accounts, and GitHub became a read-only mirror for both.
+Since 2026-11-16, outside contributors sign in with GitHub, wait for a maintainer to activate the
+account, and send AGit pull requests (`refs/for/main`); new accounts cannot create repositories, so
+there are no forks. Both projects' Forgejo CI skips an AGit pull request behind the same trust gate
+(`pull_request.flow == 0`), because those runners are trusted with release credentials. The
+maintainer moves a change they have read onto a branch here and opens it from there, rather than
+reopening the AGit pull request, which would still be AGit. Until then this entry recorded both as
+GitHub-routed, with `ci-pr.yml` testing fork PRs on GitHub-hosted runners; GitHub is now a
+read-only mirror for both.
 
 ### Coverage floors — now converged
 

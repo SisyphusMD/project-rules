@@ -3,8 +3,10 @@
 This repo follows the SisyphusMD project rules:
 https://forgejo.bryantserver.com/SisyphusMD/project-rules/src/branch/main/RULES.md
 
-Read them first. Issues and pull requests are opened on Forgejo. This file adds only what is
-specific to this repo and never loosens the rules.
+Read them first. Issues and pull requests are opened on Forgejo, where you can sign in with GitHub.
+A new account waits for a maintainer to activate it and cannot fork, so pull requests are sent with
+AGit: `git push origin HEAD:refs/for/main -o topic=<short-name>` from a Forgejo clone. This file
+adds only what is specific to this repo and never loosens the rules.
 
 ## Tests
 
