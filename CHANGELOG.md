@@ -6,6 +6,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Document the two-step stable release flow and verify and tag the exact merged release PR. (#86)
 - Tests reject weakened AGit and fork workflow conditions. The CONTRIBUTING template tells
   maintainers how to run the full suite on a branch PR after reviewing the change (#90).
 - Release-helper comments describe the current Forgejo build and publication flow (#91).
