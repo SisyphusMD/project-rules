@@ -1,3 +1,25 @@
+# Metadata only: nothing installs or builds this repository. Consumers take files by tag through
+# tools/vendor.py. The backend is named so a tool that reads this file does not fall back to a
+# setuptools that rejects `license-files`.
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "project-rules"
+version = "0.3.0"
+description = "How SisyphusMD projects are run, and the shared tooling that holds them to it"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Cody Bryant" }]
+
+[project.urls]
+Homepage = "https://forgejo.bryantserver.com/SisyphusMD/project-rules"
+Source = "https://forgejo.bryantserver.com/SisyphusMD/project-rules"
+Issues = "https://forgejo.bryantserver.com/SisyphusMD/project-rules/issues"
+Changelog = "https://forgejo.bryantserver.com/SisyphusMD/project-rules/src/branch/main/CHANGELOG.md"
+
 # The standard's own lint settings. Deliberately the UNION of both consumers' rule sets, because a
 # vendored file has to pass in whichever repo it lands in — linting here with anything weaker just
 # moves the failure downstream.
