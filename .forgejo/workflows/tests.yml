@@ -46,7 +46,9 @@ jobs:
           RUFF: "0.17.5"
           # renovate: datasource=pypi depName=pytest
           PYTEST: "9.2.0"
-        run: python3 -m pip install --upgrade "ruff==$RUFF" "pytest==$PYTEST"
+          # renovate: datasource=pypi depName=pyyaml
+          PYYAML: "6.0.3"
+        run: python3 -m pip install --upgrade "ruff==$RUFF" "pytest==$PYTEST" "pyyaml==$PYYAML"
       - name: Ruff
         # The rules here are the UNION of both consumers', because a vendored file has to pass in
         # whichever repo it lands in. Linting the standard with anything weaker just moves the

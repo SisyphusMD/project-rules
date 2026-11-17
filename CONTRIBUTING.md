@@ -4,9 +4,17 @@ This repo holds the rules, and follows them: [RULES.md](RULES.md). Issues and pu
 opened on Forgejo. A rule change is a pull request that closes an issue here, with the
 maintainer's decision recorded on that issue.
 
+The `Tests` workflow on main skips AGit and fork pull requests. A maintainer
+reads the change, pushes it to a branch here and opens a pull request from
+that branch to run the whole suite. CI and AI review use the workflows on
+main and read the proposed changes as data. See #79 for the limits of the
+gate when a pull request carries a different workflow.
+
 ## Tests
 
-- **Run them**: `python3 -m pytest tests/` and `for t in tests/test-*.sh; do bash "$t"; done`.
+- **Run them**: Install pytest and PyYAML at the versions in
+  [tests.yml](.forgejo/workflows/tests.yml), then run
+  `python3 -m pytest tests/` and `for t in tests/test-*.sh; do bash "$t"; done`.
 - **Safety-critical code** (100% coverage): the gate scripts in `.forgejo/scripts/`, because a
   bug there lets a pull request past a rule in every repo, and `tools/vendor.py` and
   `tools/check.py`, because a bug there lets a vendored copy drift unnoticed.

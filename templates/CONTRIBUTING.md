@@ -5,8 +5,14 @@ https://forgejo.bryantserver.com/SisyphusMD/project-rules/src/branch/main/RULES.
 
 Read them first. Issues and pull requests are opened on Forgejo, where you can sign in with GitHub.
 A new account waits for a maintainer to activate it and cannot fork, so pull requests are sent with
-AGit: `git push origin HEAD:refs/for/main -o topic=<short-name>` from a Forgejo clone. This file
-adds only what is specific to this repo and never loosens the rules. Note rule 9 in particular:
+AGit: `git push origin HEAD:refs/for/main -o topic=<short-name>` from a Forgejo clone.
+
+The repo's test workflows on main skip AGit and fork pull requests. A
+maintainer reads the change, pushes it to a branch here and opens a pull
+request from that branch to run the whole suite. The rules' CI and AI review
+use the workflows on main and read the proposed changes as data.
+
+This file adds only what is specific to this repo and never loosens the rules. Note rule 9:
 no AI attribution, such as a `Co-Authored-By` trailer for an assistant, anywhere in a contribution.
 
 ## Tests
