@@ -62,3 +62,47 @@ Generated nightly from the primary Forgejo; do not edit. `json/` holds the full 
 | 56 | issue | open | [issue-archive puts the job token in a global git header](items/0056-issue-archive-puts-the-job-token-in-a-global-git-header.md) |
 | 57 | issue | open | [Decide whether ci.yml and ai-review.yml need the AGit gate tests.yml has](items/0057-decide-whether-ci-yml-and-ai-review-yml-need-the-agit-gate-t.md) |
 | 58 | issue | open | [AI review robustness: bound human replies, report truncated answers, pin the checkout ref](items/0058-ai-review-robustness-bound-human-replies-report-truncated-an.md) |
+| 59 | issue | closed | [Repo metadata missing: LICENSE, CHANGELOG, SPDX licence and project URLs](items/0059-repo-metadata-missing-license-changelog-spdx-licence-and-pro.md) |
+| 60 | issue | closed | [No Renovate config, so nothing here is ever updated](items/0060-no-renovate-config-so-nothing-here-is-ever-updated.md) |
+| 61 | issue | closed | [No issue templates](items/0061-no-issue-templates.md) |
+| 62 | issue | closed | [Decide where security reports go](items/0062-decide-where-security-reports-go.md) |
+| 63 | pull | closed | [docs: add issue templates and the label set they use](items/0063-docs-add-issue-templates-and-the-label-set-they-use.md) |
+| 64 | pull | closed | [ci: add a Renovate config and make every pin visible to it](items/0064-ci-add-a-renovate-config-and-make-every-pin-visible-to-it.md) |
+| 65 | issue | open | [Template and adoption guide do not ask for LICENSE, CHANGELOG or a licence section](items/0065-template-and-adoption-guide-do-not-ask-for-license-changelog.md) |
+| 66 | pull | closed | [docs: add LICENSE, CHANGELOG and project metadata](items/0066-docs-add-license-changelog-and-project-metadata.md) |
+| 67 | issue | open | [Dependency updates (Renovate)](items/0067-dependency-updates-renovate.md) |
+| 68 | issue | open | [Upstream changelog text in a Renovate PR can fail the issue-link check](items/0068-upstream-changelog-text-in-a-renovate-pr-can-fail-the-issue-.md) |
+| 69 | issue | closed | [Secrets job scans the issue-archive branch and fails every PR on issue text](items/0069-secrets-job-scans-the-issue-archive-branch-and-fails-every-p.md) |
+| 70 | pull | closed | [fix(ci): scan only the PR head history for secrets (#69)](items/0070-fix-ci-scan-only-the-pr-head-history-for-secrets-69.md) |
+| 71 | issue | closed | [Adopt the rules in SisyphusMD/whiskerless](items/0071-adopt-the-rules-in-sisyphusmd-whiskerless.md) |
+| 72 | issue | closed | [Adopt the rules in SisyphusMD/dreame-valetudo](items/0072-adopt-the-rules-in-sisyphusmd-dreame-valetudo.md) |
+| 73 | issue | closed | [Adopt the rules in SisyphusMD/appliance-job-monitor](items/0073-adopt-the-rules-in-sisyphusmd-appliance-job-monitor.md) |
+| 74 | issue | open | [Adopt the rules in SisyphusMD/archiver](items/0074-adopt-the-rules-in-sisyphusmd-archiver.md) |
+| 75 | issue | open | [Adopt the rules in SisyphusMD/GhostSpectator](items/0075-adopt-the-rules-in-sisyphusmd-ghostspectator.md) |
+| 76 | issue | closed | [Adopt the rules in SisyphusMD/homebrew-tap](items/0076-adopt-the-rules-in-sisyphusmd-homebrew-tap.md) |
+| 77 | issue | closed | [RULES.md's relative links break in every consumer's copy](items/0077-rules-md-s-relative-links-break-in-every-consumer-s-copy.md) |
+| 78 | issue | open | [Copied gate files are outside the drift lock](items/0078-copied-gate-files-are-outside-the-drift-lock.md) |
+| 79 | issue | open | [A guard on main does not keep PR code off the runners](items/0079-a-guard-on-main-does-not-keep-pr-code-off-the-runners.md) |
+| 80 | issue | closed | [No AI attribution in commits, pull requests or comments](items/0080-no-ai-attribution-in-commits-pull-requests-or-comments.md) |
+| 81 | issue | open | [Fail CI on AI attribution in commits and PR bodies](items/0081-fail-ci-on-ai-attribution-in-commits-and-pr-bodies.md) |
+| 82 | pull | closed | [docs: make RULES.md links absolute](items/0082-docs-make-rules-md-links-absolute.md) |
+| 83 | pull | closed | [docs: add a security policy every repo carries](items/0083-docs-add-a-security-policy-every-repo-carries.md) |
+| 84 | pull | closed | [docs: ban AI attribution in commits, PRs and comments](items/0084-docs-ban-ai-attribution-in-commits-prs-and-comments.md) |
+| 85 | issue | open | [Copied ci.yml Lint fails in a repo without a ruff config](items/0085-copied-ci-yml-lint-fails-in-a-repo-without-a-ruff-config.md) |
+| 86 | issue | open | [Release push to main conflicts with branch protection](items/0086-release-push-to-main-conflicts-with-branch-protection.md) |
+| 87 | issue | open | [Required checks read PR-controlled config (ruff config, .gitattributes)](items/0087-required-checks-read-pr-controlled-config-ruff-config-gitatt.md) |
+| 88 | issue | closed | [Auto-close pull requests on the GitHub mirrors](items/0088-auto-close-pull-requests-on-the-github-mirrors.md) |
+| 89 | pull | closed | [ci: close pull requests opened on the GitHub mirrors](items/0089-ci-close-pull-requests-opened-on-the-github-mirrors.md) |
+| 90 | issue | closed | [Test the AGit and fork trust gate in tests.yml, and say in CONTRIBUTING that such PRs get no CI](items/0090-test-the-agit-and-fork-trust-gate-in-tests-yml-and-say-in-co.md) |
+| 91 | issue | closed | [fetch-release-assets.sh comment still describes GitHub runners](items/0091-fetch-release-assets-sh-comment-still-describes-github-runne.md) |
+| 92 | issue | open | [AI review counts lockfiles toward its diff limit](items/0092-ai-review-counts-lockfiles-toward-its-diff-limit.md) |
+| 93 | pull | closed | [Describe the Forgejo release and publishing flow](items/0093-describe-the-forgejo-release-and-publishing-flow.md) |
+| 94 | pull | closed | [Check the AGit and fork gate on every pull-request job](items/0094-check-the-agit-and-fork-gate-on-every-pull-request-job.md) |
+| 95 | pull | closed | [Verify and tag the exact merged release pull request](items/0095-verify-and-tag-the-exact-merged-release-pull-request.md) |
+| 96 | issue | closed | [Share verification and tag-only publishing for merged release pull requests](items/0096-share-verification-and-tag-only-publishing-for-merged-releas.md) |
+| 97 | issue | closed | [Prepare project-rules v0.3.1](items/0097-prepare-project-rules-v0-3-1.md) |
+| 98 | pull | closed | [Prepare project-rules v0.3.1](items/0098-prepare-project-rules-v0-3-1.md) |
+| 99 | issue | closed | [Bind published releases to their qualified PR head](items/0099-bind-published-releases-to-their-qualified-pr-head.md) |
+| 100 | pull | closed | [Share verification of the original qualified release candidate](items/0100-share-verification-of-the-original-qualified-release-candida.md) |
+| 101 | issue | closed | [Allow direct sync commits in the private memory repository](items/0101-allow-direct-sync-commits-in-the-private-memory-repository.md) |
+| 102 | pull | closed | [Scope the automatic memory sync exception](items/0102-scope-the-automatic-memory-sync-exception.md) |

@@ -1,0 +1,36 @@
+# #100 Share verification of the original qualified release candidate
+
+- Kind: pull, state: closed, by cody, created 2026-11-17T19:27:20-08:00
+- Labels: none; milestone: none
+- refs/pull/100/head -> main, merged: True
+
+Closes #99.
+
+Bind a new tag to a successful trusted Prepare Release dispatch recording the exact candidate SHA. Document the consumer contract and provide a small shared verifier for the Forgejo API, successful job and exact log record. The existing downstream implementations keep their locked copies until this ships as a new standard release.
+
+101 tests passed and one tag-only check skipped. Ruff and independent review passed.
+
+## forgejo-actions, 2026-11-17T19:30:53-08:00
+
+<!-- ai-review -->
+**AI review** of `78207b7358`: The shared verifier is well-structured, the core `verify` logic is thoroughly tested against realistic Forgejo response shapes, and the docs clearly describe the consumer contract. F1 is resolved by the author's live-API verification. F2 and F3 remain as suggestions for additional coverage of the CLI wrapper, the redirect guard, and two untested guards in `verify`; none are blocking because this file is not named as safety-critical in CONTRIBUTING.md and the vendored-copy drift risk is covered by `tools/check.py`.
+
+### Open
+
+- **F2** (suggestion, `tests/test_verify_release_qualification.py:1`) `main()` and `RejectRedirect` are untested: `RejectRedirect.redirect_request` is a security guard that keeps the read token on the primary; a silent regression (e.g. removing the class or returning a request) would leak the token on a redirect. A one-line test (`assert RejectRedirect().redirect_request(...) is None`) would pin it. `main()` is a thin CLI wrapper and lower risk, but a smoke test with patched `sys.argv`/`os.environ`/`subprocess`/`urllib` would catch argument-handling regressions in the vendored copy. Not blocking: this file is not in the 100%-coverage safety-critical list, and the core `verify` logic is well covered.
+  - Reviewer: Understood that these are not safety-critical per CONTRIBUTING.md and the core logic is tested. I'd still recommend at least the one-line `RejectRedirect` assertion since it is a credential-leak guard that will be vendored into every consumer; a future edit that accidentally removes the `return None` would go unnoticed.
+- **F3** (suggestion, `tests/test_verify_release_qualification.py:47`) No test for `html_url` mismatch or multiple run numbers: The `html_url` equality check (line 37 of the script) and the `len(numbers) != 1` guard for multiple distinct run numbers (line 27) are not exercised. A test that sets `html_url` to a different URL and one that adds a second status with a different run number would cover these. Not blocking for the same reason as F2.
+  - Reviewer: Agreed these are additional guards worth covering. The wrong-repository test partially exercises the URL-prefix path, but the `html_url` equality and multi-number cases are distinct. Suggest adding them when convenient.
+
+### Resolved
+
+- **F1** (suggestion, `shared/packaging/verify-release-qualification.py:37`) `workflow_id` may be a numeric ID in the Forgejo API, not a filename: The author verified on live Forgejo 17.0.1 that `workflow_id` is the filename string (e.g. `release.yml`), matching the test mock. No change needed.
+  - Reviewer: Confirmed by live-API check. Withdrawing.
+
+
+Disagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.
+<!-- ai-review-state W3siaWQiOiAiRjEiLCAiZmlsZSI6ICJzaGFyZWQvcGFja2FnaW5nL3ZlcmlmeS1yZWxlYXNlLXF1YWxpZmljYXRpb24ucHkiLCAibGluZSI6IDM3LCAic2V2ZXJpdHkiOiAic3VnZ2VzdGlvbiIsICJzdGF0dXMiOiAicmVzb2x2ZWQiLCAidGl0bGUiOiAiYHdvcmtmbG93X2lkYCBtYXkgYmUgYSBudW1lcmljIElEIGluIHRoZSBGb3JnZWpvIEFQSSwgbm90IGEgZmlsZW5hbWUiLCAiZGV0YWlsIjogIlRoZSBhdXRob3IgdmVyaWZpZWQgb24gbGl2ZSBGb3JnZWpvIDE3LjAuMSB0aGF0IGB3b3JrZmxvd19pZGAgaXMgdGhlIGZpbGVuYW1lIHN0cmluZyAoZS5nLiBgcmVsZWFzZS55bWxgKSwgbWF0Y2hpbmcgdGhlIHRlc3QgbW9jay4gTm8gY2hhbmdlIG5lZWRlZC4iLCAicmVzcG9uc2UiOiAiQ29uZmlybWVkIGJ5IGxpdmUtQVBJIGNoZWNrLiBXaXRoZHJhd2luZy4ifSwgeyJpZCI6ICJGMiIsICJmaWxlIjogInRlc3RzL3Rlc3RfdmVyaWZ5X3JlbGVhc2VfcXVhbGlmaWNhdGlvbi5weSIsICJsaW5lIjogMSwgInNldmVyaXR5IjogInN1Z2dlc3Rpb24iLCAic3RhdHVzIjogIm9wZW4iLCAidGl0bGUiOiAiYG1haW4oKWAgYW5kIGBSZWplY3RSZWRpcmVjdGAgYXJlIHVudGVzdGVkIiwgImRldGFpbCI6ICJgUmVqZWN0UmVkaXJlY3QucmVkaXJlY3RfcmVxdWVzdGAgaXMgYSBzZWN1cml0eSBndWFyZCB0aGF0IGtlZXBzIHRoZSByZWFkIHRva2VuIG9uIHRoZSBwcmltYXJ5OyBhIHNpbGVudCByZWdyZXNzaW9uIChlLmcuIHJlbW92aW5nIHRoZSBjbGFzcyBvciByZXR1cm5pbmcgYSByZXF1ZXN0KSB3b3VsZCBsZWFrIHRoZSB0b2tlbiBvbiBhIHJlZGlyZWN0LiBBIG9uZS1saW5lIHRlc3QgKGBhc3NlcnQgUmVqZWN0UmVkaXJlY3QoKS5yZWRpcmVjdF9yZXF1ZXN0KC4uLikgaXMgTm9uZWApIHdvdWxkIHBpbiBpdC4gYG1haW4oKWAgaXMgYSB0aGluIENMSSB3cmFwcGVyIGFuZCBsb3dlciByaXNrLCBidXQgYSBzbW9rZSB0ZXN0IHdpdGggcGF0Y2hlZCBgc3lzLmFyZ3ZgL2Bvcy5lbnZpcm9uYC9gc3VicHJvY2Vzc2AvYHVybGxpYmAgd291bGQgY2F0Y2ggYXJndW1lbnQtaGFuZGxpbmcgcmVncmVzc2lvbnMgaW4gdGhlIHZlbmRvcmVkIGNvcHkuIE5vdCBibG9ja2luZzogdGhpcyBmaWxlIGlzIG5vdCBpbiB0aGUgMTAwJS1jb3ZlcmFnZSBzYWZldHktY3JpdGljYWwgbGlzdCwgYW5kIHRoZSBjb3JlIGB2ZXJpZnlgIGxvZ2ljIGlzIHdlbGwgY292ZXJlZC4iLCAicmVzcG9uc2UiOiAiVW5kZXJzdG9vZCB0aGF0IHRoZXNlIGFyZSBub3Qgc2FmZXR5LWNyaXRpY2FsIHBlciBDT05UUklCVVRJTkcubWQgYW5kIHRoZSBjb3JlIGxvZ2ljIGlzIHRlc3RlZC4gSSdkIHN0aWxsIHJlY29tbWVuZCBhdCBsZWFzdCB0aGUgb25lLWxpbmUgYFJlamVjdFJlZGlyZWN0YCBhc3NlcnRpb24gc2luY2UgaXQgaXMgYSBjcmVkZW50aWFsLWxlYWsgZ3VhcmQgdGhhdCB3aWxsIGJlIHZlbmRvcmVkIGludG8gZXZlcnkgY29uc3VtZXI7IGEgZnV0dXJlIGVkaXQgdGhhdCBhY2NpZGVudGFsbHkgcmVtb3ZlcyB0aGUgYHJldHVybiBOb25lYCB3b3VsZCBnbyB1bm5vdGljZWQuIn0sIHsiaWQiOiAiRjMiLCAiZmlsZSI6ICJ0ZXN0cy90ZXN0X3ZlcmlmeV9yZWxlYXNlX3F1YWxpZmljYXRpb24ucHkiLCAibGluZSI6IDQ3LCAic2V2ZXJpdHkiOiAic3VnZ2VzdGlvbiIsICJzdGF0dXMiOiAib3BlbiIsICJ0aXRsZSI6ICJObyB0ZXN0IGZvciBgaHRtbF91cmxgIG1pc21hdGNoIG9yIG11bHRpcGxlIHJ1biBudW1iZXJzIiwgImRldGFpbCI6ICJUaGUgYGh0bWxfdXJsYCBlcXVhbGl0eSBjaGVjayAobGluZSAzNyBvZiB0aGUgc2NyaXB0KSBhbmQgdGhlIGBsZW4obnVtYmVycykgIT0gMWAgZ3VhcmQgZm9yIG11bHRpcGxlIGRpc3RpbmN0IHJ1biBudW1iZXJzIChsaW5lIDI3KSBhcmUgbm90IGV4ZXJjaXNlZC4gQSB0ZXN0IHRoYXQgc2V0cyBgaHRtbF91cmxgIHRvIGEgZGlmZmVyZW50IFVSTCBhbmQgb25lIHRoYXQgYWRkcyBhIHNlY29uZCBzdGF0dXMgd2l0aCBhIGRpZmZlcmVudCBydW4gbnVtYmVyIHdvdWxkIGNvdmVyIHRoZXNlLiBOb3QgYmxvY2tpbmcgZm9yIHRoZSBzYW1lIHJlYXNvbiBhcyBGMi4iLCAicmVzcG9uc2UiOiAiQWdyZWVkIHRoZXNlIGFyZSBhZGRpdGlvbmFsIGd1YXJkcyB3b3J0aCBjb3ZlcmluZy4gVGhlIHdyb25nLXJlcG9zaXRvcnkgdGVzdCBwYXJ0aWFsbHkgZXhlcmNpc2VzIHRoZSBVUkwtcHJlZml4IHBhdGgsIGJ1dCB0aGUgYGh0bWxfdXJsYCBlcXVhbGl0eSBhbmQgbXVsdGktbnVtYmVyIGNhc2VzIGFyZSBkaXN0aW5jdC4gU3VnZ2VzdCBhZGRpbmcgdGhlbSB3aGVuIGNvbnZlbmllbnQuIn1d -->
+
+## cody, 2026-11-17T19:34:33-08:00
+
+F1 verified on the live Forgejo 17.0.1 API. `GET` to the Actions run list with `run_number=49` for appliance-job-monitor returned `workflow_id: release.yml`, `trigger_event: workflow_dispatch`, `status: success`, its exact run URL, and payload `ref: refs/heads/main`. Its jobs endpoint returns an array as the helper expects. Run evidence: https://forgejo.bryantserver.com/SisyphusMD/appliance-job-monitor/actions/runs/49. F2 and F3 are optional coverage suggestions. The current tests exercise the candidate-bound refusal, wrong repository, wrong run metadata, absent results and failed recording job.

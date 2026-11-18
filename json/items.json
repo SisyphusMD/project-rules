@@ -1233,5 +1233,1295 @@
   "state": "open",
   "title": "AI review robustness: bound human replies, report truncated answers, pin the checkout ref",
   "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "conventions/code.md sections 5 and 7 require a LICENSE, the licence and its reasoning in CONTRIBUTING.md, a Keep a Changelog CHANGELOG.md with an Unreleased section, SPDX licence metadata and machine-readable project URLs. This repo has none of them, though every consumer does.\n\nLicence: MIT. Files here are vendored into MIT (whiskerless, appliance-job-monitor) and GPL-3.0 (dreame-valetudo) projects, so they must be usable under both; a permissive licence is the only one that is.",
+  "closed_at": "2026-11-17T07:23:19-08:00",
+  "comments": [],
+  "created_at": "2026-11-17T06:50:12-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:ready",
+   "type:chore"
+  ],
+  "milestone": null,
+  "number": 59,
+  "state": "closed",
+  "title": "Repo metadata missing: LICENSE, CHANGELOG, SPDX licence and project URLs",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "The cluster Renovate runs with requireConfig=required, so a repo without its own config is skipped. This repo has none: the pinned action SHAs in .forgejo/workflows, the ruff and pytest pins in tests.yml and the shellcheck image in shared/packaging/shellcheck-all.sh never get update PRs, and consumers inherit stale pins on every re-vendor. project-standard had a config covering exactly these; port it.",
+  "closed_at": "2026-11-17T07:53:17-08:00",
+  "comments": [],
+  "created_at": "2026-11-17T06:50:12-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:ready",
+   "type:bug"
+  ],
+  "milestone": null,
+  "number": 60,
+  "state": "closed",
+  "title": "No Renovate config, so nothing here is ever updated",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "docs/adopting.md asks every project for feature, spike, decision and bug issue templates. This repo has none, so issues filed here (including by outside contributors once #21 lands) carry no structure.",
+  "closed_at": "2026-11-17T07:20:34-08:00",
+  "comments": [],
+  "created_at": "2026-11-17T06:50:12-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:ready",
+   "type:chore"
+  ],
+  "milestone": null,
+  "number": 61,
+  "state": "closed",
+  "title": "No issue templates",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "conventions/code.md section 7 requires security and support routing. No SisyphusMD repo has it: Forgejo has no private advisories or confidential issues, and no repo publishes a contact address. Needs a maintainer decision on the private channel (for example a dedicated address) before a SECURITY.md can exist here and in each consumer.",
+  "closed_at": "2026-11-17T11:06:30-08:00",
+  "comments": [
+   {
+    "body": "Decision: Security reports go to security@bryantserver.com, a Fastmail alias delivering to the maintainer (filed to Tech/Security Reports). Every repo gets a SECURITY.md pointing there, and the CONTRIBUTING template and adoption guide ask for it. Why: Every project already lives on bryantserver.com, so the address reveals nothing new; a dedicated alias can be filtered or retired without exposing a personal address, and Forgejo has no private advisories.\n\nDecided by: Cody, 2026-11-17.",
+    "created_at": "2026-11-17T09:02:28-08:00",
+    "id": 35959,
+    "updated_at": "2026-11-17T09:02:28-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Technical call: the alias is security@bryantserver.com, filed to its own Fastmail folder; the MX for bryantserver.com is Fastmail. An end-to-end test message from outside is still owed before this is called proven.\n\nTechnical call: `SECURITY.md` is copied once at adoption, like CONTRIBUTING.md. Nothing in a consumer checks it stays identical; `docs/adopting.md` and the adoption issues #71 to #76 are the enforcement, and each adoption PR re-copies `.forgejo/RULES.md` with it. This repo's own pair is kept identical by `tests/test_security_policy.py`.\n\nTechnical call: \"only the latest release is supported\" holds for every SisyphusMD repo today; a repo that ever supports two release lines edits its copy.\n\nTechnical call: a security fix's issue lives in a private repo until the fix is released (the rule 23 route), recorded as a row in the RULES.md Exceptions table.",
+    "created_at": "2026-11-17T09:22:32-08:00",
+    "id": 35986,
+    "updated_at": "2026-11-17T09:22:32-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Verified 2026-11-17: a test message from an outside Gmail account to security@bryantserver.com arrived in Fastmail in the Security Reports folder.",
+    "created_at": "2026-11-17T11:01:45-08:00",
+    "id": 36010,
+    "updated_at": "2026-11-17T11:01:45-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-17T06:50:13-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:in-progress",
+   "type:decision"
+  ],
+  "milestone": null,
+  "number": 62,
+  "state": "closed",
+  "title": "Decide where security reports go",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "base": "main",
+  "body": "Closes #61.\n\n- `.forgejo/issue_template/`: bug, feature, decision and spike, the four `docs/adopting.md` asks every project for. A bug carries only `type:bug` (status is set at triage); a feature reminds the filer to set `status:blocked` when it lists a dependency.\n- `docs/adopting.md`: points new projects at these templates, lists the label set they and the rules use, and tells existing repos to copy the templates and create the labels too.\n- `tools/capability-diff.py`: the issue-template probe only knew `.github/ISSUE_TEMPLATE`, so a repo with Forgejo templates read as missing them. `tests/test_capability_diff.py` fails on main and passes here.\n\nThe `type:spike` label was missing here and is now created.",
+  "closed_at": "2026-11-17T07:20:33-08:00",
+  "comments": [
+   {
+    "body": "<!-- ai-review -->\n**AI review** of `6afbc0df5c`: Clean PR: adds four Forgejo issue templates, updates adopting.md with the label set and template instructions, and fixes the capability-diff probe to recognise `.forgejo/issue_template` alongside `.github/ISSUE_TEMPLATE`. The one-line tool fix is tightly coupled to the feature (without it the new templates are invisible to the probe) and ships with a focused test covering both paths and the absent case.\n\nNo findings.\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W10= -->",
+    "created_at": "2026-11-17T07:15:29-08:00",
+    "id": 35755,
+    "updated_at": "2026-11-17T07:15:29-08:00",
+    "user": "forgejo-actions"
+   }
+  ],
+  "created_at": "2026-11-17T07:13:16-08:00",
+  "head": "refs/pull/63/head",
+  "kind": "pull",
+  "labels": [],
+  "merge_commit_sha": "efeb12f5b4524cc4472ed074d3321aab4b3ce5e0",
+  "merged": true,
+  "milestone": null,
+  "number": 63,
+  "reviews": [],
+  "state": "closed",
+  "title": "docs: add issue templates and the label set they use",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "base": "main",
+  "body": "Closes #60.\n\nThe cluster Renovate runs with `requireConfig=required`, so without its own config this repo was skipped and none of its pins ever moved.\n\n- `.renovaterc.json`, ported from the retired project-standard config. Patch, minor and digest updates automerge on green CI.\n- Every Renovate PR footer says `Refs #67` (a standing dependency-updates issue), because the issue-link check has no bot exemption.\n- The shellcheck image is the one pin in a code file: its PR carries a `No tests:` line for the tests-with-code check and never automerges, since the job that runs the new image is not required.\n- gitleaks never automerges either: its PR says to update `GITLEAKS_SHA256`, which Renovate cannot compute. Python bumps wait three days for setup-python's manifest.\n- `ci.yml`'s ruff, yamllint and gitleaks pins are annotated; bare `actions/checkout` SHAs get their version comment; `python-version` is the exact `3.15.2` the consumers pin.\n- `tests/test_renovate_pins.py`: every SHA pin names its version, every interpreter is exact, every version pin is matched by a Renovate pattern, every code-file pin passes the tests-with-code gate's own regex and does not automerge, and the footer names an issue. The first three fail on main; the automerge assertion fails if the rule is flipped.\n- `conventions/shell-and-workflows.md` tells consumers to do the same in their configs.\n\nNot covered: upstream release notes in a Renovate PR body can trip issue-link (#68).",
+  "closed_at": "2026-11-17T07:53:16-08:00",
+  "comments": [
+   {
+    "body": "<!-- ai-review -->\n**AI review** of `7543666902`: Well-structured PR that adds a Renovate config, annotates every pin so the custom regex managers can find them, pins Python to an exact version, and ships a test that verifies the config's invariants (annotations present, code-file pins gated, footer names an issue). The diff is focused on the single concern of issue #60, docs are updated in the same PR, and the test covers the key failure modes.\n\nNo findings.\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W10= -->",
+    "created_at": "2026-11-17T07:25:54-08:00",
+    "id": 35785,
+    "updated_at": "2026-11-17T07:52:36-08:00",
+    "user": "forgejo-actions"
+   }
+  ],
+  "created_at": "2026-11-17T07:18:13-08:00",
+  "head": "refs/pull/64/head",
+  "kind": "pull",
+  "labels": [],
+  "merge_commit_sha": "05a897f0372f5d2905bc298bce9dd65932171e78",
+  "merged": true,
+  "milestone": null,
+  "number": 64,
+  "reviews": [],
+  "state": "closed",
+  "title": "ci: add a Renovate config and make every pin visible to it",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "conventions/code.md sections 5 and 7 require a LICENSE, the licence reasoning in CONTRIBUTING.md and a CHANGELOG.md, but templates/CONTRIBUTING.md has no License or Releases section and docs/adopting.md does not list LICENSE or CHANGELOG.md among a new repo's files. Found reviewing #59.",
+  "closed_at": null,
+  "comments": [],
+  "created_at": "2026-11-17T07:20:00-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:ready",
+   "type:chore"
+  ],
+  "milestone": null,
+  "number": 65,
+  "state": "open",
+  "title": "Template and adoption guide do not ask for LICENSE, CHANGELOG or a licence section",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "base": "main",
+  "body": "Closes #59.\n\n- `LICENSE`: MIT, with the reasoning in `CONTRIBUTING.md` (files here are vendored into MIT and GPL-3.0 consumers, and only a permissive licence sits under both).\n- `CHANGELOG.md` in Keep a Changelog form, with the 0.2.0 and 0.3.0 releases and an Unreleased section.\n- `pyproject.toml`: a metadata-only `[project]` table with the SPDX licence and project URLs, and a Hatchling backend named so no tool falls back to setuptools.\n- `CONTRIBUTING.md`: a Releases section (a release is a tag on main; move Unreleased and set the version first).\n- `tests/test_release_metadata.py`: pyproject and the newest changelog release must agree, there is one Unreleased section, and on a tag run (`RELEASE_TAG`, set in `tests.yml`) the tag must match. The tag check fails for a mismatched tag and passes for v0.3.0.\n\nThe template and adoption guide still do not ask other repos for these; that is #65.",
+  "closed_at": "2026-11-17T07:23:19-08:00",
+  "comments": [
+   {
+    "body": "<!-- ai-review -->\n**AI review** of `0ced3cd25c`: Clean, well-scoped PR that adds LICENSE, CHANGELOG, pyproject metadata, and a consistency test as required by issue #59. All hunks map to the issue, tests cover the new metadata-agreement behaviour, and the workflow change is the minimum needed to enable the tag check.\n\nNo findings.\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W10= -->",
+    "created_at": "2026-11-17T07:21:20-08:00",
+    "id": 35777,
+    "updated_at": "2026-11-17T07:22:43-08:00",
+    "user": "forgejo-actions"
+   }
+  ],
+  "created_at": "2026-11-17T07:20:11-08:00",
+  "head": "refs/pull/66/head",
+  "kind": "pull",
+  "labels": [],
+  "merge_commit_sha": "7c91adb1d2aecd9ec39c6978120951576675b0a7",
+  "merged": true,
+  "milestone": null,
+  "number": 66,
+  "reviews": [],
+  "state": "closed",
+  "title": "docs: add LICENSE, CHANGELOG and project metadata",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Standing issue every Renovate pull request references (`Refs #n` in its footer), so dependency updates pass the issue-link check without an issue per bump. Stays open.",
+  "closed_at": null,
+  "comments": [],
+  "created_at": "2026-11-17T07:21:10-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:ready",
+   "type:chore"
+  ],
+  "milestone": null,
+  "number": 67,
+  "state": "open",
+  "title": "Dependency updates (Renovate)",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Renovate puts upstream release notes in the PR body (fetchChangeLogs: pr). A line there such as 'fix #123' or 'refs #45' matches issue-link.py's pattern with no owner/repo, so it resolves against this repo and fails the check (or names an unrelated issue), and ai-review.py re-reads the same refs. Found reviewing #64; it applies to every repo running the gate with Renovate.",
+  "closed_at": null,
+  "comments": [
+   {
+    "body": "Adoption adds a Renovate footer with Refs and a standing local issue. Appliance-job-monitor PR #10 showed the AI review can block that form under rule 6 even after the issue-link job accepts it. Before requiring the gates on Renovate-managed repositories, verify against a real generated dependency PR that both checks accept the standing issue and ignore unrelated references in upstream release notes.",
+    "created_at": "2026-11-17T13:50:48-08:00",
+    "id": 36443,
+    "updated_at": "2026-11-17T13:50:48-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Live generated Dreame #300 and Whiskerless #220 passed Issue link and AI review with their Refs standing-issue footers. The included upstream v0.3.1 compare text did not contain bare issue numbers, so the unrelated changelog-reference case still needs its own regression proof. Both PRs hit a separate legacy release assertion, tracked in their release conversion issues.",
+    "created_at": "2026-11-17T18:10:38-08:00",
+    "id": 36771,
+    "updated_at": "2026-11-17T18:10:38-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-17T07:33:14-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:ready",
+   "type:bug"
+  ],
+  "milestone": null,
+  "number": 68,
+  "state": "open",
+  "title": "Upstream changelog text in a Renovate PR can fail the issue-link check",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Found 2026-11-17 on bryantserver/household-assistant PR #53, the first PR after adopting the rules: CI / Secrets failed with 2 generic-api-key hits, both alembic revision IDs quoted in an old issue body, which the nightly issue-archive commit copied into items/*.md and json/items.json.\n\nCause: the Secrets job checks out with fetch-depth 0, so the clone holds origin/issue-archive, and `gitleaks git` scans every ref. Issue text is not code; and because issue-archive is re-committed every night, .gitleaksignore fingerprints (which carry the commit SHA) for it go stale, so there is no durable allowlist fix.\n\nFix: scan only the history the PR head carries (`--log-opts=<head sha>`). Verified locally: the same clone scans clean with --log-opts=HEAD; the full-ref scan reports the 2 archive hits.\n\nClaude (session repos-79) has this.",
+  "closed_at": "2026-11-17T11:12:20-08:00",
+  "comments": [
+   {
+    "body": "Technical call: The Secrets job scans only the PR head history; issue-archive is not scanned anywhere. Why: A secret pasted into an issue is already exposed on the forge, and the archive copy adds no exposure a scan could prevent; archive commits change SHA nightly, so no allowlist can hold. Rule 15 names the check, not its scope.\n\nDecided by: Claude, 2026-11-17.",
+    "created_at": "2026-11-17T07:51:10-08:00",
+    "id": 35827,
+    "updated_at": "2026-11-17T07:51:10-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-17T07:41:55-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:in-progress",
+   "type:bug"
+  ],
+  "milestone": null,
+  "number": 69,
+  "state": "closed",
+  "title": "Secrets job scans the issue-archive branch and fails every PR on issue text",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "base": "main",
+  "body": "Closes #69\n\nThe `Secrets` job ran `gitleaks git` over every ref in a `fetch-depth: 0` clone, which includes `issue-archive` (rule 21). Issue text copied there nightly is not code, and its commits get new SHAs every night, so a `.gitleaksignore` entry can never hold. On bryantserver/household-assistant PR #53 it failed on two alembic revision IDs quoted in an old issue.\n\nThe job now scans only history reachable from the PR head (`--log-opts=<head sha>`), with the step renamed to match. Ancestors are still scanned, so a secret already on `main` still fails, and allowlists still come from base only.\n\nProof on gitleaks 8.28.0 (the pinned version):\n- Scratch repo: a secret on the PR head is reported; a secret on an unrelated branch is not.\n- household-assistant clone: the full-ref scan reports the 2 archive hits; the head-only scan is clean.\n\nNo tests: workflow YAML has no harness here; the proof above stands in, and the next PR in each consumer runs the new copy (`pull_request_target` runs from `main`).\n\nConsumers with a copy to update: bryantserver/household-assistant and bryantserver/casa.",
+  "closed_at": "2026-11-17T11:12:20-08:00",
+  "comments": [
+   {
+    "body": "<!-- ai-review -->\n**AI review** of `a060d24b00`: Clean, focused fix: the Secrets job now scans only the PR head's history via `--log-opts`, avoiding false positives from the nightly issue-archive branch while still catching secrets in any ancestor (including main). The diff is minimal (one workflow line, one comment, one CHANGELOG entry), the allowlist still comes from base, and the manual proof on gitleaks 8.28.0 is appropriate given no YAML test harness exists in this repo.\n\n### Withdrawn\n\n- **F1** (blocking, `CHANGELOG.md:9`) Rule 7: four independent issues in one PR: The diff as presented contains only two files: .forgejo/workflows/ci.yml (the gitleaks scope change) and one added CHANGELOG.md line for #69. The other CHANGELOG entries visible in context (#62, #77, #80) are pre-existing lines, not additions in this diff. The earlier review ran against a pre-rebase diff where those commits had not yet landed on main.\n  - Reviewer: Withdrawn. The author's reply and the actual diff confirm only two files changed; the other issues merged before this rebase.\n\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W3siaWQiOiAiRjEiLCAiZmlsZSI6ICJDSEFOR0VMT0cubWQiLCAibGluZSI6IDksICJzZXZlcml0eSI6ICJibG9ja2luZyIsICJzdGF0dXMiOiAid2l0aGRyYXduIiwgInRpdGxlIjogIlJ1bGUgNzogZm91ciBpbmRlcGVuZGVudCBpc3N1ZXMgaW4gb25lIFBSIiwgImRldGFpbCI6ICJUaGUgZGlmZiBhcyBwcmVzZW50ZWQgY29udGFpbnMgb25seSB0d28gZmlsZXM6IC5mb3JnZWpvL3dvcmtmbG93cy9jaS55bWwgKHRoZSBnaXRsZWFrcyBzY29wZSBjaGFuZ2UpIGFuZCBvbmUgYWRkZWQgQ0hBTkdFTE9HLm1kIGxpbmUgZm9yICM2OS4gVGhlIG90aGVyIENIQU5HRUxPRyBlbnRyaWVzIHZpc2libGUgaW4gY29udGV4dCAoIzYyLCAjNzcsICM4MCkgYXJlIHByZS1leGlzdGluZyBsaW5lcywgbm90IGFkZGl0aW9ucyBpbiB0aGlzIGRpZmYuIFRoZSBlYXJsaWVyIHJldmlldyByYW4gYWdhaW5zdCBhIHByZS1yZWJhc2UgZGlmZiB3aGVyZSB0aG9zZSBjb21taXRzIGhhZCBub3QgeWV0IGxhbmRlZCBvbiBtYWluLiIsICJyZXNwb25zZSI6ICJXaXRoZHJhd24uIFRoZSBhdXRob3IncyByZXBseSBhbmQgdGhlIGFjdHVhbCBkaWZmIGNvbmZpcm0gb25seSB0d28gZmlsZXMgY2hhbmdlZDsgdGhlIG90aGVyIGlzc3VlcyBtZXJnZWQgYmVmb3JlIHRoaXMgcmViYXNlLiJ9XQ== -->",
+    "created_at": "2026-11-17T07:52:55-08:00",
+    "id": 35837,
+    "updated_at": "2026-11-17T11:11:52-08:00",
+    "user": "forgejo-actions"
+   },
+   {
+    "body": "F1: the code is correct, the case cannot occur. The diff of this PR is two files: `.forgejo/workflows/ci.yml` (the gitleaks scope) and one `CHANGELOG.md` line. Forgejo agrees: base and merge base are both `ea327b2`, and `pulls/70.diff` lists only those two files. #62, #77 and #80 merged into main (PRs #82, #83, #84) before this rebase; this review ran against the diff from before the rebase, when those commits were not yet on its base.",
+    "created_at": "2026-11-17T11:08:54-08:00",
+    "id": 36027,
+    "updated_at": "2026-11-17T11:08:54-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Retry: the previous run could not reach the model (URLError); the Studio and the runner proxy answer now. See my reply above about F1: the diff is two files.",
+    "created_at": "2026-11-17T11:10:16-08:00",
+    "id": 36039,
+    "updated_at": "2026-11-17T11:10:16-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-17T07:51:10-08:00",
+  "head": "refs/pull/70/head",
+  "kind": "pull",
+  "labels": [],
+  "merge_commit_sha": "664d0e7cac0a2117c2ae8a2ac6d3f3c8c9713125",
+  "merged": true,
+  "milestone": null,
+  "number": 70,
+  "reviews": [],
+  "state": "closed",
+  "title": "fix(ci): scan only the PR head history for secrets (#69)",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Found auditing every SisyphusMD repo on 2026-11-17: whiskerless has none of the rules' gate workflows (issue link, tests with code, diff size, lint, secrets, AI review), no nightly issue-archive and no .forgejo/RULES.md, so its required checks are its own CI only. Bring it in per docs/adopting.md (An existing repo): workflows, scripts, issue templates and labels, RULES.md copy, CONTRIBUTING.md, protection with the rules' checks proven on a PR first, annex mirror and issue-archive.",
+  "closed_at": "2026-11-17T23:57:37-08:00",
+  "comments": [
+   {
+    "body": "Starting adoption from verified main 32f4b8af after #210. The existing CI display name will be kept while moving its workflow to tests.yml to preserve the five existing job families and their protected contexts.",
+    "created_at": "2026-11-17T13:40:33-08:00",
+    "id": 36369,
+    "updated_at": "2026-11-17T13:40:33-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Whiskerless adoption PR whiskerless#213 merged at 9b0221d and both mirrors match. Its issue archive ran successfully. The existing Tests workflow keeps its CI display name to preserve live required contexts. GitHub mirror lockdown is whiskerless#216. Stricter protection remains open pending release conversion and check proof.",
+    "created_at": "2026-11-17T14:45:27-08:00",
+    "id": 36603,
+    "updated_at": "2026-11-17T14:45:27-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Whiskerless #216 merged at be0c1b3. GitHub and annex match the exact Forgejo tip. GitHub Actions has only the SHA-pinned lockdown workflow active. Existing main protection is in place while #86 release conversion and gate proof continue.",
+    "created_at": "2026-11-17T15:02:28-08:00",
+    "id": 36635,
+    "updated_at": "2026-11-17T15:02:28-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Whiskerless adoption is complete. Adoption, release promotion and generated Tap publisher landed in whiskerless#213, whiskerless#223 and whiskerless#227. Required-check proof is in whiskerless#225. Approved v0.2.0-rc.78 passed the release and installation paths. Verified strict main protection on 903e4d20c622907b490f952ca0035782cac540b6 with 15 required contexts. Direct pushes are disabled for all users, including admins. PRs must be up to date. Both main mirrors match.\n\nhttps://forgejo.bryantserver.com/SisyphusMD/whiskerless/actions/runs/1417",
+    "created_at": "2026-11-17T23:57:37-08:00",
+    "id": 37320,
+    "updated_at": "2026-11-17T23:57:37-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-17T07:54:21-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:in-progress",
+   "type:chore"
+  ],
+  "milestone": null,
+  "number": 71,
+  "state": "closed",
+  "title": "Adopt the rules in SisyphusMD/whiskerless",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Found auditing every SisyphusMD repo on 2026-11-17: dreame-valetudo has none of the rules' gate workflows (issue link, tests with code, diff size, lint, secrets, AI review), no nightly issue-archive and no .forgejo/RULES.md, so its required checks are its own CI only. Bring it in per docs/adopting.md (An existing repo): workflows, scripts, issue templates and labels, RULES.md copy, CONTRIBUTING.md, protection with the rules' checks proven on a PR first, annex mirror and issue-archive.",
+  "closed_at": "2026-11-17T23:57:38-08:00",
+  "comments": [
+   {
+    "body": "State 2026-11-17 (handing over to a Codex session): adoption not started in substance. A clean worktree exists at ~/repos/SisyphusMD/.worktrees/dreame-valetudo-adopt on branch ci/adopt-project-rules from verified main 86b5de1 (after dreame #293), no changes, nothing pushed. Plan follows appliance-job-monitor (#73, done in its PRs #8-#10): copy the gate workflows, scripts, templates, RULES.md, SECURITY.md and mirror-lockdown.yml verbatim; rename the repo's own ci.yml to tests.yml (name: Tests); exempt the copied pull_request_target jobs in test_trust_gates_also_exclude_agit_pull_requests (_UNGATED_ON_PULL_REQUESTS); exclude .forgejo/scripts and vendored packaging from ruff (#85); Renovate leaves the copies alone; CONTRIBUTING gets the rule 9 line, SECURITY pointer and exact required-check names; then GitHub Actions on for the copy, limited to the lockdown action.",
+    "created_at": "2026-11-17T13:32:28-08:00",
+    "id": 36309,
+    "updated_at": "2026-11-17T13:32:28-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Resuming adoption in the existing ci/adopt-project-rules worktree. Branch protection waits for the required check proofs and the release change in #86.",
+    "created_at": "2026-11-17T13:34:28-08:00",
+    "id": 36329,
+    "updated_at": "2026-11-17T13:34:28-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Dreame adoption PR dreame-valetudo#296 merged at 001e66b and both mirrors match. Its issue archive ran successfully. The existing Tests workflow keeps its CI display name to preserve live required contexts. GitHub mirror lockdown is dreame-valetudo#299. Stricter protection remains open pending release conversion and check proof.",
+    "created_at": "2026-11-17T14:45:27-08:00",
+    "id": 36602,
+    "updated_at": "2026-11-17T14:45:27-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Dreame #299 merged at 9ad3964. GitHub and annex match the exact Forgejo tip. GitHub Actions has only the SHA-pinned lockdown workflow active. Existing main protection is in place while #86 release conversion and gate proof continue.",
+    "created_at": "2026-11-17T14:57:05-08:00",
+    "id": 36616,
+    "updated_at": "2026-11-17T14:57:05-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Dreame adoption is complete. Adoption, release promotion and generated Tap publisher landed in dreame-valetudo#296, dreame-valetudo#301 and dreame-valetudo#303. Required-check proof is in dreame-valetudo#304. Approved v0.3.0-rc.52 passed the release and installation paths. Verified strict main protection on 47b1bc891097e70cc6e7d55ca9d3e87b2a20ea85 with 13 required contexts. Direct pushes are disabled for all users, including admins. PRs must be up to date. Both main mirrors match.\n\nhttps://forgejo.bryantserver.com/SisyphusMD/dreame-valetudo/actions/runs/1835",
+    "created_at": "2026-11-17T23:57:38-08:00",
+    "id": 37322,
+    "updated_at": "2026-11-17T23:57:38-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-17T07:54:22-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:in-progress",
+   "type:chore"
+  ],
+  "milestone": null,
+  "number": 72,
+  "state": "closed",
+  "title": "Adopt the rules in SisyphusMD/dreame-valetudo",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Found auditing every SisyphusMD repo on 2026-11-17: appliance-job-monitor has none of the rules' gate workflows (issue link, tests with code, diff size, lint, secrets, AI review), no nightly issue-archive and no .forgejo/RULES.md, so its required checks are its own CI only. Bring it in per docs/adopting.md (An existing repo): workflows, scripts, issue templates and labels, RULES.md copy, CONTRIBUTING.md, protection with the rules' checks proven on a PR first, annex mirror and issue-archive.",
+  "closed_at": "2026-11-17T16:32:31-08:00",
+  "comments": [
+   {
+    "body": "Appliance adoption is complete. SisyphusMD/appliance-job-monitor#5 records the positive and negative gate proofs, verified main protection and the live v0.1.1 release.",
+    "created_at": "2026-11-17T16:32:30-08:00",
+    "id": 36742,
+    "updated_at": "2026-11-17T16:32:30-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-17T07:54:22-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:ready",
+   "type:chore"
+  ],
+  "milestone": null,
+  "number": 73,
+  "state": "closed",
+  "title": "Adopt the rules in SisyphusMD/appliance-job-monitor",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Found auditing every SisyphusMD repo on 2026-11-17: archiver has none of the rules' gate workflows (issue link, tests with code, diff size, lint, secrets, AI review), no nightly issue-archive and no .forgejo/RULES.md, so its required checks are its own CI only. Bring it in per docs/adopting.md (An existing repo): workflows, scripts, issue templates and labels, RULES.md copy, CONTRIBUTING.md, protection with the rules' checks proven on a PR first, annex mirror and issue-archive.",
+  "closed_at": null,
+  "comments": [
+   {
+    "body": "Starting adoption in an isolated worktree. It will use the settled main tip after archiver #348 before publication. Current Docker CI check names stay in place.",
+    "created_at": "2026-11-17T13:47:08-08:00",
+    "id": 36420,
+    "updated_at": "2026-11-17T13:47:08-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Archiver adoption PR archiver#351 merged at b34721c and both mirrors match. Its issue archive ran successfully. GitHub mirror lockdown is archiver#354 and the GitHub mirror credential now accepts workflow updates. Stricter protection remains open pending release conversion and check proof.",
+    "created_at": "2026-11-17T14:45:27-08:00",
+    "id": 36604,
+    "updated_at": "2026-11-17T14:45:27-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Archiver #354 merged at 06d756f after its exact integration checks passed. GitHub and annex match the exact Forgejo tip. GitHub Actions has only the SHA-pinned lockdown workflow active. The temporary Renovate pause was restored. Existing main protection is in place while #86 release conversion and gate proof continue.",
+    "created_at": "2026-11-17T15:04:20-08:00",
+    "id": 36646,
+    "updated_at": "2026-11-17T15:04:20-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Archiver #355 is merged and its guarded publish workflow rejected an ordinary merged PR in run #756. The shared required checks were proved in archiver#358. Strict adoption awaits the first approved maintenance release through the replacement path. release/0.11 still equals v0.11.7 and has no Unreleased entries. Keep archiver#357 draft until the new path is proven.",
+    "created_at": "2026-11-17T23:57:43-08:00",
+    "id": 37329,
+    "updated_at": "2026-11-17T23:57:43-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-17T07:54:22-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:blocked",
+   "type:chore"
+  ],
+  "milestone": null,
+  "number": 74,
+  "state": "open",
+  "title": "Adopt the rules in SisyphusMD/archiver",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Found auditing every SisyphusMD repo on 2026-11-17: GhostSpectator has none of the rules' gate workflows (issue link, tests with code, diff size, lint, secrets, AI review), no nightly issue-archive and no .forgejo/RULES.md, so its required checks are its own CI only. Bring it in per docs/adopting.md (An existing repo): workflows, scripts, issue templates and labels, RULES.md copy, CONTRIBUTING.md, protection with the rules' checks proven on a PR first, annex mirror and issue-archive.",
+  "closed_at": null,
+  "comments": [
+   {
+    "body": "Starting adoption from verified main 938021b after #24 in an isolated worktree.",
+    "created_at": "2026-11-17T13:45:10-08:00",
+    "id": 36399,
+    "updated_at": "2026-11-17T13:45:10-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "GhostSpectator #27 settled at 5d8aa89, its restore check is green, and the first issue archive ran and synced to the annex. GitHub rejected the workflow update because the existing mirror token lacks Workflow write. GitHub Actions remain disabled pending scoped token rotation. Full branch protection still depends on the release workflow change.",
+    "created_at": "2026-11-17T14:08:19-08:00",
+    "id": 36488,
+    "updated_at": "2026-11-17T14:08:19-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "GitHub mirror credential rotation cleared the workflow rejection. Both mirrors match 5d8aa89 and GitHub Actions has only the SHA-pinned lockdown workflow active. Stricter protection remains open pending GhostSpectator#28 and check proof.",
+    "created_at": "2026-11-17T14:45:27-08:00",
+    "id": 36605,
+    "updated_at": "2026-11-17T14:45:27-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "GhostSpectator #29 is merged with matching mirrors and the shared required checks were proved in GhostSpectator#30. Strict adoption awaits licensed local PEAK gameplay and an actual approved Thunderstore release through the new workflow.",
+    "created_at": "2026-11-17T23:57:43-08:00",
+    "id": 37330,
+    "updated_at": "2026-11-17T23:57:43-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-17T07:54:23-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:blocked",
+   "type:chore"
+  ],
+  "milestone": null,
+  "number": 75,
+  "state": "open",
+  "title": "Adopt the rules in SisyphusMD/GhostSpectator",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Found auditing every SisyphusMD repo on 2026-11-17: homebrew-tap has none of the rules' gate workflows (issue link, tests with code, diff size, lint, secrets, AI review), no nightly issue-archive and no .forgejo/RULES.md, so its required checks are its own CI only. Bring it in per docs/adopting.md (An existing repo): workflows, scripts, issue templates and labels, RULES.md copy, CONTRIBUTING.md, protection with the rules' checks proven on a PR first, annex mirror and issue-archive.",
+  "closed_at": "2026-11-17T23:57:38-08:00",
+  "comments": [
+   {
+    "body": "The tap has no branch protection. Dreame and Whiskerless publish formula and bottle updates by pushing to its main branch. Adoption can add rules and checks, but enabling protection also depends on moving those automated tap updates to pull requests.",
+    "created_at": "2026-11-17T13:38:03-08:00",
+    "id": 36347,
+    "updated_at": "2026-11-17T13:38:03-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Starting tap adoption. Forgejo issues and pull requests are currently disabled on this repository, so enable both on the primary to run issue-first adoption. Keep direct publisher pushes available until the publisher workflows can use pull requests.",
+    "created_at": "2026-11-17T13:45:10-08:00",
+    "id": 36401,
+    "updated_at": "2026-11-17T13:45:10-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Tap #2 settled at cd7a3f8. The Ruby syntax check passed, both mirrors match and the issue archive ran and synced to the annex. Strict main protection waits for homebrew-tap #3. GitHub lockdown follows verification of the mirror credential.",
+    "created_at": "2026-11-17T14:19:47-08:00",
+    "id": 36538,
+    "updated_at": "2026-11-17T14:19:47-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Homebrew Tap #5 merged at 65aa04b after the scoped GitHub mirror credential rotation. Both mirrors match and GitHub Actions has only the SHA-pinned lockdown workflow active. Strict main protection remains open pending homebrew-tap#3 and check proof.",
+    "created_at": "2026-11-17T14:45:27-08:00",
+    "id": 36606,
+    "updated_at": "2026-11-17T14:45:27-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Homebrew Tap adoption is complete. Homebrew-tap#3 and homebrew-tap#9 record the negative proof and positive provenance proof from both live release publishers. Verified strict main protection on e5b884b9779569f0919cae017e6d835a791bf042 with 8 required contexts. Direct pushes are disabled for all users, including admins. PRs must be up to date. Both main mirrors match.",
+    "created_at": "2026-11-17T23:57:38-08:00",
+    "id": 37324,
+    "updated_at": "2026-11-17T23:57:38-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-17T07:54:23-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:in-progress",
+   "type:chore"
+  ],
+  "milestone": null,
+  "number": 76,
+  "state": "closed",
+  "title": "Adopt the rules in SisyphusMD/homebrew-tap",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Consumers carry RULES.md as .forgejo/RULES.md (rule 22), where its relative links (conventions/, conventions/code.md, templates/CONTRIBUTING.md) point at nothing, so a consumer's doc-link check (packaging/check-doc-links.py) fails as soon as the copy is committed. Found adopting appliance-job-monitor (#73). Make them absolute Forgejo URLs so the copy works anywhere.",
+  "closed_at": "2026-11-17T09:22:54-08:00",
+  "comments": [],
+  "created_at": "2026-11-17T08:41:25-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:in-progress",
+   "type:bug"
+  ],
+  "milestone": null,
+  "number": 77,
+  "state": "closed",
+  "title": "RULES.md's relative links break in every consumer's copy",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "tools/vendor.py and STANDARD.lock cover shared/ only. The gate workflows, .forgejo/scripts, issue templates and .forgejo/RULES.md that each consumer copies (docs/adopting.md) carry no source tag and no drift check, so an in-place edit in a consumer is invisible and nobody can tell which version a copy came from. Extend vendoring to them so adoption and re-sync are mechanical. Found adopting appliance-job-monitor (#73).",
+  "closed_at": null,
+  "comments": [
+   {
+    "body": "Also: `.github/workflows/mirror-lockdown.yml` (#89) lacks the `# Canonical copy: SisyphusMD/project-rules; repos get a copy.` header the other copied workflows carry, so a consumer's copy doesn't say where it comes from. Add it when this drift lock lands (a header change means every consumer re-copies).",
+    "created_at": "2026-11-17T12:30:34-08:00",
+    "id": 36180,
+    "updated_at": "2026-11-17T12:30:34-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-17T08:41:25-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:ready",
+   "type:feature"
+  ],
+  "milestone": null,
+  "number": 78,
+  "state": "open",
+  "title": "Copied gate files are outside the drift lock",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "On 2026-11-17 three outside pull requests moved from GitHub (whiskerless #188-#190) ran unreviewed code on the runners for up to two minutes, until cancelled. No secret was exposed: the only job holding one (macos, GH_REPO_READ_PAT) waits on every other job, and none finished.\n\nTwo causes:\n1. A `pull_request` run uses the workflow files from the PR's head commit. The flow == 0 / same-repo guard (#46) is on main, but these PRs are based on an older main (b59ac5f2) without it, so the guard never applied. Any PR based on an old enough commit, or one that edits the workflow, bypasses a guard that lives only in workflow files.\n2. The PRs were pushed as AGit under the maintainer's account, so Forgejo treated them as trusted and ran CI straight away.\n\nOptions to decide:\n- Run untrusted-capable jobs only from `pull_request_target` (workflow from main, PR checked out as data), as the gate ci.yml already does, and keep `pull_request` jobs for same-repo branches pushed by maintainers.\n- Use Forgejo's approval for workflows from outside contributors, if the instance supports it for AGit.\n- Add a procedure to adopting.md and CONTRIBUTING: an outside PR is moved in by rebasing onto current main (so it carries the current guard) or pushed in a way that never starts CI, never as an AGit push under a maintainer account.\n\nAlso check what the automatic job token can do on a `pull_request` run from an AGit PR.",
+  "closed_at": null,
+  "comments": [],
+  "created_at": "2026-11-17T08:58:47-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:needs-decision",
+   "type:bug"
+  ],
+  "milestone": null,
+  "number": 79,
+  "state": "open",
+  "title": "A guard on main does not keep PR code off the runners",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Decision (Cody, 2026-11-17): like the SparkyFitness rule, contributions carry no AI attribution anywhere. No Co-Authored-By trailer for an assistant, no 'Generated with ...' line, no robot emoji and no AI tool named as an author, in commit messages, PR titles and descriptions, or comments. Add it to RULES.md (rule 9, so rule numbers others cite stay put) and the CONTRIBUTING template, and to each repo's CONTRIBUTING as it adopts the rules.",
+  "closed_at": "2026-11-17T09:24:21-08:00",
+  "comments": [],
+  "created_at": "2026-11-17T09:03:26-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:in-progress",
+   "type:feature"
+  ],
+  "milestone": null,
+  "number": 80,
+  "state": "closed",
+  "title": "No AI attribution in commits, pull requests or comments",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Rule 9 (#80) bans AI attribution in commit messages, PR titles and descriptions. Nothing enforces it: the AI review can only block on a file and line in the diff, and commit messages and the PR body are not in the diff, so an attribution line can only ever be a suggestion.\n\nA `ci.yml` job next to `issue-link` should fail a PR whose title, body or commit messages (base..head) carry a `Co-Authored-By` naming an assistant, a \"Generated with\" line naming an AI tool, or 🤖. With tests, and proven on a throwaway PR (one pass, one deliberate failure) before it is required, as in `docs/adopting.md`.\n\nDepends on #80.",
+  "closed_at": null,
+  "comments": [
+   {
+    "body": "Also: the AI review never sees commit messages at all (no commits call in ai-review.py), so a Co-Authored-By trailer is invisible to it, not merely non-blocking. The new job should read `git log base..head` and the PR title and body, shaped like issue-link.py (base commit's copy, fails closed).",
+    "created_at": "2026-11-17T09:22:33-08:00",
+    "id": 35989,
+    "updated_at": "2026-11-17T09:22:33-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-17T09:12:18-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:blocked",
+   "type:feature"
+  ],
+  "milestone": null,
+  "number": 81,
+  "state": "open",
+  "title": "Fail CI on AI attribution in commits and PR bodies",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "base": "main",
+  "body": "Closes #77\n\nEvery repo carries RULES.md as `.forgejo/RULES.md`, so its relative links (`conventions/`, `conventions/code.md`, `templates/CONTRIBUTING.md`) point at nothing there and fail that repo's doc-link check. They are now reference-style links to the files on main on Forgejo, with a comment at the bottom saying why.\n\n`tests/test_rules_links.py` rejects any relative link in RULES.md (inline, titled or `<...>`), any link to this repo that is not Forgejo (the GitHub copy, a tag, commit or raw URL), and any link to a file here that does not exist. On main's RULES.md it fails with `['conventions/', 'conventions/code.md', 'templates/CONTRIBUTING.md']`. A scratch run with a code-block example, a titled link, an autolink, a GitHub link, a tag link and an issues link showed each caught or allowed as intended. A consumer-style copy now passes `check-doc-links.py --mode tree`.\n\nRepos that already carry the old copy get this when they re-copy it under their adoption issues (#71 to #76).",
+  "closed_at": "2026-11-17T09:22:54-08:00",
+  "comments": [
+   {
+    "body": "<!-- ai-review -->\n**AI review** of `e9315b05e4`: Clean, focused PR that converts RULES.md's three relative links to absolute Forgejo URLs so consumer copies at .forgejo/RULES.md pass their doc-link check, with a new test that validates link style and target existence. No issues found.\n\nNo findings.\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W10= -->",
+    "created_at": "2026-11-17T09:22:17-08:00",
+    "id": 35985,
+    "updated_at": "2026-11-17T09:22:17-08:00",
+    "user": "forgejo-actions"
+   }
+  ],
+  "created_at": "2026-11-17T09:21:48-08:00",
+  "head": "refs/pull/82/head",
+  "kind": "pull",
+  "labels": [],
+  "merge_commit_sha": "05b813d9e84419d2c16ddfa797ec5faa31540622",
+  "merged": true,
+  "milestone": null,
+  "number": 82,
+  "reviews": [],
+  "state": "closed",
+  "title": "docs: make RULES.md links absolute",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "base": "main",
+  "body": "Closes #62\n\nA vulnerability had no private channel: issues and pull requests are public. `SECURITY.md` now says to email security@bryantserver.com (a Fastmail alias filed to its own folder), what to include, that only the latest release is supported, and that disclosure is coordinated with the reporter. `templates/SECURITY.md` is the identical copy every repo carries.\n\n- Rule 22 now requires a `SECURITY.md` alongside `CONTRIBUTING.md`, and `docs/adopting.md` adds it to both the new-repo and existing-repo steps (existing repos get it through #71 to #76).\n- The Exceptions table records the route for a security fix: its issue lives in a private repo (rule 23) until the fix is released, and the PR describes the change, not the exploit.\n- `tests/test_security_policy.py` rejects the two copies differing; with a line appended to the template it fails with \"SECURITY.md and templates/SECURITY.md differ\".\n\nThe judgment calls are recorded on #62. Delivery is proven: a test message from an outside Gmail account arrived in the Security Reports folder.\n\n\nMain was merged in after #84 landed; the only conflict was the changelog, resolved by keeping both entries.\n",
+  "closed_at": "2026-11-17T11:06:30-08:00",
+  "comments": [
+   {
+    "body": "<!-- ai-review -->\n**AI review** of `748dc1c05a`: Clean, well-scoped PR that adds a security policy, its template, a drift test, and the corresponding rule/doc updates. Every hunk serves issue #62, the diff is small, and the test correctly guards the two copies against divergence.\n\nNo findings.\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W10= -->",
+    "created_at": "2026-11-17T09:23:29-08:00",
+    "id": 35997,
+    "updated_at": "2026-11-17T11:05:55-08:00",
+    "user": "forgejo-actions"
+   },
+   {
+    "body": "Retrying the AI review: the last run failed to reach the model (URLError). The new commit only merges main in; the diff against main is unchanged.",
+    "created_at": "2026-11-17T11:05:06-08:00",
+    "id": 36012,
+    "updated_at": "2026-11-17T11:05:06-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-17T09:23:15-08:00",
+  "head": "refs/pull/83/head",
+  "kind": "pull",
+  "labels": [],
+  "merge_commit_sha": "ea327b22eaad636f355ebe288beaf4d7eb884d01",
+  "merged": true,
+  "milestone": null,
+  "number": 83,
+  "reviews": [],
+  "state": "closed",
+  "title": "docs: add a security policy every repo carries",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "base": "main",
+  "body": "Closes #80\n\nContributions arrived with assistant co-author trailers and \"Generated with\" lines. Rule 9 now says commit messages and trailers, PR titles and descriptions, and issue and PR comments carry no AI attribution: no `Co-Authored-By` for an assistant, no \"Generated with\" line, no robot emoji, no AI tool named as an author. Whoever submits the change is its author. The required AI review's own comments and a rule 2 `Technical call:` label are not attribution. The CONTRIBUTING template points at rule 9 with one example.\n\nIt is folded into rule 9 rather than added as rule 24, because other docs and the AI review cite rules by number.\n\nNot enforced by a check yet: the AI review can only block on diff lines and never sees commit messages. #81 tracks a CI job for it. Docs only, so no test.",
+  "closed_at": "2026-11-17T09:24:21-08:00",
+  "comments": [
+   {
+    "body": "<!-- ai-review -->\n**AI review** of `1a2fc0bc16`: Clean, well-scoped docs-only PR that folds the AI-attribution ban into rule 9 and adds a pointer in the CONTRIBUTING template, matching the recorded decision on #80. The diff is minimal, the rule text is specific about what is banned and what is exempt, and the CHANGELOG entry is appropriate.\n\nNo findings.\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W10= -->",
+    "created_at": "2026-11-17T09:23:47-08:00",
+    "id": 36002,
+    "updated_at": "2026-11-17T09:23:47-08:00",
+    "user": "forgejo-actions"
+   }
+  ],
+  "created_at": "2026-11-17T09:23:36-08:00",
+  "head": "refs/pull/84/head",
+  "kind": "pull",
+  "labels": [],
+  "merge_commit_sha": "0e28dcd437805802c70b4b22f9ee0928d7fae5b0",
+  "merged": true,
+  "milestone": null,
+  "number": 84,
+  "reviews": [],
+  "state": "closed",
+  "title": "docs: ban AI attribution in commits, PRs and comments",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "`ci.yml`'s Lint job runs `ruff check .` in the consuming repo with that repo's config. With no ruff config, ruff 0.17.5's defaults flag the copied `.forgejo/scripts/*.py` (EXE001, FURB167, TRY004) and the vendored `packaging/check-doc-links.py` (FURB167), which this repo lints under its own `[tool.ruff]` selection. Found adopting appliance-job-monitor (#73): a clean venv with `ruff==0.17.5` fails 13 findings, all in copied or vendored files.\n\nThat repo works around it with a `ruff.toml` that excludes `.forgejo/scripts` and `packaging`. Options for the fix here: make the copied files clean under ruff's defaults (cheap: `re.MULTILINE`/`re.DOTALL`, `TypeError`, executable bit), or have Lint pass `--extend-exclude .forgejo/scripts,packaging`, or tell `docs/adopting.md` to add that exclude. whiskerless and dreame-valetudo hit the same when they adopt (#71, #72).",
+  "closed_at": null,
+  "comments": [],
+  "created_at": "2026-11-17T11:09:36-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:ready",
+   "type:bug"
+  ],
+  "milestone": null,
+  "number": 85,
+  "state": "open",
+  "title": "Copied ci.yml Lint fails in a repo without a ruff config",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "`shared/packaging/push-tag.sh` (vendored into every repo) pushes the changelog-promotion commit straight to `main` and the tag in one atomic push. Rule 18 protects `main` with no direct pushes, admins included, so once a repo protects `main` its Release workflow fails, and the atomic push drops the tag with it. Found by review while adopting appliance-job-monitor (#73).\n\nFix without a bypass for the release credential: promote `[Unreleased]` through a PR, then tag the merged commit. Repos must not enable protection until this lands, or releases break.",
+  "closed_at": null,
+  "comments": [
+   {
+    "body": "Decision: Use the same two-step release flow across the house repositories: merge the release-preparation PR, then have a maintainer dispatch publishing for that exact merged release. Why: Branch protection can stay enforced and the maintainer chooses when artifacts start publishing.\n\nDecided by: Cody, 2026-11-17.",
+    "created_at": "2026-11-17T13:56:46-08:00",
+    "id": 36459,
+    "updated_at": "2026-11-17T13:56:46-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Starting with the shared release contract and local tests. Existing release callers keep their current behavior until each repository switches to the two-step flow.",
+    "created_at": "2026-11-17T13:56:46-08:00",
+    "id": 36460,
+    "updated_at": "2026-11-17T13:56:46-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Shared verifier and tag-only push helper merged in #95 at b79dcc0 and both mirrors match. Downstream conversions are tracked in appliance-job-monitor #14, dreame-valetudo #297, whiskerless #214, Archiver #352, GhostSpectator #28 and homebrew-tap #3. Appliance is the first workflow draft. Version preparation is #97. No stricter main protection has been enabled.",
+    "created_at": "2026-11-17T14:19:46-08:00",
+    "id": 36532,
+    "updated_at": "2026-11-17T14:19:46-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Published annotated v0.3.1 from exact #98 merge commit 4c65c00350872d5243c5438fa7c07c5fea5d47bb. Verified the same tag object and peeled commit on Forgejo primary, annex and GitHub. All three Tests jobs passed on the tag (run #178). Appliance #14 is vendoring this release.",
+    "created_at": "2026-11-17T15:08:40-08:00",
+    "id": 36658,
+    "updated_at": "2026-11-17T15:08:40-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Appliance #15 settled at 2009c05, exact reviewed head 81c917c. Both mirrors match. The local workflow fixture proved tag-only publication at the verified merge after main moved, and hosted PR CI passed. The first hosted release and appliance-job-monitor #5 check-failure proof precede protective rule changes.",
+    "created_at": "2026-11-17T15:13:50-08:00",
+    "id": 36674,
+    "updated_at": "2026-11-17T15:13:50-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Appliance v0.1.1 completed the first live two-step release. Release issue appliance-job-monitor#16 has the exact commit, CI runs and three-host asset verification. Other release implementations remain tracked separately.",
+    "created_at": "2026-11-17T15:27:12-08:00",
+    "id": 36704,
+    "updated_at": "2026-11-17T15:27:12-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Rollout status: Release proof is complete in appliance-job-monitor v0.1.1 and project-rules v0.3.1. Dreame #301, Whiskerless #223 and GhostSpectator #29 merged with matching mirrors, and a hosted negative dispatch in each verified that an ordinary merged PR cannot trigger a release tag. The shared exact-candidate verifier merged in project-rules #100. The Tap foundation in homebrew-tap #8 merged, and Tap draft #12 verified all negative checks. The Tap replay follow-up #11 must settle before the sibling publisher changes pin it. Archiver #355 passed native integration and trust checks but still needs a valid hosted AI verdict; keep maintenance retirement draft #357 on hold pending live maintenance proof. Production release proof for the remaining repos and the corresponding strict protection settings remain open.",
+    "created_at": "2026-11-17T19:48:14-08:00",
+    "id": 36956,
+    "updated_at": "2026-11-17T19:48:14-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Release-workflow code rollout is settled. Dreame publisher #303, Whiskerless publisher #227, GhostSpectator #29, homebrew-tap #8 and #11, and Archiver #355 all merged with verified Forgejo and mirror tips. Archiver run #756 joined the hosted checks that refuse ordinary merged PRs. The failing required-check proof drafts in all five additional repos have documented exact results and are closed.\n\nBlocked on live proof before extending strict main protection: homebrew-tap #3 awaits approved Dreame v0.3.0-rc.52 and Whiskerless v0.2.0-rc.78, GhostSpectator needs local licensed PEAK gameplay, and Archiver #357 awaits the replacement maintenance-release proof. Appliance v0.1.1 remains the complete live release and protection proof.",
+    "created_at": "2026-11-17T20:46:45-08:00",
+    "id": 37102,
+    "updated_at": "2026-11-17T20:46:45-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Live Homebrew publisher proof is complete for Dreame v0.3.0-rc.52 and Whiskerless v0.2.0-rc.78. Their source and bottle PRs all merged, both install matrices poured the published bottles, and main now has strict verified protection in both source repos and the tap. The results are in homebrew-tap#3 and homebrew-tap#9. Appliance and project-rules already have verified strict protection.\n\nRemaining triggers: Archiver needs an approved release with a real maintenance change on release/0.11. The channel still points at v0.11.7 with an empty Unreleased section. Keep archiver#357 draft until the replacement release publishes and is verified. GhostSpectator needs licensed local PEAK gameplay before the first live Thunderstore release through the new workflow. Keep #74, #75 and this issue open until those proofs allow strict protection.",
+    "created_at": "2026-11-17T23:57:43-08:00",
+    "id": 37326,
+    "updated_at": "2026-11-17T23:57:43-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-17T11:12:31-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:blocked",
+   "type:bug"
+  ],
+  "milestone": null,
+  "number": 86,
+  "state": "open",
+  "title": "Release push to main conflicts with branch protection",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Two `ci.yml` gates run on the PR checkout with settings the PR itself can change, so a PR can weaken the check that judges it (rule 17: gates run from the base):\n\n- **Lint**: `ruff check .` loads `ruff.toml`/`pyproject.toml` and their exclusions from the PR checkout. The workflow should supply trusted settings and file scope from the base commit.\n- **Secrets**: gitleaks scans git patch output from the PR checkout. A PR-controlled `.gitattributes` that marks paths binary suppresses their text hunks. The scan should not honor PR-controlled diff attributes (for example, `-c core.attributesFile=/dev/null` and an empty info/attributes, or scanning with `--text`).\n\nFound by review while adopting appliance-job-monitor (#73). Related: #85 (consumer ruff defaults).",
+  "closed_at": null,
+  "comments": [
+   {
+    "body": "Also from review of the #70 copy: the Secrets job fails open if a gitleaks bump changes `--log-opts` handling (it exits 0 when it scans nothing). Guard with `git cat-file -e \"$HEAD_SHA^{commit}\"` before the scan and a positive control (a throwaway repo with a fake secret must exit 1). Pass the SHAs through `env:` like the other jobs, and drop `fetch-depth: 0` for the fetch-on-demand pattern the other jobs use.",
+    "created_at": "2026-11-17T11:17:53-08:00",
+    "id": 36060,
+    "updated_at": "2026-11-17T11:17:53-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-17T11:12:31-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:ready",
+   "type:bug"
+  ],
+  "milestone": null,
+  "number": 87,
+  "state": "open",
+  "title": "Required checks read PR-controlled config (ruff config, .gitattributes)",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "GitHub cannot turn pull requests off, so the read-only GitHub copies still accept them. Cody's decision (2026-11-17): do what most read-only mirrors do, a GitHub Action (`dessant/repo-lockdown`) that closes and locks any new PR with a comment pointing to Forgejo.\n\nPlan:\n- `.github/workflows/mirror-lockdown.yml` in project-rules, pinned by SHA, guarded with `if: github.server_url == 'https://github.com'` so it never runs on Forgejo (a repo without `.forgejo/workflows/` would otherwise run it there), `permissions: {}` at the top and `pull-requests: write` on the job, no checkout.\n- `docs/adopting.md` tells every repo to copy it; each repo gets it with its adoption (#71 to #76), appliance-job-monitor in its own PR.\n- On each GitHub copy: Actions on, limited to this one action, default token read-only.",
+  "closed_at": "2026-11-17T11:55:37-08:00",
+  "comments": [
+   {
+    "body": "Verified 2026-11-17 on the project-rules GitHub copy: a test PR (GitHub #1) was closed and locked within seconds by github-actions[bot] with the Forgejo pointer comment; the run succeeded on pull_request_target. Actions there: enabled, selected actions only (this one, SHA-pinned), SHA pinning required, read-only default token. Test branch deleted.",
+    "created_at": "2026-11-17T12:13:15-08:00",
+    "id": 36142,
+    "updated_at": "2026-11-17T12:13:15-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-17T11:51:06-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:in-progress",
+   "type:feature"
+  ],
+  "milestone": null,
+  "number": 88,
+  "state": "closed",
+  "title": "Auto-close pull requests on the GitHub mirrors",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "base": "main",
+  "body": "Closes #88\n\nGitHub cannot turn pull requests off, so the read-only GitHub copies still accept them. `.github/workflows/mirror-lockdown.yml` closes and locks a new one with a comment pointing to the Forgejo repo and its GitHub sign-in, as most read-only mirrors do, using `dessant/repo-lockdown` v5.0.2 pinned by commit.\n\nWhat keeps it safe, each pinned by `tests/test_mirror_lockdown.py`:\n- It runs only on GitHub under the SisyphusMD owner: Forgejo runs `.github/workflows` in a repo without `.forgejo/workflows`, where it would close the real pull requests, and a fork with Actions on would close its own. Commenting the condition out or dropping the owner check fails the test.\n- The token is `permissions: {}` with only `pull-requests: write` on the job; an extra permission fails the test.\n- No checkout and no `run:` step, so nothing from the pull request executes.\n- The daily sweep skips pull requests created before 2026-11-17, so the closed history (already answered and moved to Forgejo) is not commented on or locked. Removing the cut-off fails the test.\n\nRule 21 and `docs/adopting.md` (step 1) say every public repo copies it and its GitHub copy has Actions on, limited to this action, with a read-only default token. Each repo gets it with its adoption (#71 to #76).",
+  "closed_at": "2026-11-17T11:55:37-08:00",
+  "comments": [
+   {
+    "body": "<!-- ai-review -->\n**AI review** of `474dbd779f`: Clean, well-scoped PR that adds a pinned, minimally-permissioned GitHub Actions workflow to auto-close PRs on read-only GitHub mirrors, with a solid test file pinning every safety property, and matching docs/changelog updates. No issues found.\n\nNo findings.\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W10= -->",
+    "created_at": "2026-11-17T11:54:54-08:00",
+    "id": 36127,
+    "updated_at": "2026-11-17T11:54:54-08:00",
+    "user": "forgejo-actions"
+   }
+  ],
+  "created_at": "2026-11-17T11:54:13-08:00",
+  "head": "refs/pull/89/head",
+  "kind": "pull",
+  "labels": [],
+  "merge_commit_sha": "bef02c1a51d348c108fb094f9f38b7016f0f4d6c",
+  "merged": true,
+  "milestone": null,
+  "number": 89,
+  "reviews": [],
+  "state": "closed",
+  "title": "ci: close pull requests opened on the GitHub mirrors",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Follow-up to the AGit gate and #79 (`pull_request` runs the PR head's workflow; AGit under a maintainer account ran CI on unreviewed code).\n\n- Nothing tests the gate in `tests.yml`. Add a test that walks every job of every `pull_request`-triggered workflow under `.forgejo/workflows/` and fails unless its `if:` carries both `github.event.pull_request.head.repo.full_name == github.repository` and `github.event.pull_request.flow == 0`, with named exemptions and a reason for each. A job that loses its whole `if:` must fail it. `pull_request_target` workflows (`ci.yml`, `ai-review.yml`) are out of scope; that is #57.\n- `CONTRIBUTING.md` and `templates/CONTRIBUTING.md` should say that AGit and fork pull requests get no CI from a repo's own test workflows, and that a maintainer re-pushes the change to a branch in the repo to run it, so repos adopting the rules carry the line.",
+  "closed_at": "2026-11-17T13:48:15-08:00",
+  "comments": [
+   {
+    "body": "Status: guard test (with a pyyaml pin in tests.yml) and the CONTRIBUTING and template note written, green locally (74 passed), not committed: needs cx review (workflow change) before commit. Branch ci/agit-guard-followups, one PR with #91.",
+    "created_at": "2026-11-17T13:24:52-08:00",
+    "id": 36277,
+    "updated_at": "2026-11-17T13:24:52-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Merged in #94 at 2318578 after #93. All ten Forgejo contexts passed. The regression covers a removed guard, either clause removed, and OR in place of AND. The standard template documents the maintainer branch-PR route.",
+    "created_at": "2026-11-17T13:48:58-08:00",
+    "id": 36439,
+    "updated_at": "2026-11-17T13:48:58-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-17T13:11:50-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:in-progress",
+   "type:chore"
+  ],
+  "milestone": null,
+  "number": 90,
+  "state": "closed",
+  "title": "Test the AGit and fork trust gate in tests.yml, and say in CONTRIBUTING that such PRs get no CI",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "The header comment of `shared/packaging/fetch-release-assets.sh` still describes the split CI: \"amd64 here, arm64 and macOS on GitHub\", \"the NAS, which no GitHub runner can reach\", and \"Half of these assets come from the mirrored-tag workflows\". Every SisyphusMD job now runs on Forgejo runners and GitHub is a read-only mirror. The release page is still the rendezvous, because the amd64, arm64 and macOS halves are built by separate workflows on separate runners.\n\nCorrect the comment for v0.3.1. Comment only; no behaviour change.",
+  "closed_at": "2026-11-17T13:46:56-08:00",
+  "comments": [
+   {
+    "body": "Status: comment fix written in the same worktree as #90, not committed yet (review pending). Comment only; shellcheck clean.",
+    "created_at": "2026-11-17T13:24:52-08:00",
+    "id": 36279,
+    "updated_at": "2026-11-17T13:24:52-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "The review found the same retired two-forge runner split in wait-for-release.sh. This issue will correct both release-helper comments. The shell logic stays byte-for-byte identical.",
+    "created_at": "2026-11-17T13:34:49-08:00",
+    "id": 36336,
+    "updated_at": "2026-11-17T13:34:49-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "The caller audit confirmed the NAS bottle refresh and native arm64 workflow. The same cutover wording is stale in the PyPI readiness, registry and prune comments. This PR will correct those related comments for v0.3.1 as well. The vendored runtime logic is unchanged.",
+    "created_at": "2026-11-17T13:45:44-08:00",
+    "id": 36409,
+    "updated_at": "2026-11-17T13:45:44-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Merged in #93 at f4d070c. All ten Forgejo contexts passed. Comment-only edits in five shared release helpers, for the v0.3.1 vendoring update.",
+    "created_at": "2026-11-17T13:47:32-08:00",
+    "id": 36426,
+    "updated_at": "2026-11-17T13:47:32-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-17T13:11:51-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:in-progress",
+   "type:chore"
+  ],
+  "milestone": null,
+  "number": 91,
+  "state": "closed",
+  "title": "fetch-release-assets.sh comment still describes GitHub runners",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "`diff-size.py` leaves lockfiles out (its `LOCKFILES` set), but `ai-review.py` sends the whole diff and fails any PR over `MAX_DIFF_CHARS` (120000) with \"split the PR\". A PR that adds a `uv.lock` (~94k characters) fails the AI review although Diff size passes it (bryantserver/casa#62, where the lockfile had to land in its own PR).\n\nFix: drop lockfile hunks from the diff the AI review sends, using the same set as `diff-size.py` (shared, not a second copy that can drift), and tell the model they were omitted. Test: a diff whose only oversize part is a lockfile is reviewed, not refused.",
+  "closed_at": null,
+  "comments": [],
+  "created_at": "2026-11-17T13:17:11-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:ready",
+   "type:bug"
+  ],
+  "milestone": null,
+  "number": 92,
+  "state": "open",
+  "title": "AI review counts lockfiles toward its diff limit",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "base": "main",
+  "body": "Closes #91\n\nThe shared release helper comments still described macOS and arm64 builds on GitHub runners and omitted the NAS bottle refresh. They now describe how the Forgejo release feeds apt/dnf, the NAS bottle refresh, the install matrix and the independent PyPI and release publication checks.\n\nNo tests: comment-only edits to the shell helpers. The diff was checked for executable changes and all five revised scripts passed ShellCheck.\n",
+  "closed_at": "2026-11-17T13:46:56-08:00",
+  "comments": [
+   {
+    "body": "<!-- ai-review -->\n**AI review** of `42fbcb3c07`: Comment-only corrections across five shared release-helper scripts to replace stale GitHub/mirrored-tag wording with the current Forgejo workflow model, as requested by issue #91. All hunks are within `#` comment lines; no executable code is touched. The CHANGELOG entry and issue link are present, and the 'No tests' justification is valid for a comment-only change.\n\nNo findings.\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W10= -->",
+    "created_at": "2026-11-17T13:46:31-08:00",
+    "id": 36412,
+    "updated_at": "2026-11-17T13:46:31-08:00",
+    "user": "forgejo-actions"
+   }
+  ],
+  "created_at": "2026-11-17T13:46:03-08:00",
+  "head": "refs/pull/93/head",
+  "kind": "pull",
+  "labels": [],
+  "merge_commit_sha": "f4d070c0226e5443d90cc5e7f4e95fc58012a025",
+  "merged": true,
+  "milestone": null,
+  "number": 93,
+  "reviews": [],
+  "state": "closed",
+  "title": "Describe the Forgejo release and publishing flow",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "base": "main",
+  "body": "Closes #90\n\nThe standard's test suite now checks each job in every `pull_request` workflow for both trust clauses. The regression fixture detects absent conditions, either clause missing, and conditions that join the clauses with OR. A positive control checks that the existing Tests jobs were inspected.\n\nThe local and template CONTRIBUTING guides explain how a maintainer runs the full suite on a branch PR after reading an AGit or fork submission.\n",
+  "closed_at": "2026-11-17T13:48:15-08:00",
+  "comments": [
+   {
+    "body": "<!-- ai-review -->\n**AI review** of `3841728c66`: The PR adds a guard test that walks every pull_request-triggered workflow and asserts each job carries both the fork and AGit trust clauses, with a regression fixture covering absent/partial/OR-joined conditions, plus the CONTRIBUTING and template notes the issue asked for. The logic, normalization, and positive/negative controls are sound; no blocking issues found.\n\nNo findings.\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W10= -->",
+    "created_at": "2026-11-17T13:47:52-08:00",
+    "id": 36428,
+    "updated_at": "2026-11-17T13:47:52-08:00",
+    "user": "forgejo-actions"
+   }
+  ],
+  "created_at": "2026-11-17T13:47:22-08:00",
+  "head": "refs/pull/94/head",
+  "kind": "pull",
+  "labels": [],
+  "merge_commit_sha": "2318578d745e87bdb2a757fe771ae4820ade2744",
+  "merged": true,
+  "milestone": null,
+  "number": 94,
+  "reviews": [],
+  "state": "closed",
+  "title": "Check the AGit and fork gate on every pull-request job",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "base": "main",
+  "body": "Closes #96\nRefs #86\n\nAdd the shared verifier and tag-only publisher for the two-step release flow. The verifier rejects a PR that has not merged into this repository's main, a different candidate tree, and a tag that conflicts with the primary's published tags. The existing release helper invocation still works while repositories migrate.\n\nTests use a real local Git remote to prove an exact release can be tagged after main advances, a retry preserves the existing tag object, and a conflicting tag leaves both refs intact. The shared Python suite passed with 90 tests and one existing skip. The existing mirror tests and ShellCheck passed.\n\nThe repository workflows and live release proof follow under #86. Keep that issue open until a protected-branch release has passed.",
+  "closed_at": "2026-11-17T14:13:23-08:00",
+  "comments": [
+   {
+    "body": "<!-- ai-review -->\n**AI review** of `59c33d0e0c`: The PR adds a well-structured verifier and tag-only publisher for the two-step release flow, with comprehensive tests using a real local Git remote. The logic for merge-commit verification, tree matching, changelog validation, tag conflict detection, and the push-tag.sh --merged-commit path are all correct and well-tested. One suggestion about the Forgejo API label format assumption.\n\n### Open\n\n- **F1** (suggestion, `shared/packaging/verify-release-pr.py:30`) head[\"label\"] format may include owner prefix in real Forgejo API: The code does `branch = head[\"label\"]` then `tag = branch.removeprefix(\"release/\")`. The test fixture uses `\"label\": \"release/v1.2.3\"`, but in Gitea/Forgejo's PR API, `head.label` for a same-repo PR is typically `owner:branch` (e.g. `Owner:release/v1.2.3`). If the real API returns the owner-prefixed form, `removeprefix(\"release/\")` would not strip anything, `VERSION.fullmatch` would return None, and every legitimate release PR would be rejected with \"expected a release/vX.Y.Z head branch\". The test passes because it constructs the dict manually. Verify against the actual Forgejo instance's API response (e.g. `curl .../repos/Owner/Project/pulls/7 | jq .head.label`) and either adjust the parsing (e.g. `branch.rsplit(\":\", 1)[-1]` or a regex that tolerates the prefix) or confirm the label truly is bare for same-repo PRs in the version deployed.\n\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W3siaWQiOiAiRjEiLCAiZmlsZSI6ICJzaGFyZWQvcGFja2FnaW5nL3ZlcmlmeS1yZWxlYXNlLXByLnB5IiwgImxpbmUiOiAzMCwgInNldmVyaXR5IjogInN1Z2dlc3Rpb24iLCAic3RhdHVzIjogIm9wZW4iLCAidGl0bGUiOiAiaGVhZFtcImxhYmVsXCJdIGZvcm1hdCBtYXkgaW5jbHVkZSBvd25lciBwcmVmaXggaW4gcmVhbCBGb3JnZWpvIEFQSSIsICJkZXRhaWwiOiAiVGhlIGNvZGUgZG9lcyBgYnJhbmNoID0gaGVhZFtcImxhYmVsXCJdYCB0aGVuIGB0YWcgPSBicmFuY2gucmVtb3ZlcHJlZml4KFwicmVsZWFzZS9cIilgLiBUaGUgdGVzdCBmaXh0dXJlIHVzZXMgYFwibGFiZWxcIjogXCJyZWxlYXNlL3YxLjIuM1wiYCwgYnV0IGluIEdpdGVhL0Zvcmdlam8ncyBQUiBBUEksIGBoZWFkLmxhYmVsYCBmb3IgYSBzYW1lLXJlcG8gUFIgaXMgdHlwaWNhbGx5IGBvd25lcjpicmFuY2hgIChlLmcuIGBPd25lcjpyZWxlYXNlL3YxLjIuM2ApLiBJZiB0aGUgcmVhbCBBUEkgcmV0dXJucyB0aGUgb3duZXItcHJlZml4ZWQgZm9ybSwgYHJlbW92ZXByZWZpeChcInJlbGVhc2UvXCIpYCB3b3VsZCBub3Qgc3RyaXAgYW55dGhpbmcsIGBWRVJTSU9OLmZ1bGxtYXRjaGAgd291bGQgcmV0dXJuIE5vbmUsIGFuZCBldmVyeSBsZWdpdGltYXRlIHJlbGVhc2UgUFIgd291bGQgYmUgcmVqZWN0ZWQgd2l0aCBcImV4cGVjdGVkIGEgcmVsZWFzZS92WC5ZLlogaGVhZCBicmFuY2hcIi4gVGhlIHRlc3QgcGFzc2VzIGJlY2F1c2UgaXQgY29uc3RydWN0cyB0aGUgZGljdCBtYW51YWxseS4gVmVyaWZ5IGFnYWluc3QgdGhlIGFjdHVhbCBGb3JnZWpvIGluc3RhbmNlJ3MgQVBJIHJlc3BvbnNlIChlLmcuIGBjdXJsIC4uLi9yZXBvcy9Pd25lci9Qcm9qZWN0L3B1bGxzLzcgfCBqcSAuaGVhZC5sYWJlbGApIGFuZCBlaXRoZXIgYWRqdXN0IHRoZSBwYXJzaW5nIChlLmcuIGBicmFuY2gucnNwbGl0KFwiOlwiLCAxKVstMV1gIG9yIGEgcmVnZXggdGhhdCB0b2xlcmF0ZXMgdGhlIHByZWZpeCkgb3IgY29uZmlybSB0aGUgbGFiZWwgdHJ1bHkgaXMgYmFyZSBmb3Igc2FtZS1yZXBvIFBScyBpbiB0aGUgdmVyc2lvbiBkZXBsb3llZC4iLCAicmVzcG9uc2UiOiAiIn1d -->",
+    "created_at": "2026-11-17T14:10:46-08:00",
+    "id": 36500,
+    "updated_at": "2026-11-17T14:10:46-08:00",
+    "user": "forgejo-actions"
+   },
+   {
+    "body": "F1 checked against the primary Forgejo API. Same-repo merged PRs GhostSpectator #24, Archiver #348 and Dreame #293 return a bare branch in head.label. After deletion head.ref becomes refs/pull/<number>/head, while head.label and head.sha retain the original values. The verifier and deleted-branch test use that observed contract.",
+    "created_at": "2026-11-17T14:12:01-08:00",
+    "id": 36501,
+    "updated_at": "2026-11-17T14:12:01-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-17T14:04:51-08:00",
+  "head": "refs/pull/95/head",
+  "kind": "pull",
+  "labels": [],
+  "merge_commit_sha": "b79dcc0e24ea83559f52aaf4a86eccb6a5d83991",
+  "merged": true,
+  "milestone": null,
+  "number": 95,
+  "reviews": [],
+  "state": "closed",
+  "title": "Verify and tag the exact merged release pull request",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Part of #86. Verify a merged release PR from the primary, match the qualified changelog and tree, and publish its exact commit without updating main or overwriting a tag. Preserve the current helper entry point while consumers migrate.",
+  "closed_at": "2026-11-17T14:13:23-08:00",
+  "comments": [],
+  "created_at": "2026-11-17T14:05:28-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:in-progress",
+   "type:feature"
+  ],
+  "milestone": null,
+  "number": 96,
+  "state": "closed",
+  "title": "Share verification and tag-only publishing for merged release pull requests",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Promote the current Unreleased notes and stamp project-rules v0.3.1. The tag will make the merged release-PR helpers available to Appliance Job Monitor #14 and other consumers of the shared standard.",
+  "closed_at": "2026-11-17T14:35:07-08:00",
+  "comments": [],
+  "created_at": "2026-11-17T14:17:30-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:in-progress",
+   "type:chore"
+  ],
+  "milestone": null,
+  "number": 97,
+  "state": "closed",
+  "title": "Prepare project-rules v0.3.1",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "base": "main",
+  "body": "Closes #97\n\nPromote the Unreleased notes unchanged and stamp v0.3.1 in the package metadata. The changelog version test passed. Tagging is the separate publish step.",
+  "closed_at": "2026-11-17T14:35:07-08:00",
+  "comments": [
+   {
+    "body": "<!-- ai-review -->\n**AI review** of `c5b4aa2d8f`: Clean release-preparation PR: promotes Unreleased changelog entries under v0.3.1, stamps the matching version in pyproject.toml, and updates link references. Follows the documented release process in CONTRIBUTING.md exactly.\n\nNo findings.\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W10= -->",
+    "created_at": "2026-11-17T14:31:39-08:00",
+    "id": 36550,
+    "updated_at": "2026-11-17T14:31:39-08:00",
+    "user": "forgejo-actions"
+   }
+  ],
+  "created_at": "2026-11-17T14:31:31-08:00",
+  "head": "refs/pull/98/head",
+  "kind": "pull",
+  "labels": [],
+  "merge_commit_sha": "4c65c00350872d5243c5438fa7c07c5fea5d47bb",
+  "merged": true,
+  "milestone": null,
+  "number": 98,
+  "reviews": [],
+  "state": "closed",
+  "title": "Prepare project-rules v0.3.1",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "During #86 downstream review, found that v0.3.1 checks the final PR tree, but a branch update or an extra push can replace the commit that passed Prepare Release. Preserve and verify the exact original qualification before publishing. Dreame and Whiskerless are adding commit-bound qualification and matching the successful Prepare Release run. Appliance needs the equivalent follow-up. GhostSpectator needs its local PEAK ZIP bound to its prepared source. Cover stale branches, amended PR heads, and retries.",
+  "closed_at": "2026-11-17T19:43:27-08:00",
+  "comments": [],
+  "created_at": "2026-11-17T18:29:31-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:ready",
+   "type:bug"
+  ],
+  "milestone": null,
+  "number": 99,
+  "state": "closed",
+  "title": "Bind published releases to their qualified PR head",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "base": "main",
+  "body": "Closes #99.\n\nBind a new tag to a successful trusted Prepare Release dispatch recording the exact candidate SHA. Document the consumer contract and provide a small shared verifier for the Forgejo API, successful job and exact log record. The existing downstream implementations keep their locked copies until this ships as a new standard release.\n\n101 tests passed and one tag-only check skipped. Ruff and independent review passed.",
+  "closed_at": "2026-11-17T19:43:27-08:00",
+  "comments": [
+   {
+    "body": "<!-- ai-review -->\n**AI review** of `78207b7358`: The shared verifier is well-structured, the core `verify` logic is thoroughly tested against realistic Forgejo response shapes, and the docs clearly describe the consumer contract. F1 is resolved by the author's live-API verification. F2 and F3 remain as suggestions for additional coverage of the CLI wrapper, the redirect guard, and two untested guards in `verify`; none are blocking because this file is not named as safety-critical in CONTRIBUTING.md and the vendored-copy drift risk is covered by `tools/check.py`.\n\n### Open\n\n- **F2** (suggestion, `tests/test_verify_release_qualification.py:1`) `main()` and `RejectRedirect` are untested: `RejectRedirect.redirect_request` is a security guard that keeps the read token on the primary; a silent regression (e.g. removing the class or returning a request) would leak the token on a redirect. A one-line test (`assert RejectRedirect().redirect_request(...) is None`) would pin it. `main()` is a thin CLI wrapper and lower risk, but a smoke test with patched `sys.argv`/`os.environ`/`subprocess`/`urllib` would catch argument-handling regressions in the vendored copy. Not blocking: this file is not in the 100%-coverage safety-critical list, and the core `verify` logic is well covered.\n  - Reviewer: Understood that these are not safety-critical per CONTRIBUTING.md and the core logic is tested. I'd still recommend at least the one-line `RejectRedirect` assertion since it is a credential-leak guard that will be vendored into every consumer; a future edit that accidentally removes the `return None` would go unnoticed.\n- **F3** (suggestion, `tests/test_verify_release_qualification.py:47`) No test for `html_url` mismatch or multiple run numbers: The `html_url` equality check (line 37 of the script) and the `len(numbers) != 1` guard for multiple distinct run numbers (line 27) are not exercised. A test that sets `html_url` to a different URL and one that adds a second status with a different run number would cover these. Not blocking for the same reason as F2.\n  - Reviewer: Agreed these are additional guards worth covering. The wrong-repository test partially exercises the URL-prefix path, but the `html_url` equality and multi-number cases are distinct. Suggest adding them when convenient.\n\n### Resolved\n\n- **F1** (suggestion, `shared/packaging/verify-release-qualification.py:37`) `workflow_id` may be a numeric ID in the Forgejo API, not a filename: The author verified on live Forgejo 17.0.1 that `workflow_id` is the filename string (e.g. `release.yml`), matching the test mock. No change needed.\n  - Reviewer: Confirmed by live-API check. Withdrawing.\n\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W3siaWQiOiAiRjEiLCAiZmlsZSI6ICJzaGFyZWQvcGFja2FnaW5nL3ZlcmlmeS1yZWxlYXNlLXF1YWxpZmljYXRpb24ucHkiLCAibGluZSI6IDM3LCAic2V2ZXJpdHkiOiAic3VnZ2VzdGlvbiIsICJzdGF0dXMiOiAicmVzb2x2ZWQiLCAidGl0bGUiOiAiYHdvcmtmbG93X2lkYCBtYXkgYmUgYSBudW1lcmljIElEIGluIHRoZSBGb3JnZWpvIEFQSSwgbm90IGEgZmlsZW5hbWUiLCAiZGV0YWlsIjogIlRoZSBhdXRob3IgdmVyaWZpZWQgb24gbGl2ZSBGb3JnZWpvIDE3LjAuMSB0aGF0IGB3b3JrZmxvd19pZGAgaXMgdGhlIGZpbGVuYW1lIHN0cmluZyAoZS5nLiBgcmVsZWFzZS55bWxgKSwgbWF0Y2hpbmcgdGhlIHRlc3QgbW9jay4gTm8gY2hhbmdlIG5lZWRlZC4iLCAicmVzcG9uc2UiOiAiQ29uZmlybWVkIGJ5IGxpdmUtQVBJIGNoZWNrLiBXaXRoZHJhd2luZy4ifSwgeyJpZCI6ICJGMiIsICJmaWxlIjogInRlc3RzL3Rlc3RfdmVyaWZ5X3JlbGVhc2VfcXVhbGlmaWNhdGlvbi5weSIsICJsaW5lIjogMSwgInNldmVyaXR5IjogInN1Z2dlc3Rpb24iLCAic3RhdHVzIjogIm9wZW4iLCAidGl0bGUiOiAiYG1haW4oKWAgYW5kIGBSZWplY3RSZWRpcmVjdGAgYXJlIHVudGVzdGVkIiwgImRldGFpbCI6ICJgUmVqZWN0UmVkaXJlY3QucmVkaXJlY3RfcmVxdWVzdGAgaXMgYSBzZWN1cml0eSBndWFyZCB0aGF0IGtlZXBzIHRoZSByZWFkIHRva2VuIG9uIHRoZSBwcmltYXJ5OyBhIHNpbGVudCByZWdyZXNzaW9uIChlLmcuIHJlbW92aW5nIHRoZSBjbGFzcyBvciByZXR1cm5pbmcgYSByZXF1ZXN0KSB3b3VsZCBsZWFrIHRoZSB0b2tlbiBvbiBhIHJlZGlyZWN0LiBBIG9uZS1saW5lIHRlc3QgKGBhc3NlcnQgUmVqZWN0UmVkaXJlY3QoKS5yZWRpcmVjdF9yZXF1ZXN0KC4uLikgaXMgTm9uZWApIHdvdWxkIHBpbiBpdC4gYG1haW4oKWAgaXMgYSB0aGluIENMSSB3cmFwcGVyIGFuZCBsb3dlciByaXNrLCBidXQgYSBzbW9rZSB0ZXN0IHdpdGggcGF0Y2hlZCBgc3lzLmFyZ3ZgL2Bvcy5lbnZpcm9uYC9gc3VicHJvY2Vzc2AvYHVybGxpYmAgd291bGQgY2F0Y2ggYXJndW1lbnQtaGFuZGxpbmcgcmVncmVzc2lvbnMgaW4gdGhlIHZlbmRvcmVkIGNvcHkuIE5vdCBibG9ja2luZzogdGhpcyBmaWxlIGlzIG5vdCBpbiB0aGUgMTAwJS1jb3ZlcmFnZSBzYWZldHktY3JpdGljYWwgbGlzdCwgYW5kIHRoZSBjb3JlIGB2ZXJpZnlgIGxvZ2ljIGlzIHdlbGwgY292ZXJlZC4iLCAicmVzcG9uc2UiOiAiVW5kZXJzdG9vZCB0aGF0IHRoZXNlIGFyZSBub3Qgc2FmZXR5LWNyaXRpY2FsIHBlciBDT05UUklCVVRJTkcubWQgYW5kIHRoZSBjb3JlIGxvZ2ljIGlzIHRlc3RlZC4gSSdkIHN0aWxsIHJlY29tbWVuZCBhdCBsZWFzdCB0aGUgb25lLWxpbmUgYFJlamVjdFJlZGlyZWN0YCBhc3NlcnRpb24gc2luY2UgaXQgaXMgYSBjcmVkZW50aWFsLWxlYWsgZ3VhcmQgdGhhdCB3aWxsIGJlIHZlbmRvcmVkIGludG8gZXZlcnkgY29uc3VtZXI7IGEgZnV0dXJlIGVkaXQgdGhhdCBhY2NpZGVudGFsbHkgcmVtb3ZlcyB0aGUgYHJldHVybiBOb25lYCB3b3VsZCBnbyB1bm5vdGljZWQuIn0sIHsiaWQiOiAiRjMiLCAiZmlsZSI6ICJ0ZXN0cy90ZXN0X3ZlcmlmeV9yZWxlYXNlX3F1YWxpZmljYXRpb24ucHkiLCAibGluZSI6IDQ3LCAic2V2ZXJpdHkiOiAic3VnZ2VzdGlvbiIsICJzdGF0dXMiOiAib3BlbiIsICJ0aXRsZSI6ICJObyB0ZXN0IGZvciBgaHRtbF91cmxgIG1pc21hdGNoIG9yIG11bHRpcGxlIHJ1biBudW1iZXJzIiwgImRldGFpbCI6ICJUaGUgYGh0bWxfdXJsYCBlcXVhbGl0eSBjaGVjayAobGluZSAzNyBvZiB0aGUgc2NyaXB0KSBhbmQgdGhlIGBsZW4obnVtYmVycykgIT0gMWAgZ3VhcmQgZm9yIG11bHRpcGxlIGRpc3RpbmN0IHJ1biBudW1iZXJzIChsaW5lIDI3KSBhcmUgbm90IGV4ZXJjaXNlZC4gQSB0ZXN0IHRoYXQgc2V0cyBgaHRtbF91cmxgIHRvIGEgZGlmZmVyZW50IFVSTCBhbmQgb25lIHRoYXQgYWRkcyBhIHNlY29uZCBzdGF0dXMgd2l0aCBhIGRpZmZlcmVudCBydW4gbnVtYmVyIHdvdWxkIGNvdmVyIHRoZXNlLiBOb3QgYmxvY2tpbmcgZm9yIHRoZSBzYW1lIHJlYXNvbiBhcyBGMi4iLCAicmVzcG9uc2UiOiAiQWdyZWVkIHRoZXNlIGFyZSBhZGRpdGlvbmFsIGd1YXJkcyB3b3J0aCBjb3ZlcmluZy4gVGhlIHdyb25nLXJlcG9zaXRvcnkgdGVzdCBwYXJ0aWFsbHkgZXhlcmNpc2VzIHRoZSBVUkwtcHJlZml4IHBhdGgsIGJ1dCB0aGUgYGh0bWxfdXJsYCBlcXVhbGl0eSBhbmQgbXVsdGktbnVtYmVyIGNhc2VzIGFyZSBkaXN0aW5jdC4gU3VnZ2VzdCBhZGRpbmcgdGhlbSB3aGVuIGNvbnZlbmllbnQuIn1d -->",
+    "created_at": "2026-11-17T19:30:53-08:00",
+    "id": 36919,
+    "updated_at": "2026-11-17T19:42:38-08:00",
+    "user": "forgejo-actions"
+   },
+   {
+    "body": "F1 verified on the live Forgejo 17.0.1 API. `GET` to the Actions run list with `run_number=49` for appliance-job-monitor returned `workflow_id: release.yml`, `trigger_event: workflow_dispatch`, `status: success`, its exact run URL, and payload `ref: refs/heads/main`. Its jobs endpoint returns an array as the helper expects. Run evidence: https://forgejo.bryantserver.com/SisyphusMD/appliance-job-monitor/actions/runs/49. F2 and F3 are optional coverage suggestions. The current tests exercise the candidate-bound refusal, wrong repository, wrong run metadata, absent results and failed recording job.",
+    "created_at": "2026-11-17T19:34:33-08:00",
+    "id": 36921,
+    "updated_at": "2026-11-17T19:34:33-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-17T19:27:20-08:00",
+  "head": "refs/pull/100/head",
+  "kind": "pull",
+  "labels": [],
+  "merge_commit_sha": "dc62e53297e94208e5122361b4169c58dca55694",
+  "merged": true,
+  "milestone": null,
+  "number": 100,
+  "reviews": [],
+  "state": "closed",
+  "title": "Share verification of the original qualified release candidate",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Automatically synchronized agent memory notes need to reach other machines as ordinary versioned file updates. The maintainer approved a single private, memory-only repository for this purpose. Record an exception to rules 1, 6, and 19 for its repository-scoped sync identity. The exception covers automatic commits of memory notes and their indexes. Tools, scripts, hooks, configuration, and instructions keep the usual issue and pull request process.",
+  "closed_at": "2026-11-17T23:32:08-08:00",
+  "comments": [
+   {
+    "body": "Decision: One designated private repository for automatic memory notes and indexes may receive direct sync commits on main. Tools, scripts, hooks, shared settings, and instructions still go through issues and pull requests. Why: Shared memories can stay versioned and reach other machines automatically while changes to agent behavior follow the normal review process.\n\nDecided by: Cody, 2026-11-17.",
+    "created_at": "2026-11-17T22:48:32-08:00",
+    "id": 37165,
+    "updated_at": "2026-11-17T22:48:32-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Taking the exception row, changelog entry, and required validation.",
+    "created_at": "2026-11-17T22:48:32-08:00",
+    "id": 37168,
+    "updated_at": "2026-11-17T22:48:32-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-17T22:48:20-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:in-progress",
+   "type:decision"
+  ],
+  "milestone": null,
+  "number": 101,
+  "state": "closed",
+  "title": "Allow direct sync commits in the private memory repository",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "base": "main",
+  "body": "Closes #101.\n\nAn automated update to a memory note needs to reach the other machines without a pull request for each write. This adds an exception for the scoped sync identity in one designated private repository. It limits direct pushes to memory notes and indexes, with path validation and a credential scan before each push. Tools, workflows, hooks, settings, and instructions use the ordinary issue and pull request process.\n\nThe local unit suite, shell tests, lint checks, and scratch vendoring check passed.",
+  "closed_at": "2026-11-17T23:32:07-08:00",
+  "comments": [
+   {
+    "body": "<!-- ai-review -->\n**AI review** of `87146d6ad4`: The PR adds a scoped exception to RULES.md for automatic memory sync in a designated private repository, matching the maintainer's decision in #101. The diff is small, focused, and includes a CHANGELOG entry. The earlier finding F1 misread the diff and should be withdrawn.\n\n### Withdrawn\n\n- **F1** (suggestion, `RULES.md:120`) Exception text says \"workflows\" where the decision says \"scripts\": The finding claimed the PR substituted \"workflows\" for \"scripts\" and dropped \"shared\" from \"shared settings.\" Re-reading the actual diff, the exception text reads \"tools, scripts, workflows, hooks, shared or local settings, and instructions\" — it contains both \"scripts\" and \"workflows,\" and retains \"shared.\" The PR is slightly broader than the decision (adding \"workflows\" and \"or local\"), which makes the exception narrower (more items require a PR), so it is more conservative than what was decided and creates no security gap.\n  - Reviewer: Withdrawing: the factual claims in the original finding are incorrect. The diff includes both \"scripts\" and \"workflows\" (not a substitution), and \"shared\" is present in \"shared or local settings\" (not dropped). The additions beyond the decision's list make the exception more restrictive, not less, so there is no scope mismatch that could let something through.\n\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W3siaWQiOiAiRjEiLCAiZmlsZSI6ICJSVUxFUy5tZCIsICJsaW5lIjogMTIwLCAic2V2ZXJpdHkiOiAic3VnZ2VzdGlvbiIsICJzdGF0dXMiOiAid2l0aGRyYXduIiwgInRpdGxlIjogIkV4Y2VwdGlvbiB0ZXh0IHNheXMgXCJ3b3JrZmxvd3NcIiB3aGVyZSB0aGUgZGVjaXNpb24gc2F5cyBcInNjcmlwdHNcIiIsICJkZXRhaWwiOiAiVGhlIGZpbmRpbmcgY2xhaW1lZCB0aGUgUFIgc3Vic3RpdHV0ZWQgXCJ3b3JrZmxvd3NcIiBmb3IgXCJzY3JpcHRzXCIgYW5kIGRyb3BwZWQgXCJzaGFyZWRcIiBmcm9tIFwic2hhcmVkIHNldHRpbmdzLlwiIFJlLXJlYWRpbmcgdGhlIGFjdHVhbCBkaWZmLCB0aGUgZXhjZXB0aW9uIHRleHQgcmVhZHMgXCJ0b29scywgc2NyaXB0cywgd29ya2Zsb3dzLCBob29rcywgc2hhcmVkIG9yIGxvY2FsIHNldHRpbmdzLCBhbmQgaW5zdHJ1Y3Rpb25zXCIgXHUyMDE0IGl0IGNvbnRhaW5zIGJvdGggXCJzY3JpcHRzXCIgYW5kIFwid29ya2Zsb3dzLFwiIGFuZCByZXRhaW5zIFwic2hhcmVkLlwiIFRoZSBQUiBpcyBzbGlnaHRseSBicm9hZGVyIHRoYW4gdGhlIGRlY2lzaW9uIChhZGRpbmcgXCJ3b3JrZmxvd3NcIiBhbmQgXCJvciBsb2NhbFwiKSwgd2hpY2ggbWFrZXMgdGhlIGV4Y2VwdGlvbiBuYXJyb3dlciAobW9yZSBpdGVtcyByZXF1aXJlIGEgUFIpLCBzbyBpdCBpcyBtb3JlIGNvbnNlcnZhdGl2ZSB0aGFuIHdoYXQgd2FzIGRlY2lkZWQgYW5kIGNyZWF0ZXMgbm8gc2VjdXJpdHkgZ2FwLiIsICJyZXNwb25zZSI6ICJXaXRoZHJhd2luZzogdGhlIGZhY3R1YWwgY2xhaW1zIGluIHRoZSBvcmlnaW5hbCBmaW5kaW5nIGFyZSBpbmNvcnJlY3QuIFRoZSBkaWZmIGluY2x1ZGVzIGJvdGggXCJzY3JpcHRzXCIgYW5kIFwid29ya2Zsb3dzXCIgKG5vdCBhIHN1YnN0aXR1dGlvbiksIGFuZCBcInNoYXJlZFwiIGlzIHByZXNlbnQgaW4gXCJzaGFyZWQgb3IgbG9jYWwgc2V0dGluZ3NcIiAobm90IGRyb3BwZWQpLiBUaGUgYWRkaXRpb25zIGJleW9uZCB0aGUgZGVjaXNpb24ncyBsaXN0IG1ha2UgdGhlIGV4Y2VwdGlvbiBtb3JlIHJlc3RyaWN0aXZlLCBub3QgbGVzcywgc28gdGhlcmUgaXMgbm8gc2NvcGUgbWlzbWF0Y2ggdGhhdCBjb3VsZCBsZXQgc29tZXRoaW5nIHRocm91Z2guIn1d -->",
+    "created_at": "2026-11-17T22:55:36-08:00",
+    "id": 37178,
+    "updated_at": "2026-11-17T22:59:55-08:00",
+    "user": "forgejo-actions"
+   }
+  ],
+  "created_at": "2026-11-17T22:54:18-08:00",
+  "head": "refs/pull/102/head",
+  "kind": "pull",
+  "labels": [],
+  "merge_commit_sha": "1dfdfd7830dd6f6ed233a38297125d6a1319ced4",
+  "merged": true,
+  "milestone": null,
+  "number": 102,
+  "reviews": [],
+  "state": "closed",
+  "title": "Scope the automatic memory sync exception",
+  "user": "cody"
  }
 ]
