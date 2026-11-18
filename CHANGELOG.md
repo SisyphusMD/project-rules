@@ -6,6 +6,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Provide a shared verifier for the exact commit qualified by Prepare Release. (#99)
+
 ## [0.3.1] - 2026-11-17
 
 - Document the two-step stable release flow and verify and tag the exact merged release PR. (#86)
