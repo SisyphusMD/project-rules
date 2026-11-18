@@ -119,7 +119,8 @@ designated by the maintainer under #101. It must use a write credential scoped
 to that repository and verify that its commits contain only memory notes and
 their indexes. The sync checks changed files for credentials before pushing.
 This is an exception to the issue and PR path in rules 1, 6, and 19. Changes to
-tools, workflows, hooks, settings, and instructions follow the normal process.
+tools, scripts, workflows, hooks, shared or local settings, and instructions
+follow the issue and PR path.
 
 <!-- Absolute, not relative: every repo carries this file as .forgejo/RULES.md, where a relative
      link points at nothing. tests/test_rules_links.py checks that this repo's targets exist. -->
