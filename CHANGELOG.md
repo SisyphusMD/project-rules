@@ -6,6 +6,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- `RULES.md` allows one scoped sync identity to commit memory notes and indexes
+  directly to the designated private memory repository. (#101)
 - Provide a shared verifier for the exact commit qualified by Prepare Release. (#99)
 
 ## [0.3.1] - 2026-11-17
