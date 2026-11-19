@@ -60,7 +60,7 @@ class AskModel(unittest.TestCase):
         cap = USAGE["completion_tokens"]
         ok = '{"summary": "ok", "findings": []}'
         with mock.patch.object(ai_review, "MAX_OUTPUT_TOKENS", cap):
-            result, _, out = self.call(None, ok)
+            result, _, _ = self.call(None, ok)
             self.assertIsInstance(result, ai_review.CutOff)
             self.assertIn("cut off", str(result))
             # A server that says it stopped normally is believed.
