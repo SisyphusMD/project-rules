@@ -20,3 +20,7 @@ GitHub mirror credential rotation cleared the workflow rejection. Both mirrors m
 ## cody, 2026-11-17T23:57:43-08:00
 
 GhostSpectator #29 is merged with matching mirrors and the shared required checks were proved in GhostSpectator#30. Strict adoption awaits licensed local PEAK gameplay and an actual approved Thunderstore release through the new workflow.
+
+## cody, 2026-11-18T06:18:48-08:00
+
+The release-preparation regression passed, including the gameplay confirmation gate and candidate-only push. A licensed PEAK installation is available under the maintainer’s interactive account. The configured Forgejo runner is isolated from that account and GhostSpectator has no gameplay runner. The remaining gate is PatchValidator and a gameplay run using the actual candidate ZIP in the interactive game session.

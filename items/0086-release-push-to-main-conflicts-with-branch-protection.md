@@ -48,3 +48,7 @@ Blocked on live proof before extending strict main protection: homebrew-tap #3 a
 Live Homebrew publisher proof is complete for Dreame v0.3.0-rc.52 and Whiskerless v0.2.0-rc.78. Their source and bottle PRs all merged, both install matrices poured the published bottles, and main now has strict verified protection in both source repos and the tap. The results are in homebrew-tap#3 and homebrew-tap#9. Appliance and project-rules already have verified strict protection.
 
 Remaining triggers: Archiver needs an approved release with a real maintenance change on release/0.11. The channel still points at v0.11.7 with an empty Unreleased section. Keep archiver#357 draft until the replacement release publishes and is verified. GhostSpectator needs licensed local PEAK gameplay before the first live Thunderstore release through the new workflow. Keep #74, #75 and this issue open until those proofs allow strict protection.
+
+## cody, 2026-11-18T06:18:48-08:00
+
+Follow-up on the two remaining release blocks: Archiver maintenance promotion, exact merge verification, tag replay and runtime smoke passed in isolation. See #74 for the remaining live-patch trigger. GhostSpectator release-preparation regression is green, and actual licensed gameplay still requires the maintainer’s interactive game environment. See #75. This follow-up did not publish a release or change branch protection.

@@ -546,7 +546,15 @@
   "assignees": [],
   "body": "_Recreated from bryantserver/project-rules#21 (issue, opened by cody on 2026-11-16)._\n\nDecision on #1 (Cody, 2026-11-16). To work out before anything is opened:\n- Sign-up: who can register, spam and abuse limits (the Anubis gate already fronts Forgejo).\n- Fork PRs: the gates run on pull_request_target and never run PR code; confirm they check out a fork's head and that secrets stay out of anything the PR controls.\n- Cost: AI review and runner time spent on strangers' PRs (limit per user, or first-time contributors need a maintainer's go).\n- GitHub: disable issues and PRs on each public repo's GitHub copy and point its README to Forgejo. Outward-facing; each repo needs Cody's OK.\n- Public CONTRIBUTING.md in each public repo pointing to the public rules.",
   "closed_at": null,
-  "comments": [],
+  "comments": [
+   {
+    "body": "Decision: Keep GitHub as a full read-only mirror and for external sign-in and Home Assistant Marketplace. Keep shipping Homebrew bottles and use Forgejo as the default for our tap, downloads and update lookups. Why: Users should keep prebuilt installs and access through required third-party integrations while our primary handles installation and updates.\n\nDecided by: Cody, 2026-11-18.",
+    "created_at": "2026-11-18T06:53:20-08:00",
+    "id": 37527,
+    "updated_at": "2026-11-18T06:53:20-08:00",
+    "user": "cody"
+   }
+  ],
   "created_at": "2026-11-16T14:07:28-08:00",
   "kind": "issue",
   "labels": [
@@ -1693,6 +1701,13 @@
     "id": 37329,
     "updated_at": "2026-11-17T23:57:43-08:00",
     "user": "cody"
+   },
+   {
+    "body": "Retested the maintenance path from the current release/0.11 tip (caf0bb13bf8d1dfbc6f1711888bb0fb498fa4689) and current trusted main. An isolated Git primary reproduced v0.11.8, verified the exact merge, created and replayed the annotated tag, and rejected a substituted PR head. The version-only diff leaves the Docker build inputs identical to v0.11.7, and the digest-matching v0.11.7 container passed both maintenance startup smoke checks. The live branch is still at v0.11.7 with an empty Unreleased section. The first approved release of a maintenance change is still the trigger for validating hosted qualification and retirement of the old writer.",
+    "created_at": "2026-11-18T06:18:47-08:00",
+    "id": 37439,
+    "updated_at": "2026-11-18T06:18:47-08:00",
+    "user": "cody"
    }
   ],
   "created_at": "2026-11-17T07:54:22-08:00",
@@ -1738,6 +1753,13 @@
     "created_at": "2026-11-17T23:57:43-08:00",
     "id": 37330,
     "updated_at": "2026-11-17T23:57:43-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "The release-preparation regression passed, including the gameplay confirmation gate and candidate-only push. A licensed PEAK installation is available under the maintainer’s interactive account. The configured Forgejo runner is isolated from that account and GhostSpectator has no gameplay runner. The remaining gate is PatchValidator and a gameplay run using the actual candidate ZIP in the interactive game session.",
+    "created_at": "2026-11-18T06:18:48-08:00",
+    "id": 37440,
+    "updated_at": "2026-11-18T06:18:48-08:00",
     "user": "cody"
    }
   ],
@@ -2078,6 +2100,13 @@
     "created_at": "2026-11-17T23:57:43-08:00",
     "id": 37326,
     "updated_at": "2026-11-17T23:57:43-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Follow-up on the two remaining release blocks: Archiver maintenance promotion, exact merge verification, tag replay and runtime smoke passed in isolation. See #74 for the remaining live-patch trigger. GhostSpectator release-preparation regression is green, and actual licensed gameplay still requires the maintainer’s interactive game environment. See #75. This follow-up did not publish a release or change branch protection.",
+    "created_at": "2026-11-18T06:18:48-08:00",
+    "id": 37441,
+    "updated_at": "2026-11-18T06:18:48-08:00",
     "user": "cody"
    }
   ],

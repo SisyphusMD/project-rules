@@ -20,3 +20,7 @@ Archiver #354 merged at 06d756f after its exact integration checks passed. GitHu
 ## cody, 2026-11-17T23:57:43-08:00
 
 Archiver #355 is merged and its guarded publish workflow rejected an ordinary merged PR in run #756. The shared required checks were proved in archiver#358. Strict adoption awaits the first approved maintenance release through the replacement path. release/0.11 still equals v0.11.7 and has no Unreleased entries. Keep archiver#357 draft until the new path is proven.
+
+## cody, 2026-11-18T06:18:47-08:00
+
+Retested the maintenance path from the current release/0.11 tip (caf0bb13bf8d1dfbc6f1711888bb0fb498fa4689) and current trusted main. An isolated Git primary reproduced v0.11.8, verified the exact merge, created and replayed the annotated tag, and rejected a substituted PR head. The version-only diff leaves the Docker build inputs identical to v0.11.7, and the digest-matching v0.11.7 container passed both maintenance startup smoke checks. The live branch is still at v0.11.7 with an empty Unreleased section. The first approved release of a maintenance change is still the trigger for validating hosted qualification and retirement of the old writer.

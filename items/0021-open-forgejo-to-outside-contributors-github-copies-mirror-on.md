@@ -11,3 +11,9 @@ Decision on #1 (Cody, 2026-11-16). To work out before anything is opened:
 - Cost: AI review and runner time spent on strangers' PRs (limit per user, or first-time contributors need a maintainer's go).
 - GitHub: disable issues and PRs on each public repo's GitHub copy and point its README to Forgejo. Outward-facing; each repo needs Cody's OK.
 - Public CONTRIBUTING.md in each public repo pointing to the public rules.
+
+## cody, 2026-11-18T06:53:20-08:00
+
+Decision: Keep GitHub as a full read-only mirror and for external sign-in and Home Assistant Marketplace. Keep shipping Homebrew bottles and use Forgejo as the default for our tap, downloads and update lookups. Why: Users should keep prebuilt installs and access through required third-party integrations while our primary handles installation and updates.
+
+Decided by: Cody, 2026-11-18.
