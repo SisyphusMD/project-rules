@@ -196,10 +196,22 @@ def ask_model(messages):
         raise CutOff(f"the model's answer was cut off at {MAX_OUTPUT_TOKENS} output tokens")
     text = choice["message"].get("content") or ""
     text = re.sub(r"<think>.*?</think>", "", text, flags=re.S).strip()
-    m = re.search(r"\{.*\}", text, re.S)
-    if not m:
-        raise ValueError("no JSON object in the model's answer")
-    return json.loads(m.group(0))
+    # The server's reasoning parser can end early on a literal </think> the model quotes (from a
+    # diff of this very line), leaking the rest of its reasoning, braces and all, ahead of the
+    # verdict. Try the whole answer, then what follows each </think>; each attempt must parse as
+    # one object from its first brace to the end, so no draft or inner object can stand in for a
+    # malformed verdict.
+    parts = text.split("</think>")
+    for k in range(len(parts)):
+        segment = "</think>".join(parts[k:]).rstrip().removesuffix("```").rstrip()
+        start = segment.find("{")
+        if start < 0:
+            continue
+        try:
+            return json.loads(segment[start:])
+        except ValueError:
+            continue
+    raise ValueError("no JSON object in the model's answer")
 
 
 def validate(result, files, prior):

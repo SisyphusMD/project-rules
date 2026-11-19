@@ -77,6 +77,35 @@ class AskModel(unittest.TestCase):
         self.assertIsInstance(self.call("stop", "", choices=[])[0], IndexError)
         self.assertIsInstance(self.call("stop", "", choices=["x"])[0], AttributeError)
 
+    def test_reasoning_leaked_past_a_quoted_think_tag_is_ignored(self):
+        leaked = ('", "", text)` is unchanged; the check {"x": 1} is fine.\n</think>\n\n'
+                  '{"summary": "ok", "findings": []}')
+        self.assertEqual(self.call("stop", leaked)[0]["summary"], "ok")
+
+    def test_verdict_quoting_a_think_tag_survives(self):
+        quoted = '{"summary": "the parser strips </think> blocks", "findings": [{"id": "F1"}]}'
+        result = self.call("stop", quoted)[0]
+        self.assertEqual(result["summary"], "the parser strips </think> blocks")
+        self.assertEqual(result["findings"], [{"id": "F1"}])
+
+    def test_malformed_final_verdict_fails_even_after_a_valid_draft(self):
+        text = ('draft {"summary": "draft", "findings": []} more thought\n</think>\n'
+                '{"summary": "final", "findings": [')
+        self.assertIsInstance(self.call("stop", text)[0], ValueError)
+
+    def test_inner_verdict_of_an_unfinished_object_fails(self):
+        text = '{"summary": "real", "findings": [], "note": {"summary": "inner", "findings": []}'
+        self.assertIsInstance(self.call("stop", text)[0], ValueError)
+
+    def test_fenced_verdict_parses(self):
+        text = '```json\n{"summary": "ok", "findings": []}\n```\n'
+        self.assertEqual(self.call("stop", text)[0]["summary"], "ok")
+
+    def test_last_verdict_wins_over_a_leaked_draft(self):
+        text = ('draft {"summary": "draft", "findings": []} more thought\n</think>\n'
+                '{"summary": "final", "findings": []}')
+        self.assertEqual(self.call("stop", text)[0]["summary"], "final")
+
     def test_empty_answer_fails_closed(self):
         result, _, _ = self.call("stop", None)
         self.assertIsInstance(result, ValueError)
