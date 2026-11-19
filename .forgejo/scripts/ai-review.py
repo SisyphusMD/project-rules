@@ -168,13 +168,13 @@ def linked_issues(body):
     return "\n\n---\n\n".join(out) if out else "none named"
 
 
-# Hidden reasoning counts toward this cap: a long review reasoned for 23,119 tokens before a
-# 438-token answer. It must stay small enough to finish inside the request timeout at the slowest
-# observed speed (59 tok/s, so about 11 minutes); a review that reaches it is stuck, not slow.
+# Hidden reasoning counts toward this cap: uncapped, one long review reasoned for 23,119 tokens
+# before a 438-token answer. It must stay small enough to finish inside the request timeout at
+# the slowest observed speed (59 tok/s, so about 11 minutes); a review that reaches it is stuck.
 MAX_OUTPUT_TOKENS = int(os.environ.get("MAX_OUTPUT_TOKENS", "40000"))
 
 
-class CutOff(ValueError):
+class CutOff(RuntimeError):
     pass
 
 
@@ -186,9 +186,13 @@ def ask_model(messages):
     with urllib.request.urlopen(req, timeout=900) as r:
         reply = json.loads(r.read())
     choice = reply["choices"][0]
-    # The run log is the only record of real usage, which is what the cap is checked against.
-    print(f"model usage: {json.dumps(reply.get('usage'))} finish_reason={choice.get('finish_reason')}")
-    if choice.get("finish_reason") == "length":
+    usage = reply.get("usage") or {}
+    # Logged so the cap can be re-sized from real reviews; nothing else records it.
+    finish = choice.get("finish_reason")
+    print(f"model usage: {json.dumps(usage)} finish_reason={finish}")
+    # The token count decides only when the server does not say why it stopped.
+    if finish == "length" or (finish is None
+                              and (usage.get("completion_tokens") or 0) >= MAX_OUTPUT_TOKENS):
         raise CutOff(f"the model's answer was cut off at {MAX_OUTPUT_TOKENS} output tokens")
     text = choice["message"].get("content") or ""
     text = re.sub(r"<think>.*?</think>", "", text, flags=re.S).strip()
@@ -276,9 +280,11 @@ def main():
         raise
     except CutOff as e:
         # The same prompt hits the same cap again, so a re-run cannot help.
-        set_status(sha, "error", f"Model output hit the {MAX_OUTPUT_TOKENS}-token cap: split the PR")
+        set_status(sha, "error", f"Model output hit the {MAX_OUTPUT_TOKENS}-token cap: "
+                   "split the PR or raise MAX_OUTPUT_TOKENS")
         sys.exit(f"review failed closed: {e}")
-    except (urllib.error.URLError, TimeoutError, ValueError, KeyError, json.JSONDecodeError) as e:
+    except (urllib.error.URLError, TimeoutError, ValueError, KeyError, IndexError,
+            AttributeError) as e:
         set_status(sha, "error", f"Review could not run: {type(e).__name__}; re-run or reply to retry")
         sys.exit(f"review failed closed: {e}")
     body = render(result, sha)

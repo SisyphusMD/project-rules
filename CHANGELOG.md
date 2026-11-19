@@ -8,7 +8,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - AI review: the model may generate up to 40,000 tokens (`MAX_OUTPUT_TOKENS` overrides it), since its
   hidden reasoning alone ran past the old 16,000 cap on long reviews; a cut-off answer now fails
-  with a status that says to split the PR, and every run logs the model's token usage. (#103, #104)
+  with a status that says to split the PR or raise the cap, and every run logs the model's token
+  usage. (#103, #104)
 - `RULES.md` allows one scoped sync identity to commit memory notes and indexes
   directly to the designated private memory repository. (#101)
 - Provide a shared verifier for the exact commit qualified by Prepare Release. (#99)
