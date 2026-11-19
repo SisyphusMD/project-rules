@@ -2,8 +2,8 @@
 """CodeRabbit-style PR review on the house LLM, posted as the required `AI review` status.
 
 Env: FORGEJO_URL, REPO, TOKEN, PR (number), LLM_URL (chat-completions endpoint, keyless proxy),
-MODEL. Optional: MAX_DIFF_CHARS, STATUS_CONTEXT, BOT_LOGIN, ISSUE_READ_TOKEN (linked issues in
-other repos).
+MODEL. Optional: MAX_DIFF_CHARS, MAX_OUTPUT_TOKENS, STATUS_CONTEXT, BOT_LOGIN, ISSUE_READ_TOKEN
+(linked issues in other repos).
 
 Each run reads the PR, its diff and every human comment, plus the findings this reviewer left
 before (kept as JSON in one marker comment it edits in place). The model returns the full finding
@@ -168,14 +168,29 @@ def linked_issues(body):
     return "\n\n---\n\n".join(out) if out else "none named"
 
 
+# Hidden reasoning counts toward this cap: a long review reasoned for 23,119 tokens before a
+# 438-token answer. It must stay small enough to finish inside the request timeout at the slowest
+# observed speed (59 tok/s, so about 11 minutes); a review that reaches it is stuck, not slow.
+MAX_OUTPUT_TOKENS = int(os.environ.get("MAX_OUTPUT_TOKENS", "40000"))
+
+
+class CutOff(ValueError):
+    pass
+
+
 def ask_model(messages):
     body = {"model": os.environ["MODEL"], "messages": messages, "temperature": 0,
-            "max_tokens": 16000, "stream": False}
+            "max_tokens": MAX_OUTPUT_TOKENS, "stream": False}
     req = urllib.request.Request(os.environ["LLM_URL"], method="POST", data=json.dumps(body).encode(),
                                  headers={"Content-Type": "application/json"})
     with urllib.request.urlopen(req, timeout=900) as r:
         reply = json.loads(r.read())
-    text = reply["choices"][0]["message"].get("content") or ""
+    choice = reply["choices"][0]
+    # The run log is the only record of real usage, which is what the cap is checked against.
+    print(f"model usage: {json.dumps(reply.get('usage'))} finish_reason={choice.get('finish_reason')}")
+    if choice.get("finish_reason") == "length":
+        raise CutOff(f"the model's answer was cut off at {MAX_OUTPUT_TOKENS} output tokens")
+    text = choice["message"].get("content") or ""
     text = re.sub(r"<think>.*?</think>", "", text, flags=re.S).strip()
     m = re.search(r"\{.*\}", text, re.S)
     if not m:
@@ -259,6 +274,10 @@ def main():
                                      {"role": "user", "content": user}]), changed_files(diff), prior)
     except SystemExit:
         raise
+    except CutOff as e:
+        # The same prompt hits the same cap again, so a re-run cannot help.
+        set_status(sha, "error", f"Model output hit the {MAX_OUTPUT_TOKENS}-token cap: split the PR")
+        sys.exit(f"review failed closed: {e}")
     except (urllib.error.URLError, TimeoutError, ValueError, KeyError, json.JSONDecodeError) as e:
         set_status(sha, "error", f"Review could not run: {type(e).__name__}; re-run or reply to retry")
         sys.exit(f"review failed closed: {e}")
