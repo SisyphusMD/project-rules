@@ -89,5 +89,25 @@ class AskModel(unittest.TestCase):
         self.assertEqual(module.MAX_OUTPUT_TOKENS, 1234)
 
 
+class MainCutOff(unittest.TestCase):
+    def test_cut_off_review_posts_the_cap_status_and_exits(self):
+        pr = {"head": {"sha": "abc123"}, "state": "open", "title": "t", "body": ""}
+
+        def api(method, path, data=None, raw=False):
+            return "diff --git a/x b/x\n" if raw else pr
+
+        statuses = []
+        with (mock.patch.dict(os.environ, {**ENV, "PR": "7"}),
+              mock.patch.object(ai_review, "api", api),
+              mock.patch.object(ai_review, "pages", lambda path: iter(())),
+              mock.patch.object(ai_review, "repo_rules", lambda: ""),
+              mock.patch.object(ai_review, "set_status", lambda *a: statuses.append(a)),
+              mock.patch.object(ai_review, "ask_model", side_effect=ai_review.CutOff("cut off")),
+              self.assertRaises(SystemExit)):
+            ai_review.main()
+        self.assertEqual(statuses[-1][1], "error")
+        self.assertIn("split the PR or raise MAX_OUTPUT_TOKENS", statuses[-1][2])
+
+
 if __name__ == "__main__":
     unittest.main()
