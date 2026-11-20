@@ -6,6 +6,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- AI review: a model request that never reached the server (failed name lookup, refused or
+  unroutable connection) is retried after 5, 15 and 30 seconds before the review fails closed;
+  timeouts and HTTP errors still fail at once (#109).
+
 - AI review: a review now has a 40-minute deadline from its start (`MODEL_DEADLINE_SECONDS`
   can shorten it) and the job a 45-minute limit, so a slow model ends with an error status instead
   of the job being killed with the required check left pending. Any unexpected error, including a
