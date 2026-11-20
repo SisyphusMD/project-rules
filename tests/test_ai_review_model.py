@@ -4,6 +4,8 @@ import io
 import json
 import os
 import pathlib
+import signal
+import time
 import unittest
 from unittest import mock
 
@@ -136,6 +138,103 @@ class MainCutOff(unittest.TestCase):
             ai_review.main()
         self.assertEqual(statuses[-1][1], "error")
         self.assertIn("split the PR or raise MAX_OUTPUT_TOKENS", statuses[-1][2])
+
+
+PR = {"head": {"sha": "abc123"}, "state": "open", "title": "t", "body": ""}
+
+
+class MainFailsClosed(unittest.TestCase):
+    def run_main(self, set_status, **patches):
+        def api(method, path, data=None, raw=False):
+            return "diff --git a/x b/x\n" if raw else (PR if method == "GET" else {})
+
+        with (mock.patch.dict(os.environ, {**ENV, "PR": "7"}),
+              mock.patch.object(ai_review, "api", patches.pop("api", api)),
+              mock.patch.object(ai_review, "pages", lambda path: iter(())),
+              mock.patch.object(ai_review, "repo_rules", lambda: ""),
+              mock.patch.object(ai_review, "set_status", set_status),
+              contextlib.redirect_stdout(io.StringIO()),
+              mock.patch.multiple(ai_review, **patches),
+              self.assertRaises(SystemExit) as raised):
+            ai_review.main()
+        return raised.exception
+
+    def test_slow_model_hits_the_deadline_and_sets_an_error_status(self):
+        statuses = []
+        started = time.monotonic()
+        self.run_main(lambda *a: statuses.append(a), MODEL_DEADLINE=1, STARTED=started,
+                      ask_model=lambda messages: time.sleep(5))
+        self.assertLess(time.monotonic() - started, 4)
+        self.assertEqual(statuses[-1][1], "error")
+        self.assertIn("deadline; re-run when the Studio is idle", statuses[-1][2])
+        self.assertEqual(signal.alarm(0), 0)
+
+    def test_deadline_status_names_the_limit(self):
+        statuses = []
+        self.run_main(lambda *a: statuses.append(a), MODEL_DEADLINE=2400,
+                      ask_model=mock.Mock(side_effect=ai_review.Deadline("slow")))
+        self.assertIn("passed its 40-minute deadline", statuses[-1][2])
+
+    def test_deadline_counts_from_the_start_and_is_off_before_the_status(self):
+        alarms = []
+        with mock.patch.object(ai_review.signal, "alarm", side_effect=alarms.append):
+            self.run_main(lambda *a: None, MODEL_DEADLINE=600, STARTED=time.monotonic() - 500,
+                          ask_model=mock.Mock(side_effect=RuntimeError("x")))
+        self.assertTrue(95 <= alarms[0] <= 100, alarms)
+        self.assertEqual(alarms[-1], 0)
+
+    def test_deadline_override_cannot_pass_the_job_limit(self):
+        for value, expected in (("3600", 2400), ("600", 600)):
+            with mock.patch.dict(os.environ, {**ENV, "MODEL_DEADLINE_SECONDS": value}):
+                spec = importlib.util.spec_from_file_location("ai_review_deadline", SCRIPT)
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+            self.assertEqual(module.MODEL_DEADLINE, expected)
+
+    def test_deadline_is_not_wrapped_by_urllib(self):
+        self.assertFalse(issubclass(ai_review.Deadline, OSError))
+
+    def test_deadline_during_the_comment_write_reports_the_deadline(self):
+        statuses = []
+
+        def api(method, path, data=None, raw=False):
+            if method != "GET":
+                raise ai_review.Deadline("slow")
+            return "diff --git a/x b/x\n" if raw else PR
+
+        self.run_main(lambda *a: statuses.append(a), MODEL_DEADLINE=2400, api=api,
+                      ask_model=mock.Mock(return_value={"findings": []}),
+                      validate=lambda result, files, prior: result, render=lambda result, sha: "body")
+        self.assertIn("deadline", statuses[-1][2])
+
+    def test_bad_comment_response_sets_an_error_status(self):
+        statuses = []
+
+        def api(method, path, data=None, raw=False):
+            if method != "GET":
+                raise json.JSONDecodeError("truncated", "", 0)
+            return "diff --git a/x b/x\n" if raw else PR
+
+        self.run_main(lambda *a: statuses.append(a), api=api,
+                      ask_model=mock.Mock(return_value={"findings": []}),
+                      validate=lambda result, files, prior: result, render=lambda result, sha: "body")
+        self.assertEqual(statuses[-1][1:], ("error", "Review ran but its comment could not be saved; re-run"))
+
+    def test_unexpected_error_still_sets_an_error_status(self):
+        statuses = []
+        self.run_main(lambda *a: statuses.append(a), ask_model=mock.Mock(side_effect=RuntimeError("x")))
+        self.assertEqual(statuses[-1], ("abc123", "error",
+                                        "Review could not run: RuntimeError; re-run or reply to retry"))
+
+    def test_failed_final_status_fails_the_job(self):
+        def set_status(sha, state, description):
+            if state != "pending":
+                raise OSError("forgejo down")
+
+        exit_ = self.run_main(set_status, ask_model=mock.Mock(return_value={"findings": []}),
+                              validate=lambda result, files, prior: result,
+                              render=lambda result, sha: "body")
+        self.assertIn("status could not be set", str(exit_.code))
 
 
 if __name__ == "__main__":
