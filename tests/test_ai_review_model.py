@@ -1,4 +1,5 @@
 import contextlib
+import errno
 import importlib.util
 import io
 import json
@@ -43,6 +44,68 @@ class AskModel(unittest.TestCase):
                 return ai_review.ask_model([]), sent, out.getvalue()
             except (ValueError, ai_review.CutOff, IndexError, AttributeError) as e:
                 return e, sent, out.getvalue()
+
+    def flaky(self, errors):
+        """urlopen that raises each of errors once, then answers; returns (urlopen, calls, sleeps)."""
+        calls, sleeps = [], []
+
+        def urlopen(req, timeout):
+            calls.append(req)
+            if len(calls) <= len(errors):
+                raise errors[len(calls) - 1]
+            return reply("stop", '{"summary": "ok", "findings": []}')
+        return urlopen, calls, sleeps
+
+    def run_flaky(self, errors):
+        urlopen, calls, sleeps = self.flaky(errors)
+        env = {"MODEL": "m", "LLM_URL": "http://llm/v1/chat/completions"}
+        out = io.StringIO()
+        with mock.patch.dict(os.environ, env), mock.patch.object(ai_review.urllib.request, "urlopen", urlopen), \
+                mock.patch.object(ai_review.time, "sleep", sleeps.append), contextlib.redirect_stdout(out):
+            try:
+                result = ai_review.ask_model([])
+            except Exception as e:
+                result = e
+        self.out = out.getvalue()
+        return result, calls, sleeps
+
+    def test_name_lookup_failure_then_success_yields_a_verdict(self):
+        dns = ai_review.urllib.error.URLError(ai_review.socket.gaierror(-2, "Name or service not known"))
+        result, calls, sleeps = self.run_flaky([dns])
+        self.assertEqual(result, {"summary": "ok", "findings": []})
+        self.assertEqual((len(calls), sleeps), (2, [5]))
+        self.assertIn("retrying in 5s", self.out)
+        # The retry re-sends the same prompt, not a consumed or empty body.
+        self.assertEqual(json.loads(calls[1].data), json.loads(calls[0].data))
+        self.assertEqual(json.loads(calls[1].data)["max_tokens"], ai_review.MAX_OUTPUT_TOKENS)
+
+    def test_refused_or_unroutable_connection_is_retried(self):
+        refused = ai_review.urllib.error.URLError(ConnectionRefusedError(errno.ECONNREFUSED, "refused"))
+        unroutable = ai_review.urllib.error.URLError(OSError(errno.EHOSTUNREACH, "No route to host"))
+        result, calls, sleeps = self.run_flaky([refused, unroutable])
+        self.assertEqual(result, {"summary": "ok", "findings": []})
+        self.assertEqual((len(calls), sleeps), (3, [5, 15]))
+
+    def test_other_os_errors_are_not_retried(self):
+        reset = ai_review.urllib.error.URLError(OSError(errno.ECONNRESET, "Connection reset"))
+        result, calls, sleeps = self.run_flaky([reset])
+        self.assertIs(result, reset)
+        self.assertEqual((len(calls), sleeps), (1, []))
+
+    def test_connect_retries_are_bounded_and_fail_closed(self):
+        dns = ai_review.urllib.error.URLError(ai_review.socket.gaierror(-2, "Name or service not known"))
+        result, calls, sleeps = self.run_flaky([dns] * 10)
+        self.assertIsInstance(result, ai_review.urllib.error.URLError)
+        self.assertEqual(len(calls), len(ai_review.CONNECT_RETRY_DELAYS) + 1)
+        self.assertEqual(sleeps, list(ai_review.CONNECT_RETRY_DELAYS))
+
+    def test_timeouts_and_http_errors_are_not_retried(self):
+        timeout = ai_review.urllib.error.URLError(TimeoutError("timed out"))
+        http = ai_review.urllib.error.HTTPError("http://llm", 502, "Bad Gateway", {}, None)
+        for error in (timeout, http, TimeoutError("read timed out")):
+            result, calls, sleeps = self.run_flaky([error])
+            self.assertIs(result, error)
+            self.assertEqual((len(calls), sleeps), (1, []))
 
     def test_requests_the_cap_and_logs_usage(self):
         result, sent, out = self.call("stop", '<think>x</think>{"summary": "ok", "findings": []}')

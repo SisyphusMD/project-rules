@@ -13,10 +13,12 @@ fail the check. Anything that prevents a real review (model unreachable, unparse
 too large) fails closed: the gate never passes by accident.
 """
 import base64
+import errno
 import json
 import os
 import re
 import signal
+import socket
 import sys
 import time
 import urllib.error
@@ -196,12 +198,42 @@ def _deadline(signum, frame):
     raise Deadline(f"the review passed its {MODEL_DEADLINE // 60}-minute deadline")
 
 
+# Waits before each retry of a model request that never reached the server. A failed name lookup
+# or a refused or unroutable connection happens before anything is sent, so repeating it cannot
+# review twice; a timeout or an HTTP error may come after the model started, so those still fail
+# at once. About a minute rides out a blip; a longer outage should fail and show on the PR.
+CONNECT_RETRY_DELAYS = (5, 15, 30)
+# Bounds each socket read (and the connect), not the call; MODEL_DEADLINE bounds the call.
+MODEL_READ_TIMEOUT = 900
+UNSENT_ERRNOS = {errno.ECONNREFUSED, errno.EHOSTUNREACH, errno.ENETUNREACH, errno.ENETDOWN}
+
+
+def never_connected(error):
+    if not isinstance(error, urllib.error.URLError) or isinstance(error, urllib.error.HTTPError):
+        return False
+    reason = error.reason
+    return isinstance(reason, socket.gaierror) or (isinstance(reason, OSError)
+                                                   and reason.errno in UNSENT_ERRNOS)
+
+
+def open_model(req):
+    for delay in CONNECT_RETRY_DELAYS:
+        try:
+            return urllib.request.urlopen(req, timeout=MODEL_READ_TIMEOUT)
+        except urllib.error.URLError as e:
+            if not never_connected(e):
+                raise
+            print(f"model request did not connect ({e.reason}); retrying in {delay}s")
+            time.sleep(delay)
+    return urllib.request.urlopen(req, timeout=MODEL_READ_TIMEOUT)
+
+
 def ask_model(messages):
     body = {"model": os.environ["MODEL"], "messages": messages, "temperature": 0,
             "max_tokens": MAX_OUTPUT_TOKENS, "stream": False}
     req = urllib.request.Request(os.environ["LLM_URL"], method="POST", data=json.dumps(body).encode(),
                                  headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=900) as r:
+    with open_model(req) as r:
         reply = json.loads(r.read())
     choice = reply["choices"][0]
     usage = reply.get("usage") or {}
