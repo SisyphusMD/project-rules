@@ -58,7 +58,7 @@ Generated nightly from the primary Forgejo; do not edit. `json/` holds the full 
 | 52 | pull | closed | [docs: name this repo as the canonical copy in the gate comments](items/0052-docs-name-this-repo-as-the-canonical-copy-in-the-gate-commen.md) |
 | 53 | pull | closed | [feat(shared): gate releases on Forgejo's macOS run and retire the GitHub-runner helpers](items/0053-feat-shared-gate-releases-on-forgejo-s-macos-run-and-retire-.md) |
 | 54 | issue | open | [AI review reads its saved state from the first marker, so model-echoed text can wipe carried findings](items/0054-ai-review-reads-its-saved-state-from-the-first-marker-so-mod.md) |
-| 55 | issue | open | [AI review can leave its required check stuck at pending](items/0055-ai-review-can-leave-its-required-check-stuck-at-pending.md) |
+| 55 | issue | closed | [AI review can leave its required check stuck at pending](items/0055-ai-review-can-leave-its-required-check-stuck-at-pending.md) |
 | 56 | issue | open | [issue-archive puts the job token in a global git header](items/0056-issue-archive-puts-the-job-token-in-a-global-git-header.md) |
 | 57 | issue | open | [Decide whether ci.yml and ai-review.yml need the AGit gate tests.yml has](items/0057-decide-whether-ci-yml-and-ai-review-yml-need-the-agit-gate-t.md) |
 | 58 | issue | open | [AI review robustness: bound human replies, report truncated answers, pin the checkout ref](items/0058-ai-review-robustness-bound-human-replies-report-truncated-an.md) |
@@ -106,3 +106,10 @@ Generated nightly from the primary Forgejo; do not edit. `json/` holds the full 
 | 100 | pull | closed | [Share verification of the original qualified release candidate](items/0100-share-verification-of-the-original-qualified-release-candida.md) |
 | 101 | issue | closed | [Allow direct sync commits in the private memory repository](items/0101-allow-direct-sync-commits-in-the-private-memory-repository.md) |
 | 102 | pull | closed | [Scope the automatic memory sync exception](items/0102-scope-the-automatic-memory-sync-exception.md) |
+| 103 | issue | closed | [AI review fails with ValueError on cody/macos#63 (model answer not parseable, every run 3m37s)](items/0103-ai-review-fails-with-valueerror-on-cody-macos-63-model-answe.md) |
+| 104 | issue | closed | [AI review: raise the model output cap to 40,000 tokens and log usage](items/0104-ai-review-raise-the-model-output-cap-to-40-000-tokens-and-lo.md) |
+| 105 | pull | closed | [Raise the AI review output cap to 40,000 tokens and log usage](items/0105-raise-the-ai-review-output-cap-to-40-000-tokens-and-log-usag.md) |
+| 106 | issue | open | [ai-review.py: review findings on the 40k output cap and its tests](items/0106-ai-review-py-review-findings-on-the-40k-output-cap-and-its-t.md) |
+| 107 | issue | open | [AI review parser can accept a leaked reasoning draft as the verdict](items/0107-ai-review-parser-can-accept-a-leaked-reasoning-draft-as-the-.md) |
+| 108 | pull | closed | [AI review: 40-minute deadline inside a 45-minute job so a slow review fails with a status](items/0108-ai-review-40-minute-deadline-inside-a-45-minute-job-so-a-slo.md) |
+| 109 | issue | open | [AI review fails closed on one transient DNS error](items/0109-ai-review-fails-closed-on-one-transient-dns-error.md) |

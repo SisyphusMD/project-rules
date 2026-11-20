@@ -1177,17 +1177,53 @@
  {
   "assignees": [],
   "body": "From a house-model review on 2026-11-16, confirmed on main: the status goes to pending first and only paths inside the try clear it. The job has timeout-minutes: 20 but ask_model may wait 900 s plus API calls, so a slow model gets the job killed with the check left pending; binascii.Error from a trimmed state marker is not caught; and the final set_status calls are unguarded. A pending required check blocks every merge until break-glass. Fix: job timeout above the script's worst case, catch everything at the top to set error, guard the terminal set_status. Tests for each path.",
-  "closed_at": null,
-  "comments": [],
+  "closed_at": "2026-11-19T17:39:37-08:00",
+  "comments": [
+   {
+    "body": "Now hitting live with the 40,000-token cap (#105). casa #81's review step started 00:38:45Z and the job was killed at the 20-minute limit at 00:58:44Z (job 199020), with no usage line logged and the check left pending. cody/macos #63's review is on the same path (started 00:44Z). The 900 s urlopen timeout never fired, so it limits each socket read rather than the whole call; something on the path must be sending bytes before the answer is done. Generating up to 40,000 tokens can take longer than the job allows, so this blocks reviews of large diffs in every repo that copies the script. Fix needed: a total deadline in ask_model below the job limit that sets an error status, plus a job timeout above the script's worst case. — cody-36 (owner of the review-script sync)",
+    "created_at": "2026-11-19T17:00:34-08:00",
+    "id": 38856,
+    "updated_at": "2026-11-19T17:00:34-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Decision: Raise the AI review job limit from 20 to 45 minutes, with a 40-minute total deadline on the model call (Cody: \"Yes\"). Why: Reviews at the 40,000-token cap outlast 20 minutes and get killed with the check stuck pending (casa #81, macos #63).\n\nDecided by: Cody, 2026-11-19.",
+    "created_at": "2026-11-19T17:20:00-08:00",
+    "id": 38985,
+    "updated_at": "2026-11-19T17:20:00-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Technical call: The 40-minute deadline covers the whole review from the script's start through the comment write, not the model call alone. Why: A deadline on the model call alone leaves the reads before it and the comment write unbounded, which is how the job got killed with the check pending; normal setup takes seconds, so the model keeps nearly all 40 minutes.\n\nDecided by: Claude, 2026-11-19.",
+    "created_at": "2026-11-19T17:35:22-08:00",
+    "id": 39025,
+    "updated_at": "2026-11-19T17:35:22-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Left out of the fix: the terminal status write after the alarm is off still has only api()'s 60 s per-read timeout. A Forgejo response that trickles without committing could in principle outlast the 5-minute margin. Not seen in practice; bound it separately if it ever shows up.",
+    "created_at": "2026-11-19T17:35:22-08:00",
+    "id": 39026,
+    "updated_at": "2026-11-19T17:35:22-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "More data: casa #81's rerun passed in 9m41s and casa #85 in 7m22s, once the 11 concurrent sync reviews had cleared. The 20-minute kills came from queueing on the shared Studio, not from generation time alone. The deadline in #108 still matters, because a busy Studio is exactly when reviews queue.",
+    "created_at": "2026-11-19T17:36:57-08:00",
+    "id": 39040,
+    "updated_at": "2026-11-19T17:36:57-08:00",
+    "user": "cody"
+   }
+  ],
   "created_at": "2026-11-16T19:37:17-08:00",
   "kind": "issue",
   "labels": [
-   "status:ready",
+   "status:in-progress",
    "type:bug"
   ],
   "milestone": null,
   "number": 55,
-  "state": "open",
+  "state": "closed",
   "title": "AI review can leave its required check stuck at pending",
   "user": "cody"
  },
@@ -1229,7 +1265,15 @@
   "assignees": [],
   "body": "From a house-model review on 2026-11-16: (1) ai-review.py interpolates human reply bodies uncapped, while everything else in the prompt is capped; cap them, oldest dropped first. (2) ask_model ignores finish_reason, so a length cut shows up as a JSON parse error; name the cause. (3) ai-review.yml's checkout has no ref and no persist-credentials: false, unlike ci.yml; pin the base sha explicitly. Smaller: workflows declare no permissions, checkout pins lack version comments and renovate markers, ai-review.yml hardcodes forgejo-actions while BOT_LOGIN is configurable, a bool passes the line-number check, and a closed PR keeps a stale status. Coverage for the gate scripts is #9.",
   "closed_at": null,
-  "comments": [],
+  "comments": [
+   {
+    "body": "Status (2026-11-20, session rotating):\n- The public Forgejo 500 was a LAN hairpin artifact: Anubis had no client address for LAN clients reaching the WAN address. Outside visitors were never affected. Fixed in bryantserver/k8s#2617 (merged 437fb4325, deployed and verified): login, release JSON, bottle and blueprint downloads all return 200 through the public address.\n- Next: the four forgejo-defaults PRs, one at a time: appliance-job-monitor #21, dreame-valetudo #306, whiskerless #228, archiver #364. Their changes are still uncommitted in the worktrees and each branch is behind main.\n- Still open after that: archiver maintenance patch proof and GhostSpectator PEAK proof (#74, #75, #86). No public releases are authorized.\n",
+    "created_at": "2026-11-20T00:12:26-08:00",
+    "id": 39577,
+    "updated_at": "2026-11-20T00:12:26-08:00",
+    "user": "cody"
+   }
+  ],
   "created_at": "2026-11-16T19:37:17-08:00",
   "kind": "issue",
   "labels": [
@@ -2551,6 +2595,204 @@
   "reviews": [],
   "state": "closed",
   "title": "Scope the automatic memory sync exception",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "cody/macos PR #63 (about 500 changed lines, a Python helper + tests + setup.sh) failed the AI review three times in a row (runs 185526, 185535, 185552). Each run took exactly 3m37s and ended in .forgejo/scripts/ai-review.py raising ValueError while parsing the model's answer (line 182-196: no JSON object / wrong shape), reported as 'Review could not run: ValueError'. Other PRs reviewed fine the same morning, so this looks like a cut-off or malformed answer on a larger diff, perhaps a token or time limit. Next: log the raw answer on parse failure and find the limit.",
+  "closed_at": "2026-11-19T11:58:03-08:00",
+  "comments": [
+   {
+    "body": "Duplicate of #104, which already has Cody's approved fix (40,000-token cap, no retry, usage logged) in PR #105. Same cause on cody/macos#63: replaying its review returned finish_reason=length with all 16,000 tokens spent on reasoning and no content. A parallel retry-without-thinking fix was drafted here and dropped in favour of #104; one idea from it for #104 to consider: put the bounded exception text in the commit status, since 'ValueError' alone hid the cause.",
+    "created_at": "2026-11-19T11:58:03-08:00",
+    "id": 38430,
+    "updated_at": "2026-11-19T11:58:03-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-19T09:36:27-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:ready",
+   "type:bug"
+  ],
+  "milestone": null,
+  "number": 103,
+  "state": "closed",
+  "title": "AI review fails with ValueError on cody/macos#63 (model answer not parseable, every run 3m37s)",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "The review asks the model for at most 16,000 output tokens. The model reasons before answering and its hidden reasoning counts against that cap, so long reviews end with finish_reason=length and no JSON verdict; the required check then fails closed with nothing wrong in the PR.\n\nEvidence: bryantserver/k8s PR 2572 failed twice this way (16,000 tokens generated on 9,355- and 9,443-token prompts). Replaying its prompt with no effective cap finished in 308 s at 77 tok/s using 23,557 output tokens (23,119 reasoning), with a valid verdict.\n\nPlan (Cody approved 2026-11-19): one fixed cap of 40,000, no retry. Context is 262k so it is not the limit; the 900 s request timeout is. At the slowest seen speed (59 tok/s) 40,000 tokens take about 11 minutes, under 15. Also print the model's usage on every run so the cap can be re-checked against real reviews. Then carry the change to every repo that copies the script.",
+  "closed_at": "2026-11-19T12:17:27-08:00",
+  "comments": [
+   {
+    "body": "Decision: Admin-merge #105 past its failing AI review check (\"Yes\"). Why: The review runs main's script, which has the </think> parse bug #105 fixes, and #105's own diff contains that tag, so its review cannot pass until it merges.\n\nDecided by: Cody, 2026-11-19.",
+    "created_at": "2026-11-19T12:17:10-08:00",
+    "id": 38445,
+    "updated_at": "2026-11-19T12:17:10-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-19T09:55:26-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:in-progress",
+   "type:bug"
+  ],
+  "milestone": null,
+  "number": 104,
+  "state": "closed",
+  "title": "AI review: raise the model output cap to 40,000 tokens and log usage",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "base": "main",
+  "body": "Closes #104\nCloses #103\n\nThe review's model output cap was 16,000 tokens. The model's hidden reasoning counts toward it, so long reviews were cut off before the JSON verdict and failed closed (k8s #2572 twice; cody/macos #63 three times, each 3m37s, which is about 16,000 tokens at the observed speed).\n\n- One fixed cap of 40,000, overridable per repo with `MAX_OUTPUT_TOKENS`. Sizing: a replay of k8s #2572's prompt needed 23,557 output tokens (23,119 reasoning) and finished in 308 s; the context window is 262,144, and at the slowest seen speed (59 tok/s) 40,000 tokens fit inside the 900 s request timeout.\n- A cut-off answer (`finish_reason=length`) fails closed before parsing, with a status that says to split the PR instead of re-running.\n- Every run logs the model's token usage, so the cap can be re-checked against real reviews.\n- New tests cover the cap sent, the usage log, a cut-off answer, an empty answer and the override.\n\nThe copies in other repos follow once this merges.",
+  "closed_at": "2026-11-19T12:17:27-08:00",
+  "comments": [
+   {
+    "body": "<!-- ai-review -->\n**AI review** of `7814a84820`: The PR correctly raises the output cap to 40,000 tokens, adds a CutOff exception with fail-closed handling, logs usage, and ships thorough tests for ask_model. One coverage gap remains on the new except-CutOff branch in main().\n\n### Open\n\n- **F1** (suggestion, `.forgejo/scripts/ai-review.py:281`) CutOff handler in main() may lack branch coverage: CONTRIBUTING.md requires 100% branch coverage on .forgejo/scripts/. The new `except CutOff` block in main() (lines 281-284) is a new branch. The new test file exercises ask_model directly but does not call main() with a mocked ask_model that raises CutOff. If no pre-existing test already drives main() through this path, coverage will fall below 100%. Consider adding a small test that patches ask_model to raise CutOff and asserts set_status is called with the expected message and sys.exit is reached.\n\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W3siaWQiOiAiRjEiLCAiZmlsZSI6ICIuZm9yZ2Vqby9zY3JpcHRzL2FpLXJldmlldy5weSIsICJsaW5lIjogMjgxLCAic2V2ZXJpdHkiOiAic3VnZ2VzdGlvbiIsICJzdGF0dXMiOiAib3BlbiIsICJ0aXRsZSI6ICJDdXRPZmYgaGFuZGxlciBpbiBtYWluKCkgbWF5IGxhY2sgYnJhbmNoIGNvdmVyYWdlIiwgImRldGFpbCI6ICJDT05UUklCVVRJTkcubWQgcmVxdWlyZXMgMTAwJSBicmFuY2ggY292ZXJhZ2Ugb24gLmZvcmdlam8vc2NyaXB0cy8uIFRoZSBuZXcgYGV4Y2VwdCBDdXRPZmZgIGJsb2NrIGluIG1haW4oKSAobGluZXMgMjgxLTI4NCkgaXMgYSBuZXcgYnJhbmNoLiBUaGUgbmV3IHRlc3QgZmlsZSBleGVyY2lzZXMgYXNrX21vZGVsIGRpcmVjdGx5IGJ1dCBkb2VzIG5vdCBjYWxsIG1haW4oKSB3aXRoIGEgbW9ja2VkIGFza19tb2RlbCB0aGF0IHJhaXNlcyBDdXRPZmYuIElmIG5vIHByZS1leGlzdGluZyB0ZXN0IGFscmVhZHkgZHJpdmVzIG1haW4oKSB0aHJvdWdoIHRoaXMgcGF0aCwgY292ZXJhZ2Ugd2lsbCBmYWxsIGJlbG93IDEwMCUuIENvbnNpZGVyIGFkZGluZyBhIHNtYWxsIHRlc3QgdGhhdCBwYXRjaGVzIGFza19tb2RlbCB0byByYWlzZSBDdXRPZmYgYW5kIGFzc2VydHMgc2V0X3N0YXR1cyBpcyBjYWxsZWQgd2l0aCB0aGUgZXhwZWN0ZWQgbWVzc2FnZSBhbmQgc3lzLmV4aXQgaXMgcmVhY2hlZC4iLCAicmVzcG9uc2UiOiAiIn1d -->",
+    "created_at": "2026-11-19T10:14:11-08:00",
+    "id": 38310,
+    "updated_at": "2026-11-19T10:23:13-08:00",
+    "user": "forgejo-actions"
+   },
+   {
+    "body": "Added a main() test for the cut-off status (F1). Retrying the review: the last run returned an unparseable answer after 45 s.",
+    "created_at": "2026-11-19T11:05:23-08:00",
+    "id": 38398,
+    "updated_at": "2026-11-19T11:05:23-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "The two failed reviews on 926715e were not the cap: the Studio's reasoning parser ended the reasoning at a literal </think> the model quoted from this diff (the re.sub line), so the rest of its reasoning leaked into the answer ahead of the verdict and the old brace regex could not parse it. 70ca224 parses the whole answer first, then what follows each </think>, and each attempt must parse as one object to the end. A replay of the failed review's real reply now parses.\n\nDeclined from cross-model review: rejecting an unfinished verdict that quotes </think> and happens to end in a nested verdict-shaped object. By accident that is vanishingly unlikely, and output steered on purpose could already be a clean verdict, so stricter parsing adds no protection.",
+    "created_at": "2026-11-19T11:13:08-08:00",
+    "id": 38408,
+    "updated_at": "2026-11-19T11:13:08-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Retrying the review: the last run hit a transient URLError; the model endpoint answers normally now.",
+    "created_at": "2026-11-19T11:14:42-08:00",
+    "id": 38409,
+    "updated_at": "2026-11-19T11:14:42-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Picking this up from cody-36 (the earlier session has been quiet since 11:14). Retrying the review.",
+    "created_at": "2026-11-19T13:39:58-08:00",
+    "id": 38613,
+    "updated_at": "2026-11-19T13:39:58-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Correction from cody-36: this PR was already merged at 12:17; my earlier pickup note was based on a stale status. Nothing to do here.",
+    "created_at": "2026-11-19T13:40:15-08:00",
+    "id": 38614,
+    "updated_at": "2026-11-19T13:40:15-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-19T09:58:52-08:00",
+  "head": "refs/pull/105/head",
+  "kind": "pull",
+  "labels": [],
+  "merge_commit_sha": "699f6bd695debb189be4a1f82f289f18d2c37724",
+  "merged": true,
+  "milestone": null,
+  "number": 105,
+  "reviews": [],
+  "state": "closed",
+  "title": "Raise the AI review output cap to 40,000 tokens and log usage",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Found by the house review while syncing this script into cody/agents (cody/agents#39), 2026-11-19. The copy there is verbatim, so these belong here:\n\n1. A 40k completion budget plus a prompt that can reach about 70k tokens needs about 110k of served context. If the Studio serves less, a large PR fails as a generic `HTTPError` instead of the explicit cap message. Check the proxy's context limit, or size the cap from it.\n2. `tests/test_ai_review_model.py` enters `mock.patch.dict(os.environ, ...)` at import and never exits it. In repos that run this test in one pytest process with other suites, `TOKEN`/`REPO`/`FORGEJO_URL` leak into them. Load the module in `setUpModule` and stop the patcher in `tearDownModule`.\n3. `main()`'s `CutOff` branch (status `error`, no retry hint) has no test.\n4. Cut-off detection only treats `finish_reason == \"length\"` as truncated. Any other non-`stop` reason without a `usage` block is parsed as a complete answer.\n5. Nits: the comment cites 23,119 reasoning tokens but the fixture uses 23557. And \"raise MAX_OUTPUT_TOKENS\" above about 53k would trip the 900 s timeout at 59 tok/s.",
+  "closed_at": null,
+  "comments": [],
+  "created_at": "2026-11-19T10:38:58-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:ready",
+   "type:bug"
+  ],
+  "milestone": null,
+  "number": 106,
+  "state": "open",
+  "title": "ai-review.py: review findings on the 40k output cap and its tests",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Found by a Codex review of the cody/macos copy of #105's script (699f6bd). parse_answer falls back to the text after each </think>; when leaked reasoning contains braces, then a quoted </think>, then a schema-valid draft, and no final verdict follows, the suffix fallback can accept the draft. A draft with no findings would post success, so the gate would not fail closed (RULES.md fail-closed requirement). The pre-#105 parser rejected this shape. Next: require a reliable boundary before accepting a suffix and add a regression test for draft-only output.",
+  "closed_at": null,
+  "comments": [],
+  "created_at": "2026-11-19T13:43:26-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:ready",
+   "type:bug"
+  ],
+  "milestone": null,
+  "number": 107,
+  "state": "open",
+  "title": "AI review parser can accept a leaked reasoning draft as the verdict",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "base": "main",
+  "body": "Closes #55\n\nCody approved raising the AI review job limit from 20 to 45 minutes, with a 40-minute deadline. Reviews at the 40,000-token cap outlasted 20 minutes and were killed with the required check left pending (casa #81, cody/macos #63).\n\n- One SIGALRM deadline covers the review from the script start through the comment write (decision on #55). urlopen's 900 s timeout only bounds each socket read, which is why it never fired.\n- `MODEL_DEADLINE_SECONDS` can only shorten it, so it always stays under the job limit.\n- `Deadline` is not an OSError, so urllib cannot wrap it in a URLError while connecting.\n- Any unexpected error, including a bad response to the comment write, sets an error status. A final status that cannot be set fails the job.\n- `timeout-minutes: 45` in ai-review.yml.\n\nTests cover a slow model hitting the deadline, time already spent counting against it, the cap on the override, a deadline during the comment write, a bad comment response, an unexpected error, and a failed final status.\n\nThis PR's own review runs main's 20-minute job, so it may also be killed before it answers.",
+  "closed_at": "2026-11-19T17:39:37-08:00",
+  "comments": [
+   {
+    "body": "<!-- ai-review -->\n**AI review** of `9369e1a5f8`: Clean, well-tested fix for the stuck-pending AI review check: a SIGALRM-based 40-minute deadline from script start, a 45-minute job timeout, a broad `except Exception` that always sets an error status, and a guarded final status write. Tests cover every new path (deadline hit, deadline during comment write, bad comment response, unexpected error, failed final status, override cap, alarm cancellation ordering). No issues found.\n\nNo findings.\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W10= -->",
+    "created_at": "2026-11-19T17:38:59-08:00",
+    "id": 39049,
+    "updated_at": "2026-11-19T17:38:59-08:00",
+    "user": "forgejo-actions"
+   }
+  ],
+  "created_at": "2026-11-19T17:35:30-08:00",
+  "head": "refs/pull/108/head",
+  "kind": "pull",
+  "labels": [],
+  "merge_commit_sha": "5fe900664ca3ce97525c53d70dc78cddbfa12b1d",
+  "merged": true,
+  "milestone": null,
+  "number": 108,
+  "reviews": [],
+  "state": "closed",
+  "title": "AI review: 40-minute deadline inside a 45-minute job so a slow review fails with a status",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "The Review job ends at the first resolver failure and reports a required-check failure: `review failed closed: <urlopen error [Errno -2] Name or service not known>`. Seen three times on 2026-11-19/20 in cody/agents (job 199810 on PR #78, 201150 and 201275 on PR #87); each passed on a plain job rerun with no code change, so it is the runner's DNS, not the review. Rule 14 lists giving up after one transient failure as a bug class. Proposal: retry the model request a bounded number of times with backoff on connection and name-resolution errors only, still failing closed after that, with a test that a first URLError followed by success yields a verdict.",
+  "closed_at": null,
+  "comments": [
+   {
+    "body": "Narrower than a flaky resolver: every failure came from one runner, id 62383437-3730-3536-3930-313661643039 (cody/agents jobs 199810 first attempt, 201275 twice); reruns on other runners (131bf2ac…, 2760c9f0…, 697f7b66…) resolved studio-llm.forgejo-runner.svc.cluster.local and passed. The service and its endpoints were healthy throughout. So that runner's job containers likely lack cluster DNS (wrong runner, or a non-cluster runner also carrying ubuntu-latest). Identify it (admin runners list) and fix its DNS or labels; the bounded retry is still worth having, but it will not help when every attempt lands on that runner.",
+    "created_at": "2026-11-20T00:41:32-08:00",
+    "id": 39691,
+    "updated_at": "2026-11-20T00:41:32-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-20T00:40:03-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:ready",
+   "type:bug"
+  ],
+  "milestone": null,
+  "number": 109,
+  "state": "open",
+  "title": "AI review fails closed on one transient DNS error",
   "user": "cody"
  }
 ]
