@@ -6,6 +6,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- AI review: a review now has a 40-minute deadline from its start (`MODEL_DEADLINE_SECONDS`
+  can shorten it) and the job a 45-minute limit, so a slow model ends with an error status instead
+  of the job being killed with the required check left pending. Any unexpected error, including a
+  bad response to the comment write, also sets an error status, and a final status that cannot be
+  set fails the job. (#55)
 - AI review: the model may generate up to 40,000 tokens (`MAX_OUTPUT_TOKENS` overrides it), since its
   hidden reasoning alone ran past the old 16,000 cap on long reviews; a cut-off answer now fails
   with a status that says to split the PR or raise the cap, and every run logs the model's token
