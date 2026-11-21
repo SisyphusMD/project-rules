@@ -9,8 +9,9 @@ Each run reads the PR, its diff and every human comment, plus the findings this 
 before (kept as JSON in one marker comment it edits in place). The model returns the full finding
 list with stable ids: a finding stays open, is resolved by a later commit, or is withdrawn when an
 author's reply convinces it. Only open findings marked blocking, citing a changed file and a line,
-fail the check. Anything that prevents a real review (model unreachable, unparseable answer, diff
-too large) fails closed: the gate never passes by accident.
+fail the check. An unparseable or malformed answer is put back to the model once with the error; a second one
+fails the check, and the comment names what was wrong. Anything that prevents a real review
+(model unreachable, diff too large) fails closed: the gate never passes by accident.
 """
 import base64
 import errno
@@ -264,17 +265,28 @@ def ask_model(messages):
     raise ValueError("no JSON object in the model's answer")
 
 
-def validate(result, files, prior):
+def validate(result, files, prior, lenient=False):
+    """The model's answer as {summary, findings}. A malformed finding raises, or with `lenient`
+    is left out of `findings` and named in `malformed`; a wrong overall shape always raises."""
     if not isinstance(result, dict) or not isinstance(result.get("findings"), list) \
             or not isinstance(result.get("summary"), str):
         raise ValueError("answer is not {summary: str, findings: list}")
-    findings = []
+    findings, malformed = [], []
     for f in result["findings"]:
-        if not isinstance(f, dict) or not str(f.get("id", "")).strip():
-            raise ValueError("finding without an id")
-        if f.get("severity") not in ("blocking", "suggestion") \
+        if not isinstance(f, dict) or not isinstance(f.get("id"), str) or not f["id"].strip():
+            problem = "finding without an id"
+        elif f.get("severity") not in ("blocking", "suggestion") \
                 or f.get("status") not in ("open", "resolved", "withdrawn"):
-            raise ValueError(f"finding {f['id']} has an invalid severity or status")
+            problem = f"finding {f['id']} has an invalid severity or status"
+        else:
+            problem = None
+        if problem:
+            # The finding itself goes in the error, so a re-ask names the exact defect.
+            problem = f"{problem}: {json.dumps(f, default=str)[:500]}"
+            if not lenient:
+                raise ValueError(problem)
+            malformed.append(problem)
+            continue
         # A blocking finding must point at the change; otherwise it can only advise.
         if f["severity"] == "blocking" and not (f.get("file") in files and isinstance(f.get("line"), int)):
             f["severity"] = "suggestion"
@@ -283,7 +295,41 @@ def validate(result, files, prior):
     # A finding the model forgot is not a finding it withdrew: carry it over unchanged.
     seen = {f["id"] for f in findings}
     findings += [p for p in prior if p.get("id") not in seen]
-    return {"summary": result["summary"], "findings": findings}
+    checked = {"summary": result["summary"], "findings": findings}
+    if malformed:
+        checked["malformed"] = malformed
+    return checked
+
+
+def get_result(messages, files, prior):
+    """Ask the model; an answer that cannot be read or checked goes back to it once with the
+    error. A second bad answer still fails the review (`malformed` is set), but whatever in either
+    answer was well-formed is kept so the author can see it. A retry that succeeds says so."""
+    answer = None
+    try:
+        answer = ask_model(messages)
+        return validate(answer, files, prior)
+    except (ValueError, IndexError, AttributeError) as e:
+        first = str(e) or type(e).__name__
+        note = f"Your answer was rejected: {first}. Answer again with the one JSON object described above."
+        if answer is not None:
+            # Each request is stateless: this quote is the only copy of the answer the model sees.
+            note += "\nThe rejected answer was:\n" + json.dumps(answer, default=str)[:6000]
+    # The first answer's usable findings, kept in case the second cannot be read at all.
+    try:
+        fallback = validate(answer, files, prior, lenient=True)["findings"]
+    except ValueError:
+        fallback = prior
+    print(f"model answer rejected ({first}); asking once more")
+    try:
+        result = validate(ask_model([*messages, {"role": "user", "content": note}]), files, prior,
+                          lenient=True)
+    except (ValueError, IndexError, AttributeError) as e:
+        return {"summary": "The model's answer could not be used, even after one retry.",
+                "findings": fallback,
+                "malformed": [f"first answer: {first}", f"second answer: {str(e) or type(e).__name__}"]}
+    result["retried"] = first
+    return result
 
 
 def render(result, sha):
@@ -300,10 +346,19 @@ def render(result, sha):
             if f.get("response"):
                 lines.append(f"  - Reviewer: {f['response']}")
         lines.append("")
-    if not result["findings"]:
+    if not result["findings"] and not result.get("malformed"):
         lines.append("No findings.")
+    if result.get("malformed"):
+        lines += ["### Malformed model output", "",
+                  ("The model's answer was rejected and re-asked once; this is what was still wrong, "
+                   "so the check fails until a re-review returns a readable answer:"), ""]
+        lines += [f"- {problem}".replace("\n", " ") for problem in result["malformed"]]
+        lines.append("")
+    if result.get("retried") and not result.get("malformed"):
+        lines += [f"(The model's first answer was rejected ({result['retried']}); this is its second.)", ""]
     lines += ["", "Disagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.",
-              # Base64, so no finding text can close the HTML comment that carries the state.
+              # Base64, so no finding text can close the HTML comment that carries the state. Always
+              # the body's last line: main reads the last marker, so one echoed in text above loses.
               f"<!-- ai-review-state {base64.b64encode(json.dumps(result['findings']).encode()).decode()} -->"]
     return "\n".join(lines)
 
@@ -324,8 +379,9 @@ def main():
             comments = list(pages(f"/issues/{n}/comments"))
             marker = next((c for c in comments if c["user"]["login"] == BOT and MARKER in c["body"]), None)
             prior = []
-            if marker and (m := STATE_RE.search(marker["body"])):
-                prior = json.loads(base64.b64decode(m.group(1)))
+            if marker and (found := STATE_RE.findall(marker["body"])):
+                # An empty or broken state raises, and the review fails closed.
+                prior = json.loads(base64.b64decode(found[-1]))
             if len(diff) > MAX_DIFF:
                 set_status(sha, "failure", f"Diff is {len(diff)} chars, over {MAX_DIFF}: split the PR")
                 sys.exit("diff too large to review")
@@ -339,8 +395,8 @@ def main():
                 "Replies on the PR, oldest first:\n" + ("\n---\n".join(replies) if replies else "none"),
                 "Diff:\n" + diff,
             ])
-            result = validate(ask_model([{"role": "system", "content": SYSTEM},
-                                         {"role": "user", "content": user}]), changed_files(diff), prior)
+            result = get_result([{"role": "system", "content": SYSTEM},
+                                 {"role": "user", "content": user}], changed_files(diff), prior)
             body = render(result, sha)
             blocking = [f for f in result["findings"]
                         if f["status"] == "open" and f["severity"] == "blocking"]
@@ -374,7 +430,10 @@ def main():
         set_status(sha, "error", f"Review could not run: {type(e).__name__}; re-run or reply to retry")
         sys.exit(f"review failed closed: {e}")
     try:
-        if blocking:
+        if result.get("malformed"):
+            set_status(sha, "failure", f"Model answer malformed after a retry ({len(result['malformed'])} problems)"
+                       f"; blocking: {', '.join(f['id'] for f in blocking) or 'none'}")
+        elif blocking:
             set_status(sha, "failure", f"{len(blocking)} blocking: " + ", ".join(f["id"] for f in blocking))
         else:
             set_status(sha, "success", f"No blocking findings ({len(result['findings'])} total)")
@@ -382,7 +441,7 @@ def main():
         # The check stays pending; a failed job at least shows on the PR's Actions tab.
         sys.exit(f"review saved but its status could not be set: {e}")
     print(body)
-    if blocking:
+    if blocking or result.get("malformed"):
         sys.exit(1)
 
 

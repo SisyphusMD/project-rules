@@ -1,3 +1,4 @@
+import base64
 import contextlib
 import errno
 import importlib.util
@@ -298,6 +299,216 @@ class MainFailsClosed(unittest.TestCase):
                               validate=lambda result, files, prior: result,
                               render=lambda result, sha: "body")
         self.assertIn("status could not be set", str(exit_.code))
+
+
+GOOD = {"id": "F1", "file": "x", "line": 3, "severity": "suggestion", "status": "open",
+        "title": "good one", "detail": "d", "response": ""}
+BAD = {"id": "F5", "file": "x", "line": 3, "severity": "major", "status": "open",
+       "title": "bad one", "detail": "d", "response": ""}
+
+
+def answer(*findings):
+    return {"summary": "s", "findings": list(findings)}
+
+
+class MainReasks(unittest.TestCase):
+    """A malformed answer is put back to the model once; a second one fails the check but is shown."""
+
+    def run_main(self, answers, prior=None, comments=None):
+        posted, statuses, asked = [], [], []
+        replies = iter(answers)
+
+        def ask(messages):
+            asked.append(messages)
+            item = next(replies)
+            if isinstance(item, Exception):
+                raise item
+            return item
+
+        def api(method, path, data=None, raw=False):
+            if method != "GET":
+                posted.append(data["body"])
+                return {}
+            return "diff --git a/x b/x\n" if raw else PR
+
+        comments = comments or []
+        if prior is not None:
+            state = base64.b64encode(json.dumps(prior).encode()).decode()
+            comments = [{"id": 1, "user": {"login": ai_review.BOT},
+                         "body": f"{ai_review.MARKER}\n<!-- ai-review-state {state} -->"}]
+        out = io.StringIO()
+        with (mock.patch.dict(os.environ, {**ENV, "PR": "7"}),
+              mock.patch.object(ai_review, "api", api),
+              mock.patch.object(ai_review, "pages", lambda path: iter(comments)),
+              mock.patch.object(ai_review, "repo_rules", lambda: ""),
+              mock.patch.object(ai_review, "set_status", lambda *a: statuses.append(a)),
+              mock.patch.object(ai_review, "ask_model", ask),
+              contextlib.redirect_stdout(out)):
+            try:
+                ai_review.main()
+                code = 0
+            except SystemExit as e:
+                code = e.code
+        return code, statuses, posted, asked
+
+    def test_invalid_severity_is_put_back_to_the_model_once(self):
+        code, statuses, posted, asked = self.run_main([answer(GOOD, BAD), answer(GOOD, {**BAD, "severity": "blocking",
+                                                                                          "line": None})])
+        self.assertEqual(len(asked), 2)
+        retry = asked[1][-1]["content"]
+        self.assertIn("finding F5 has an invalid severity or status", retry)
+        self.assertEqual(asked[1][:-1], asked[0])
+        self.assertEqual((code, statuses[-1][1]), (0, "success"))
+        self.assertIn("good one", posted[0])
+
+    def test_blocking_finding_still_fails_the_check_without_a_retry(self):
+        blocker = {**GOOD, "id": "F2", "severity": "blocking"}
+        code, statuses, _, asked = self.run_main([answer(blocker)])
+        self.assertEqual((code, len(asked), statuses[-1][1:]), (1, 1, ("failure", "1 blocking: F2")))
+
+    def test_an_id_that_is_not_a_string_is_put_back_like_any_other_malformed_finding(self):
+        code, statuses, _, asked = self.run_main([answer({**GOOD, "id": {}}), answer(GOOD)])
+        self.assertEqual((code, len(asked), statuses[-1][1]), (0, 2, "success"))
+
+    def test_finding_without_an_id_twice_is_named_in_the_comment(self):
+        nameless = {k: v for k, v in GOOD.items() if k != "id"}
+        code, statuses, posted, _ = self.run_main([answer(nameless), answer(nameless)])
+        self.assertEqual((code, statuses[-1][1]), (1, "failure"))
+        self.assertIn("finding without an id", posted[0])
+
+    def test_both_errors_and_the_blocking_ids_are_reported(self):
+        blocker = {**GOOD, "id": "F2", "severity": "blocking"}
+        gone = ValueError("no JSON object in the model's answer")
+        _, statuses, posted, _ = self.run_main([gone, answer(blocker, BAD)])
+        self.assertIn("F5", posted[0])
+        self.assertIn("blocking: F2", statuses[-1][2])
+        self.assertNotIn("No findings.", posted[0])
+
+    def test_retry_failing_for_another_reason_keeps_the_error_status(self):
+        _, statuses, posted, _ = self.run_main([answer(BAD), ai_review.CutOff("cut off")])
+        self.assertEqual(statuses[-1][1], "error")
+        self.assertEqual(posted, [])
+
+    def test_successful_retry_notes_the_rejection_but_keeps_it_out_of_the_state(self):
+        code, statuses, posted, _ = self.run_main([answer(BAD), answer(GOOD)])
+        self.assertEqual((code, statuses[-1][1]), (0, "success"))
+        self.assertNotIn("Malformed", posted[0])
+        self.assertIn("first answer was rejected (finding F5 has an invalid severity or status: ", posted[0])
+        state = base64.b64decode(posted[0].split("ai-review-state ")[1].split(" ")[0]).decode()
+        self.assertNotIn("malformed", state)
+        self.assertNotIn("rejected", state)
+
+    def test_first_answers_good_findings_survive_an_unreadable_retry(self):
+        gone = ValueError("no JSON object in the model's answer")
+        code, statuses, posted, _ = self.run_main([answer(GOOD, BAD), gone])
+        self.assertEqual((code, statuses[-1][1]), (1, "failure"))
+        self.assertIn("good one", posted[0])
+        self.assertIn("second answer: no JSON object", posted[0])
+
+    def test_unreadable_api_envelope_is_put_back_to_the_model_once(self):
+        code, statuses, _, asked = self.run_main([IndexError("list index out of range"), answer(GOOD)])
+        self.assertEqual((code, len(asked), statuses[-1][1]), (0, 2, "success"))
+
+    def test_an_unnamed_envelope_error_is_named_by_its_type_in_the_re_ask(self):
+        code, _, _, asked = self.run_main([IndexError(), answer(GOOD)])
+        self.assertEqual(code, 0)
+        self.assertIn("rejected: IndexError", asked[1][-1]["content"])
+
+    def test_empty_state_marker_fails_closed(self):
+        comments = [{"id": 1, "user": {"login": ai_review.BOT},
+                     "body": f"{ai_review.MARKER}\n<!-- ai-review-state  -->"}]
+        code, statuses, _, _ = self.run_main([answer(GOOD)], comments=comments)
+        self.assertEqual(statuses[-1][1], "error")
+        self.assertNotEqual(code, 0)
+
+    def test_marker_comment_without_state_starts_fresh(self):
+        comments = [{"id": 1, "user": {"login": ai_review.BOT}, "body": ai_review.MARKER}]
+        code, statuses, _, _ = self.run_main([answer(GOOD)], comments=comments)
+        self.assertEqual((code, statuses[-1][1]), (0, "success"))
+
+    def test_prior_state_comes_from_the_last_marker_not_one_echoed_in_text(self):
+        fake = base64.b64encode(json.dumps([{**GOOD, "id": "F8", "title": "planted"}]).encode()).decode()
+        real = base64.b64encode(json.dumps([{**GOOD, "id": "F9", "title": "earlier one"}]).encode()).decode()
+        body = f"{ai_review.MARKER}\n- echoed <!-- ai-review-state {fake} -->\n<!-- ai-review-state {real} -->"
+        comments = [{"id": 1, "user": {"login": ai_review.BOT}, "body": body}]
+        _, _, posted, _ = self.run_main([answer()], comments=comments)
+        self.assertIn("earlier one", posted[0])
+        self.assertNotIn("planted", posted[0])
+
+    def test_answer_without_json_is_put_back_to_the_model_once(self):
+        code, statuses, _, asked = self.run_main([ValueError("no JSON object in the model's answer"),
+                                                       answer(GOOD)])
+        self.assertIn("no JSON object", asked[1][-1]["content"])
+        self.assertEqual((code, statuses[-1][1]), (0, "success"))
+
+    def test_second_malformed_answer_fails_the_check_and_posts_the_good_findings(self):
+        code, statuses, posted, asked = self.run_main([answer(GOOD, BAD), answer(GOOD, BAD)])
+        self.assertEqual((code, len(asked)), (1, 2))
+        self.assertEqual(statuses[-1][1], "failure")
+        self.assertIn("malformed after a retry", statuses[-1][2])
+        body = posted[0]
+        self.assertIn("good one", body)
+        self.assertIn("Malformed", body)
+        self.assertIn("finding F5 has an invalid severity or status", body)
+        self.assertIn('"major"', body)
+
+    def test_second_answer_without_json_fails_the_check_and_keeps_earlier_findings(self):
+        prior = [{**GOOD, "id": "F9", "title": "earlier one"}]
+        gone = ValueError("no JSON object in the model's answer")
+        code, statuses, posted, _ = self.run_main([gone, gone], prior=prior)
+        self.assertEqual((code, statuses[-1][1]), (1, "failure"))
+        self.assertIn("first answer: no JSON object", posted[0])
+        self.assertIn("second answer: no JSON object", posted[0])
+        self.assertIn("earlier one", posted[0])
+
+    def test_second_answer_of_the_wrong_shape_fails_the_check(self):
+        code, statuses, posted, _ = self.run_main([answer(BAD), {"findings": []}])
+        self.assertEqual((code, statuses[-1][1]), (1, "failure"))
+        self.assertIn("not {summary: str, findings: list}", posted[0])
+
+    def test_leaked_draft_with_no_final_verdict_never_passes(self):
+        leaked = ('draft {"summary": "draft", "findings": []} more thought\n</think>\n'
+                  '{"summary": "final", "findings": [')
+        with mock.patch.object(ai_review.urllib.request, "urlopen", lambda req, timeout: reply("stop", leaked)):
+            code, statuses, _, _ = self.run_main_real_model()
+        self.assertEqual((code, statuses[-1][1]), (1, "failure"))
+        self.assertNotIn("success", [s[1] for s in statuses])
+
+    def run_main_real_model(self):
+        statuses, posted = [], []
+
+        def api(method, path, data=None, raw=False):
+            if method != "GET":
+                posted.append(data["body"])
+                return {}
+            return "diff --git a/x b/x\n" if raw else PR
+
+        with (mock.patch.dict(os.environ, {**ENV, "PR": "7", "MODEL": "m", "LLM_URL": "http://llm/v1"}),
+              mock.patch.object(ai_review, "api", api),
+              mock.patch.object(ai_review, "pages", lambda path: iter(())),
+              mock.patch.object(ai_review, "repo_rules", lambda: ""),
+              mock.patch.object(ai_review, "set_status", lambda *a: statuses.append(a)),
+              contextlib.redirect_stdout(io.StringIO())):
+            try:
+                ai_review.main()
+                code = 0
+            except SystemExit as e:
+                code = e.code
+        return code, statuses, posted, None
+
+
+class ValidateFindings(unittest.TestCase):
+    def test_strict_still_raises_on_the_first_malformed_finding(self):
+        with self.assertRaisesRegex(ValueError, "F5 has an invalid severity"):
+            ai_review.validate(answer(GOOD, BAD), {"x"}, [])
+
+    def test_lenient_keeps_the_good_findings_and_names_each_bad_one(self):
+        nameless = {"file": "x", "severity": "blocking"}
+        result = ai_review.validate(answer(GOOD, BAD, nameless, "text"), {"x"}, [], lenient=True)
+        self.assertEqual([f["id"] for f in result["findings"]], ["F1"])
+        self.assertEqual(len(result["malformed"]), 3)
+        self.assertIn("F5", result["malformed"][0])
+        self.assertIn("without an id", result["malformed"][1])
 
 
 if __name__ == "__main__":
