@@ -8,7 +8,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - AI review: an answer with no JSON or a malformed finding is put back to the model once with the
   error; if the second answer is still bad the check fails, and the comment names what was
-  malformed and keeps the well-formed findings instead of discarding the review (#110).
+  malformed and keeps the well-formed findings of both answers instead of discarding the review.
+  An unreadable response envelope gets the same one retry, a retry that succeeds is noted in the
+  comment, and the saved state is read from the comment's last marker (#110).
 - AI review: a model request that never reached the server (failed name lookup, refused or
   unroutable connection) is retried after 5, 15 and 30 seconds before the review fails closed;
   timeouts and HTTP errors still fail at once (#109).

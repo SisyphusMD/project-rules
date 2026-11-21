@@ -281,9 +281,11 @@ def validate(result, files, prior, lenient=False):
         else:
             problem = None
         if problem:
+            # The finding itself goes in the error, so a re-ask names the exact defect.
+            problem = f"{problem}: {json.dumps(f, default=str)[:500]}"
             if not lenient:
                 raise ValueError(problem)
-            malformed.append(f"{problem}: {json.dumps(f, default=str)[:500]}")
+            malformed.append(problem)
             continue
         # A blocking finding must point at the change; otherwise it can only advise.
         if f["severity"] == "blocking" and not (f.get("file") in files and isinstance(f.get("line"), int)):
@@ -301,24 +303,33 @@ def validate(result, files, prior, lenient=False):
 
 def get_result(messages, files, prior):
     """Ask the model; an answer that cannot be read or checked goes back to it once with the
-    error. A second bad answer still fails the review (`malformed` is set), but whatever in it
-    was well-formed is kept so the author can see it."""
+    error. A second bad answer still fails the review (`malformed` is set), but whatever in either
+    answer was well-formed is kept so the author can see it. A retry that succeeds says so."""
     answer = None
     try:
         answer = ask_model(messages)
         return validate(answer, files, prior)
-    except ValueError as e:
-        first = str(e)
+    except (ValueError, IndexError, AttributeError) as e:
+        first = str(e) or type(e).__name__
         note = f"Your answer was rejected: {first}. Answer again with the one JSON object described above."
         if answer is not None:
+            # Each request is stateless: this quote is the only copy of the answer the model sees.
             note += "\nThe rejected answer was:\n" + json.dumps(answer, default=str)[:6000]
+    # The first answer's usable findings, kept in case the second cannot be read at all.
+    try:
+        fallback = validate(answer, files, prior, lenient=True)["findings"]
+    except ValueError:
+        fallback = prior
     print(f"model answer rejected ({first}); asking once more")
     try:
-        return validate(ask_model([*messages, {"role": "user", "content": note}]), files, prior,
-                        lenient=True)
-    except ValueError as second:
+        result = validate(ask_model([*messages, {"role": "user", "content": note}]), files, prior,
+                          lenient=True)
+    except (ValueError, IndexError, AttributeError) as e:
         return {"summary": "The model's answer could not be used, even after one retry.",
-                "findings": prior, "malformed": [f"first answer: {first}", f"second answer: {second}"]}
+                "findings": fallback,
+                "malformed": [f"first answer: {first}", f"second answer: {str(e) or type(e).__name__}"]}
+    result["retried"] = first
+    return result
 
 
 def render(result, sha):
@@ -343,8 +354,11 @@ def render(result, sha):
                    "so the check fails until a re-review returns a readable answer:"), ""]
         lines += [f"- {problem}".replace("\n", " ") for problem in result["malformed"]]
         lines.append("")
+    if result.get("retried") and not result.get("malformed"):
+        lines += [f"(The model's first answer was rejected ({result['retried']}); this is its second.)", ""]
     lines += ["", "Disagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.",
-              # Base64, so no finding text can close the HTML comment that carries the state.
+              # Base64, so no finding text can close the HTML comment that carries the state. Always
+              # the body's last line: main reads the last marker, so one echoed in text above loses.
               f"<!-- ai-review-state {base64.b64encode(json.dumps(result['findings']).encode()).decode()} -->"]
     return "\n".join(lines)
 
@@ -365,8 +379,9 @@ def main():
             comments = list(pages(f"/issues/{n}/comments"))
             marker = next((c for c in comments if c["user"]["login"] == BOT and MARKER in c["body"]), None)
             prior = []
-            if marker and (m := STATE_RE.search(marker["body"])):
-                prior = json.loads(base64.b64decode(m.group(1)))
+            if marker and (found := STATE_RE.findall(marker["body"])):
+                # An empty or broken state raises, and the review fails closed.
+                prior = json.loads(base64.b64decode(found[-1]))
             if len(diff) > MAX_DIFF:
                 set_status(sha, "failure", f"Diff is {len(diff)} chars, over {MAX_DIFF}: split the PR")
                 sys.exit("diff too large to review")
