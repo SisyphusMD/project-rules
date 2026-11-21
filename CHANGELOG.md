@@ -6,6 +6,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- AI review: the retry of an unreadable answer is now a restate under a strict `json_schema`
+  matching what the review accepts, quoting the first answer's text and the end of its reasoning,
+  so its shape cannot be wrong; the first review stays unconstrained, since the schema caps
+  reasoning near 4,096 tokens. A server that refuses `response_format` gets the free re-ask, and
+  an error body without `choices` is retried too (#114).
 - AI review: an answer with no JSON or a malformed finding is put back to the model once with the
   error; if the second answer is still bad the check fails, and the comment names what was
   malformed and keeps the well-formed findings of both answers instead of discarding the review.
