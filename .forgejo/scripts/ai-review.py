@@ -175,7 +175,9 @@ def linked_issues(body):
 
 # Hidden reasoning counts toward this cap: uncapped, one long review reasoned for 23,119 tokens
 # before a 438-token answer. It must stay small enough to finish inside MODEL_DEADLINE at the
-# slowest observed speed (59 tok/s, so about 11 minutes); a review that reaches it is stuck.
+# slowest observed speed (59 tok/s, so about 11 minutes); a review that reaches it is stuck. A
+# retry under its schema is capped at RESTATE_OUTPUT_TOKENS (about 5 minutes), so both fit; a
+# server that refuses the schema costs a third, full call, which can reach the deadline.
 MAX_OUTPUT_TOKENS = int(os.environ.get("MAX_OUTPUT_TOKENS", "40000"))
 # Everything between the pending status and the saved comment, counted from the script's start,
 # the model's queueing on the shared Studio included. urlopen's timeout bounds each socket read,
@@ -188,6 +190,36 @@ STARTED = time.monotonic()
 
 class CutOff(RuntimeError):
     pass
+
+
+class NoJSON(ValueError):
+    """An answer with no readable verdict; `raw` keeps its text for the restate request."""
+
+    def __init__(self, raw):
+        super().__init__("no JSON object in the model's answer")
+        self.raw = raw
+
+
+# What validate accepts, as a strict json_schema. oMLX enforces it with a grammar that starts after
+# the reasoning but caps that reasoning near 4,096 tokens, too few for a review, so it constrains
+# only the retry, which restates an answer already reasoned out.
+_TEXT = {"type": "string"}
+ANSWER_SCHEMA = {
+    "type": "object", "additionalProperties": False, "required": ["summary", "findings"],
+    "properties": {"summary": _TEXT, "findings": {"type": "array", "items": {
+        "type": "object", "additionalProperties": False,
+        "required": ["id", "severity", "status", "title", "detail", "response"],
+        "properties": {"id": {"type": "string", "pattern": "^\\s*\\S.*$"}, "file": _TEXT, "line": {"type": "integer"},
+                       "severity": {"type": "string", "enum": ["blocking", "suggestion"]},
+                       "status": {"type": "string", "enum": ["open", "resolved", "withdrawn"]},
+                       "title": _TEXT, "detail": _TEXT, "response": _TEXT}}}},
+}
+# The restate quotes this much of a rejected answer: the start and end of its text, and the end of
+# its reasoning, where the verdict was reached.
+RESTATE_CONTENT_CHARS = 6000
+RESTATE_REASONING_CHARS = 12000
+# A schema-constrained answer reasons for at most about 4,096 tokens and then writes only the JSON.
+RESTATE_OUTPUT_TOKENS = 16000
 
 
 # Not a TimeoutError: urllib wraps any OSError raised while it connects in a URLError.
@@ -229,23 +261,42 @@ def open_model(req):
     return urllib.request.urlopen(req, timeout=MODEL_READ_TIMEOUT)
 
 
-def ask_model(messages):
+def clip(text, limit):
+    """Text over `limit` keeps its start and its end, where a verdict usually sits."""
+    if len(text) <= limit:
+        return text
+    half = limit // 2
+    return text[:half] + "\n[...]\n" + text[-half:]
+
+
+def ask_model(messages, schema=None):
+    cap = min(MAX_OUTPUT_TOKENS, RESTATE_OUTPUT_TOKENS) if schema else MAX_OUTPUT_TOKENS
     body = {"model": os.environ["MODEL"], "messages": messages, "temperature": 0,
-            "max_tokens": MAX_OUTPUT_TOKENS, "stream": False}
+            "max_tokens": cap, "stream": False}
+    if schema:
+        body["response_format"] = {"type": "json_schema",
+                                   "json_schema": {"name": "review", "strict": True, "schema": schema}}
     req = urllib.request.Request(os.environ["LLM_URL"], method="POST", data=json.dumps(body).encode(),
                                  headers={"Content-Type": "application/json"})
     with open_model(req) as r:
         reply = json.loads(r.read())
-    choice = reply["choices"][0]
+    choices = reply.get("choices") if isinstance(reply, dict) else None
+    if not choices or not isinstance(choices[0], dict):
+        # A server error body ({"error": ...}) is an unreadable answer, not a broken script.
+        raise ValueError(f"model reply has no choices: {json.dumps(reply, default=str)[:500]}")
+    choice = choices[0]
     usage = reply.get("usage") or {}
     # Logged so the cap can be re-sized from real reviews; nothing else records it.
     finish = choice.get("finish_reason")
     print(f"model usage: {json.dumps(usage)} finish_reason={finish}")
     # The token count decides only when the server does not say why it stopped.
-    if finish == "length" or (finish is None
-                              and (usage.get("completion_tokens") or 0) >= MAX_OUTPUT_TOKENS):
-        raise CutOff(f"the model's answer was cut off at {MAX_OUTPUT_TOKENS} output tokens")
-    text = choice["message"].get("content") or ""
+    if finish == "length" or (finish is None and (usage.get("completion_tokens") or 0) >= cap):
+        raise CutOff(f"the model's answer was cut off at {cap} output tokens")
+    message = choice.get("message")
+    if not isinstance(message, dict):
+        raise ValueError("model reply has no message")
+    text = message.get("content") or ""
+    reasoning = message.get("reasoning_content") or message.get("reasoning") or ""
     text = re.sub(r"<think>.*?</think>", "", text, flags=re.S).strip()
     # The server's reasoning parser can end early on a literal </think> the model quotes (from a
     # diff of this very line), leaking the rest of its reasoning, braces and all, ahead of the
@@ -262,7 +313,7 @@ def ask_model(messages):
             return json.loads(segment[start:])
         except ValueError:
             continue
-    raise ValueError("no JSON object in the model's answer")
+    raise NoJSON({"content": clip(text, RESTATE_CONTENT_CHARS), "reasoning": reasoning[-RESTATE_REASONING_CHARS:]})
 
 
 def validate(result, files, prior, lenient=False):
@@ -301,20 +352,48 @@ def validate(result, files, prior, lenient=False):
     return checked
 
 
+# An answer the model could not have meant: a body without a verdict, a reply without choices, or
+# a verdict of the wrong shape. KeyError and TypeError stay out: they mean a broken script or setup.
+UNREADABLE = (ValueError, IndexError, AttributeError)
+
+
+def restate(messages, note):
+    """The retry, constrained to ANSWER_SCHEMA so its shape cannot be wrong. A server that refuses
+    response_format gets the same request unconstrained."""
+    retry = [*messages, {"role": "user", "content": note}]
+    try:
+        return ask_model(retry, schema=ANSWER_SCHEMA)
+    except urllib.error.HTTPError as e:
+        # 400 is also how a server says the prompt is too long; only a refusal of the format itself
+        # is worth asking again without it.
+        detail = e.read().decode("utf-8", "replace") if e.code in (400, 422) else ""
+        if not re.search(r"response_format|json_schema|schema|grammar", detail, re.I):
+            raise
+        print(f"the model server refused a json_schema answer (HTTP {e.code}); asking without one")
+        return ask_model(retry)
+
+
 def get_result(messages, files, prior):
     """Ask the model; an answer that cannot be read or checked goes back to it once with the
-    error. A second bad answer still fails the review (`malformed` is set), but whatever in either
-    answer was well-formed is kept so the author can see it. A retry that succeeds says so."""
+    error, to be restated as the JSON object. A second bad answer still fails the review
+    (`malformed` is set), but whatever in either answer was well-formed is kept so the author can
+    see it. A retry that succeeds says so."""
     answer = None
     try:
         answer = ask_model(messages)
         return validate(answer, files, prior)
-    except (ValueError, IndexError, AttributeError) as e:
+    except UNREADABLE as e:
         first = str(e) or type(e).__name__
-        note = f"Your answer was rejected: {first}. Answer again with the one JSON object described above."
-        if answer is not None:
-            # Each request is stateless: this quote is the only copy of the answer the model sees.
-            note += "\nThe rejected answer was:\n" + json.dumps(answer, default=str)[:6000]
+        # A NoJSON answer's text is bounded already; a parsed verdict is clipped like text.
+        raw = getattr(e, "raw", None)
+        rejected = json.dumps(raw if raw is not None else answer, default=str)
+        if raw is None:
+            rejected = clip(rejected, RESTATE_CONTENT_CHARS)
+    note = (f"Your answer was rejected: {first}. Restate the review you reached as the one JSON object "
+            "described above: keep every finding you meant to report, and fix only what made it unreadable.")
+    if rejected != "null":
+        # Each request is stateless: this quote is the only copy of the answer the model sees.
+        note += "\nThe rejected answer was:\n" + rejected
     # The first answer's usable findings, kept in case the second cannot be read at all.
     try:
         fallback = validate(answer, files, prior, lenient=True)["findings"]
@@ -322,9 +401,8 @@ def get_result(messages, files, prior):
         fallback = prior
     print(f"model answer rejected ({first}); asking once more")
     try:
-        result = validate(ask_model([*messages, {"role": "user", "content": note}]), files, prior,
-                          lenient=True)
-    except (ValueError, IndexError, AttributeError) as e:
+        result = validate(restate(messages, note), files, prior, lenient=True)
+    except UNREADABLE as e:
         return {"summary": "The model's answer could not be used, even after one retry.",
                 "findings": fallback,
                 "malformed": [f"first answer: {first}", f"second answer: {str(e) or type(e).__name__}"]}

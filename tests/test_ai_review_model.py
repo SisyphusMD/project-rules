@@ -6,6 +6,7 @@ import io
 import json
 import os
 import pathlib
+import re
 import signal
 import time
 import unittest
@@ -140,8 +141,10 @@ class AskModel(unittest.TestCase):
         self.assertIn("model usage: {}", out)
 
     def test_malformed_choices_raise_handled_errors(self):
-        self.assertIsInstance(self.call("stop", "", choices=[])[0], IndexError)
-        self.assertIsInstance(self.call("stop", "", choices=["x"])[0], AttributeError)
+        # Named ValueErrors, which the retry puts back to the model, never a KeyError or TypeError.
+        self.assertRegex(str(self.call("stop", "", choices=[])[0]), "no choices")
+        self.assertRegex(str(self.call("stop", "", choices=["x"])[0]), "no choices")
+        self.assertRegex(str(self.call("stop", "", choices=[{"finish_reason": "stop"}])[0]), "no message")
 
     def test_reasoning_leaked_past_a_quoted_think_tag_is_ignored(self):
         leaked = ('", "", text)` is unchanged; the check {"x": 1} is fine.\n</think>\n\n'
@@ -316,10 +319,12 @@ class MainReasks(unittest.TestCase):
 
     def run_main(self, answers, prior=None, comments=None):
         posted, statuses, asked = [], [], []
+        self.schemas = []
         replies = iter(answers)
 
-        def ask(messages):
+        def ask(messages, schema=None):
             asked.append(messages)
+            self.schemas.append(schema)
             item = next(replies)
             if isinstance(item, Exception):
                 raise item
@@ -495,6 +500,197 @@ class MainReasks(unittest.TestCase):
             except SystemExit as e:
                 code = e.code
         return code, statuses, posted, None
+
+
+class Restate(unittest.TestCase):
+    """The retry restates the first answer under ANSWER_SCHEMA, so its shape cannot be wrong."""
+
+    run_main = MainReasks.run_main
+
+    def test_only_the_retry_is_constrained_to_the_schema(self):
+        code, _, _, asked = self.run_main([ai_review.NoJSON({"content": "", "reasoning": ""}), answer(GOOD)])
+        self.assertEqual(code, 0)
+        self.assertEqual(self.schemas, [None, ai_review.ANSWER_SCHEMA])
+        self.assertIn("Restate the review", asked[1][-1]["content"])
+
+    def test_restate_quotes_the_answer_text_and_the_end_of_the_reasoning(self):
+        raw = {"content": "F1 is a real bug in x", "reasoning": "long thought ... so the verdict is F1"}
+        _, _, _, asked = self.run_main([ai_review.NoJSON(raw), answer(GOOD)])
+        self.assertIn("F1 is a real bug in x", asked[1][-1]["content"])
+        self.assertIn("so the verdict is F1", asked[1][-1]["content"])
+
+    def test_a_server_error_body_is_put_back_once(self):
+        empty = ValueError('model reply has no choices: {"error": "overloaded"}')
+        code, statuses, _, asked = self.run_main([empty, answer(GOOD)])
+        self.assertEqual((code, len(asked), statuses[-1][1]), (0, 2, "success"))
+
+    def test_a_broken_script_is_an_error_not_a_malformed_answer(self):
+        code, statuses, posted, asked = self.run_main([KeyError("MODEL")])
+        self.assertEqual((len(asked), statuses[-1][1]), (1, "error"))
+        self.assertNotEqual(code, 0)
+        self.assertEqual(posted, [])
+
+    def test_long_answers_keep_the_end_of_the_text_and_reasoning(self):
+        text = "x" * 20000 + " TEXT VERDICT F1"
+        reasoning = "y" * 50000 + " REASONED VERDICT F1"
+        raw = {"content": ai_review.clip(text, ai_review.RESTATE_CONTENT_CHARS),
+               "reasoning": reasoning[-ai_review.RESTATE_REASONING_CHARS:]}
+        _, _, _, asked = self.run_main([ai_review.NoJSON(raw), answer(GOOD)])
+        note = asked[1][-1]["content"]
+        self.assertIn("TEXT VERDICT F1", note)
+        self.assertIn("REASONED VERDICT F1", note)
+        self.assertLess(len(note), ai_review.RESTATE_CONTENT_CHARS + ai_review.RESTATE_REASONING_CHARS + 600)
+
+    def test_a_long_parsed_answer_is_clipped_in_the_quote(self):
+        huge = {**BAD, "detail": "d" * 30000 + " END"}
+        _, _, _, asked = self.run_main([answer(huge), answer(GOOD)])
+        note = asked[1][-1]["content"]
+        self.assertLess(len(note), ai_review.RESTATE_CONTENT_CHARS + 1200)
+        self.assertIn("END", note)
+
+    def test_a_refused_schema_still_reviews_end_to_end(self):
+        seen = []
+
+        def ask(messages, schema=None):
+            seen.append(schema)
+            if len(seen) == 1:
+                raise ai_review.NoJSON({"content": "prose", "reasoning": ""})
+            if schema:
+                raise ai_review.urllib.error.HTTPError("u", 400, "bad", {},
+                                                       io.BytesIO(b"response_format unsupported"))
+            return answer(GOOD)
+
+        with mock.patch.object(ai_review, "get_result", ai_review.get_result):
+            code, statuses, posted = self.main_with(ask)
+        self.assertEqual((code, statuses[-1][1]), (0, "success"))
+        self.assertEqual(seen, [None, ai_review.ANSWER_SCHEMA, None])
+        self.assertIn("first answer was rejected", posted[0])
+
+    def main_with(self, ask):
+        posted, statuses = [], []
+
+        def api(method, path, data=None, raw=False):
+            if method != "GET":
+                posted.append(data["body"])
+                return {}
+            return "diff --git a/x b/x\n" if raw else PR
+
+        with (mock.patch.dict(os.environ, {**ENV, "PR": "7"}),
+              mock.patch.object(ai_review, "api", api),
+              mock.patch.object(ai_review, "pages", lambda path: iter(())),
+              mock.patch.object(ai_review, "repo_rules", lambda: ""),
+              mock.patch.object(ai_review, "set_status", lambda *a: statuses.append(a)),
+              mock.patch.object(ai_review, "ask_model", ask),
+              contextlib.redirect_stdout(io.StringIO())):
+            try:
+                ai_review.main()
+                code = 0
+            except SystemExit as e:
+                code = e.code
+        return code, statuses, posted
+
+    def refused(self, code, body):
+        calls = []
+
+        def ask(messages, schema=None):
+            calls.append(schema)
+            if schema:
+                raise ai_review.urllib.error.HTTPError("u", code, "refused", {}, io.BytesIO(body))
+            return answer(GOOD)
+
+        with mock.patch.object(ai_review, "ask_model", ask), contextlib.redirect_stdout(io.StringIO()):
+            result = ai_review.restate([], "note")
+        return result, calls
+
+    def test_a_server_that_refuses_the_schema_gets_a_free_retry(self):
+        for code in (400, 422):
+            result, calls = self.refused(code, b'{"error": "response_format json_schema is not supported"}')
+            self.assertEqual((result, calls), (answer(GOOD), [ai_review.ANSWER_SCHEMA, None]))
+
+    def test_a_400_for_another_reason_is_not_retried_without_the_schema(self):
+        with self.assertRaises(ai_review.urllib.error.HTTPError):
+            self.refused(400, b'{"error": "prompt is longer than the context window"}')
+
+    def test_other_http_errors_on_the_retry_still_fail_closed(self):
+        def ask(messages, schema=None):
+            raise ai_review.urllib.error.HTTPError("u", 502, "bad gateway", {}, None)
+
+        with mock.patch.object(ai_review, "ask_model", ask), self.assertRaises(ai_review.urllib.error.HTTPError):
+            ai_review.restate([], "note")
+
+    def test_schema_allows_exactly_what_validate_accepts(self):
+        item = ai_review.ANSWER_SCHEMA["properties"]["findings"]["items"]
+        self.assertEqual(set(item["properties"]["severity"]["enum"]), {"blocking", "suggestion"})
+        self.assertEqual(set(item["properties"]["status"]["enum"]), {"open", "resolved", "withdrawn"})
+        self.assertIn("id", item["required"])
+        pattern = item["properties"]["id"]["pattern"]
+        self.assertIsNone(re.search(pattern, "   "))
+        self.assertIsNone(re.search(pattern, ""))
+        self.assertIsNotNone(re.search(pattern, "F1"))
+        self.assertEqual(ai_review.ANSWER_SCHEMA["required"], ["summary", "findings"])
+        # A finding the grammar can produce passes validate untouched.
+        self.assertEqual(ai_review.validate(answer(GOOD), {"x"}, [])["findings"], [GOOD])
+
+
+class AskModelSchema(unittest.TestCase):
+    def ask(self, message, schema=None):
+        sent = []
+
+        def urlopen(req, timeout):
+            sent.append(json.loads(req.data))
+            return reply(None, None, usage={}, choices=[{"finish_reason": "stop", "message": message}])
+
+        env = {"MODEL": "m", "LLM_URL": "http://llm/v1/chat/completions"}
+        with mock.patch.dict(os.environ, env), mock.patch.object(ai_review.urllib.request, "urlopen", urlopen), \
+                contextlib.redirect_stdout(io.StringIO()):
+            try:
+                return ai_review.ask_model([], schema=schema), sent
+            except ValueError as e:
+                return e, sent
+
+    def test_a_schema_is_sent_as_a_strict_response_format(self):
+        _, sent = self.ask({"content": '{"summary": "s", "findings": []}'}, schema=ai_review.ANSWER_SCHEMA)
+        fmt = sent[0]["response_format"]
+        self.assertEqual((fmt["type"], fmt["json_schema"]["strict"]), ("json_schema", True))
+        self.assertEqual(fmt["json_schema"]["schema"], ai_review.ANSWER_SCHEMA)
+
+    def test_no_schema_sends_no_response_format(self):
+        _, sent = self.ask({"content": '{"summary": "s", "findings": []}'})
+        self.assertNotIn("response_format", sent[0])
+
+    def test_an_answer_without_json_keeps_its_text_and_reasoning_tail(self):
+        reasoning = "x" * (ai_review.RESTATE_REASONING_CHARS + 50) + "THE END"
+        e, _ = self.ask({"content": "prose only", "reasoning_content": reasoning})
+        self.assertIsInstance(e, ai_review.NoJSON)
+        self.assertEqual(str(e), "no JSON object in the model's answer")
+        self.assertEqual(e.raw["content"], "prose only")
+        self.assertTrue(e.raw["reasoning"].endswith("THE END"))
+        self.assertEqual(len(e.raw["reasoning"]), ai_review.RESTATE_REASONING_CHARS)
+
+    def test_a_schema_request_gets_the_smaller_output_cap(self):
+        _, sent = self.ask({"content": '{"summary": "s", "findings": []}'}, schema=ai_review.ANSWER_SCHEMA)
+        self.assertEqual(sent[0]["max_tokens"], ai_review.RESTATE_OUTPUT_TOKENS)
+        _, sent = self.ask({"content": '{"summary": "s", "findings": []}'})
+        self.assertEqual(sent[0]["max_tokens"], ai_review.MAX_OUTPUT_TOKENS)
+
+    def test_long_text_keeps_its_start_and_end(self):
+        clipped = ai_review.clip("A" + "x" * 10000 + "Z", 100)
+        self.assertTrue(clipped.startswith("A") and clipped.endswith("Z"))
+        self.assertLess(len(clipped), 120)
+        self.assertEqual(ai_review.clip("short", 100), "short")
+
+    def test_a_server_error_body_raises_an_unreadable_error(self):
+        sent = []
+
+        def urlopen(req, timeout):
+            sent.append(1)
+            return mock.MagicMock(__enter__=lambda s: io.BytesIO(b'{"error": "overloaded"}'),
+                                  __exit__=lambda *a: False)
+
+        env = {"MODEL": "m", "LLM_URL": "http://llm/v1/chat/completions"}
+        with (mock.patch.dict(os.environ, env), mock.patch.object(ai_review.urllib.request, "urlopen", urlopen),
+              self.assertRaisesRegex(ValueError, "no choices")):
+            ai_review.ask_model([])
 
 
 class ValidateFindings(unittest.TestCase):
