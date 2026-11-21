@@ -112,4 +112,7 @@ Generated nightly from the primary Forgejo; do not edit. `json/` holds the full 
 | 106 | issue | open | [ai-review.py: review findings on the 40k output cap and its tests](items/0106-ai-review-py-review-findings-on-the-40k-output-cap-and-its-t.md) |
 | 107 | issue | open | [AI review parser can accept a leaked reasoning draft as the verdict](items/0107-ai-review-parser-can-accept-a-leaked-reasoning-draft-as-the-.md) |
 | 108 | pull | closed | [AI review: 40-minute deadline inside a 45-minute job so a slow review fails with a status](items/0108-ai-review-40-minute-deadline-inside-a-45-minute-job-so-a-slo.md) |
-| 109 | issue | open | [AI review fails closed on one transient DNS error](items/0109-ai-review-fails-closed-on-one-transient-dns-error.md) |
+| 109 | issue | closed | [AI review fails closed on one transient DNS error](items/0109-ai-review-fails-closed-on-one-transient-dns-error.md) |
+| 110 | issue | open | [AI review fails the whole check when one finding has an invalid severity](items/0110-ai-review-fails-the-whole-check-when-one-finding-has-an-inva.md) |
+| 111 | pull | closed | [fix(ai-review): retry a model request that never connected before failing closed](items/0111-fix-ai-review-retry-a-model-request-that-never-connected-bef.md) |
+| 112 | pull | open | [fix(ai-review): re-ask the model once on a malformed answer and post the usable findings](items/0112-fix-ai-review-re-ask-the-model-once-on-a-malformed-answer-an.md) |

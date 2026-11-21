@@ -24,3 +24,7 @@ GhostSpectator #29 is merged with matching mirrors and the shared required check
 ## cody, 2026-11-18T06:18:48-08:00
 
 The release-preparation regression passed, including the gameplay confirmation gate and candidate-only push. A licensed PEAK installation is available under the maintainer’s interactive account. The configured Forgejo runner is isolated from that account and GhostSpectator has no gameplay runner. The remaining gate is PatchValidator and a gameplay run using the actual candidate ZIP in the interactive game session.
+
+## cody, 2026-11-20T17:46:35-08:00
+
+Status unchanged: needs PatchValidator plus a gameplay run of the actual candidate ZIP in Cody's interactive PEAK session, and a separate approval for the first Thunderstore release. Not started; asked after the Archiver release.

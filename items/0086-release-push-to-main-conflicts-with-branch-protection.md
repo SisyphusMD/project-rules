@@ -52,3 +52,11 @@ Remaining triggers: Archiver needs an approved release with a real maintenance c
 ## cody, 2026-11-18T06:18:48-08:00
 
 Follow-up on the two remaining release blocks: Archiver maintenance promotion, exact merge verification, tag replay and runtime smoke passed in isolation. See #74 for the remaining live-patch trigger. GhostSpectator release-preparation regression is green, and actual licensed gameplay still requires the maintainer’s interactive game environment. See #75. This follow-up did not publish a release or change branch protection.
+
+## cody, 2026-11-20T17:46:35-08:00
+
+Status: the Archiver maintenance trigger now exists (archiver#371 on release/0.11) and Cody approved v0.11.8 on 2026-11-20; the release run is next in a fresh session. See #74.
+
+## cody, 2026-11-20T18:52:22-08:00
+
+Status: Archiver now releases through merged PRs on both lines (main and release/0.11), verified by v0.11.9 (archiver#376, runs 858/41557/41558). Strict protection on archiver is the remaining step, tracked in #74. GhostSpectator (#75) is still open.
