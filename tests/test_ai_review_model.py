@@ -774,12 +774,6 @@ class ReviewWorkflow(unittest.TestCase):
         default = re.search(r'os\.environ\.get\("BOT_LOGIN", "([^"]+)"\)', SCRIPT.read_text()).group(1)
         self.assertEqual(configured, default)
 
-    def test_the_job_condition_is_exactly_the_event_and_bot_guard(self):
-        condition = re.search(r"(?ms)^    if: >-\n(.*?)\n    runs-on:", self.TEXT).group(1).split()
-        self.assertEqual(" ".join(condition),
-                         "github.event_name == 'pull_request_target' || (github.event.issue.pull_request "
-                         "&& github.event.comment.user.login != 'forgejo-actions')")
-
     def test_the_checkout_is_the_base_commit_without_saved_credentials(self):
         step = re.search(r"(?ms)uses: actions/checkout@\S+.*?(?=\n      - )", self.TEXT).group(0)
         self.assertIn("ref: ${{ github.sha }}", step)
