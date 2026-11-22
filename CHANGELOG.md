@@ -6,6 +6,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- AI review: replies on the PR are bounded like the rest of the prompt (each kept to about 4,000
+  characters of its start and end, about 30,000 in all, oldest dropped first with a note); a
+  blocking finding's line must be a real integer, not `true`, including one carried over from an
+  earlier review; the workflow checks out the base commit explicitly without saving credentials,
+  and passes `BOT_LOGIN` with the same login its job condition skips (#58).
 - AI review: a PR comment starts a review only when its author can push to the repo or wrote the
   PR, so an outside account's comments on PRs no longer queue runs on the review model (#116).
 - AI review: the retry of an unreadable answer is now a restate under a strict `json_schema`

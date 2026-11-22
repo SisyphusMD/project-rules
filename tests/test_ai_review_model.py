@@ -706,6 +706,79 @@ class ValidateFindings(unittest.TestCase):
         self.assertIn("F5", result["malformed"][0])
         self.assertIn("without an id", result["malformed"][1])
 
+    def test_a_blocking_finding_needs_an_integer_line_not_a_bool(self):
+        for line, severity in ((True, "suggestion"), (3.0, "suggestion"), (3, "blocking")):
+            f = dict(GOOD, severity="blocking", line=line)
+            self.assertEqual(ai_review.validate(answer(f), {"x"}, [])["findings"][0]["severity"], severity, line)
+
+    def test_a_carried_blocker_saved_with_a_bool_line_is_held_to_the_check(self):
+        saved = dict(GOOD, id="F9", severity="blocking", line=True)
+        kept = dict(GOOD, id="F8", severity="blocking", line=4, file="gone")
+        carried = {f["id"]: f for f in ai_review.validate(answer(GOOD), {"x"}, [saved, kept])["findings"]}
+        self.assertEqual(carried["F9"]["severity"], "suggestion")
+        self.assertEqual(saved["severity"], "blocking")
+        self.assertEqual(carried["F8"], kept)
+
+    def test_the_schema_line_is_an_integer_like_validate(self):
+        item = ai_review.ANSWER_SCHEMA["properties"]["findings"]["items"]
+        self.assertEqual(item["properties"]["line"], {"type": "integer"})
+
+
+class BoundReplies(unittest.TestCase):
+    def test_short_threads_pass_unchanged(self):
+        self.assertEqual(ai_review.bound_replies(["a", "b"]), ["a", "b"])
+        self.assertEqual(ai_review.bound_replies([]), [])
+
+    def test_a_long_reply_keeps_its_start_and_its_conclusion(self):
+        long = "START" + "x" * ai_review.MAX_REPLY_CHARS + "CONCLUSION"
+        (only,) = ai_review.bound_replies([long])
+        self.assertTrue(only.startswith("START") and only.endswith("CONCLUSION"))
+        self.assertIn("[...]", only)
+        self.assertLess(len(only), ai_review.MAX_REPLY_CHARS + 10)
+
+    def test_the_oldest_replies_go_first_and_the_total_stays_bounded(self):
+        replies = [f"{i}:" + "y" * (ai_review.MAX_REPLY_CHARS - 10) for i in range(20)]
+        kept = ai_review.bound_replies(replies)
+        self.assertRegex(kept[0], r"^\[\d+ older replies omitted\]$")
+        self.assertTrue(kept[-1].startswith("19:"))
+        self.assertEqual([r.split(":")[0] for r in kept[1:]],
+                         [str(i) for i in range(20 - len(kept) + 1, 20)])
+        self.assertLessEqual(sum(map(len, kept[1:])), ai_review.MAX_REPLIES_CHARS)
+
+
+class MainBoundsReplies(unittest.TestCase):
+    run_main = MainReasks.run_main
+
+    def test_the_prompt_carries_only_the_newest_replies_within_the_bound(self):
+        comments = [{"user": {"login": "maintainer"}, "created_at": f"t{i}",
+                     "body": f"reply {i} " + "z" * ai_review.MAX_REPLY_CHARS} for i in range(20)]
+        code, _, _, asked = self.run_main([answer(GOOD)], comments=comments)
+        self.assertEqual(code, 0)
+        prompt = asked[0][1]["content"]
+        section = prompt.split("Replies on the PR, oldest first:\n", 1)[1].split("\n\nDiff:\n", 1)[0]
+        self.assertIn("older replies omitted", section)
+        self.assertIn("reply 19 ", section)
+        self.assertNotIn("reply 0 ", section)
+        self.assertLess(len(section), ai_review.MAX_REPLIES_CHARS + 500)
+
+
+class ReviewWorkflow(unittest.TestCase):
+    TEXT = (SCRIPT.parents[1] / "workflows/ai-review.yml").read_text()
+
+    def test_the_job_skips_the_same_login_the_script_treats_as_its_own(self):
+        skipped = re.search(r"comment\.user\.login != '([^']+)'", self.TEXT).group(1)
+        configured = re.search(r"(?m)^ +BOT_LOGIN: (\S+)$", self.TEXT).group(1)
+        self.assertEqual(skipped, configured)
+        # The script's own default (read from its source, so an ambient BOT_LOGIN cannot interfere),
+        # so a shared typo in both cannot pass.
+        default = re.search(r'os\.environ\.get\("BOT_LOGIN", "([^"]+)"\)', SCRIPT.read_text()).group(1)
+        self.assertEqual(configured, default)
+
+    def test_the_checkout_is_the_base_commit_without_saved_credentials(self):
+        step = re.search(r"(?ms)uses: actions/checkout@\S+.*?(?=\n      - )", self.TEXT).group(0)
+        self.assertIn("ref: ${{ github.sha }}", step)
+        self.assertIn("persist-credentials: false", step)
+
 
 if __name__ == "__main__":
     unittest.main()
