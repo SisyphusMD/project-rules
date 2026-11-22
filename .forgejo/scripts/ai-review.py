@@ -32,6 +32,9 @@ HEADERS = {"Authorization": f"token {os.environ['TOKEN']}", "Content-Type": "app
 CONTEXT = os.environ.get("STATUS_CONTEXT", "AI review")
 BOT = os.environ.get("BOT_LOGIN", "forgejo-actions")
 MAX_DIFF = int(os.environ.get("MAX_DIFF_CHARS", "120000"))
+# Replies are bounded like every other part of the prompt, so a long thread cannot crowd out the diff.
+MAX_REPLY_CHARS = 4000
+MAX_REPLIES_CHARS = 30000
 
 SYSTEM = """You are the code reviewer for a small repository. Review the pull request for
 real problems: correctness bugs, security and privacy risks, data loss, broken error handling,
@@ -87,6 +90,20 @@ def pages(path):
         if len(batch) < 50:
             return
         page += 1
+
+
+def bound_replies(replies):
+    """Each reply clipped to its start and end, then the oldest dropped until the rest fit: the
+    newest carry the argument, and a withdrawn finding keeps its reason in the saved state."""
+    kept, total = [], 0
+    for reply in reversed(replies):
+        text = clip(reply, MAX_REPLY_CHARS)
+        if total + len(text) > MAX_REPLIES_CHARS:
+            break
+        kept.append(text)
+        total += len(text)
+    dropped = len(replies) - len(kept)
+    return ([f"[{dropped} older replies omitted]"] if dropped else []) + kept[::-1]
 
 
 def set_status(sha, state, description):
@@ -316,6 +333,9 @@ def ask_model(messages, schema=None):
     raise NoJSON({"content": clip(text, RESTATE_CONTENT_CHARS), "reasoning": reasoning[-RESTATE_REASONING_CHARS:]})
 
 
+NOT_BLOCKING = " (Not blocking: it did not cite a changed file and line.)"
+
+
 def validate(result, files, prior, lenient=False):
     """The model's answer as {summary, findings}. A malformed finding raises, or with `lenient`
     is left out of `findings` and named in `malformed`; a wrong overall shape always raises."""
@@ -338,14 +358,21 @@ def validate(result, files, prior, lenient=False):
                 raise ValueError(problem)
             malformed.append(problem)
             continue
-        # A blocking finding must point at the change; otherwise it can only advise.
-        if f["severity"] == "blocking" and not (f.get("file") in files and isinstance(f.get("line"), int)):
+        # A blocking finding must point at the change; otherwise it can only advise. A JSON true is a
+        # Python int, so the line check is on the exact type.
+        if f["severity"] == "blocking" and not (f.get("file") in files and type(f.get("line")) is int):
             f["severity"] = "suggestion"
-            f["detail"] = (f.get("detail") or "") + " (Not blocking: it did not cite a changed file and line.)"
+            f["detail"] = (f.get("detail") or "") + NOT_BLOCKING
         findings.append(f)
-    # A finding the model forgot is not a finding it withdrew: carry it over unchanged.
+    # A finding the model forgot is not a finding it withdrew: carry it over, except that a blocker
+    # saved before the exact line check (with `line: true`) is held to it now.
     seen = {f["id"] for f in findings}
-    findings += [p for p in prior if p.get("id") not in seen]
+    for saved in prior:
+        if saved.get("id") in seen:
+            continue
+        weak = saved.get("severity") == "blocking" and type(saved.get("line")) is not int
+        findings.append({**saved, "severity": "suggestion", "detail": (saved.get("detail") or "") + NOT_BLOCKING}
+                        if weak else saved)
     checked = {"summary": result["summary"], "findings": findings}
     if malformed:
         checked["malformed"] = malformed
@@ -463,8 +490,8 @@ def main():
             if len(diff) > MAX_DIFF:
                 set_status(sha, "failure", f"Diff is {len(diff)} chars, over {MAX_DIFF}: split the PR")
                 sys.exit("diff too large to review")
-            replies = [f"{c['user']['login']} ({c['created_at']}): {c['body']}" for c in comments
-                       if c["user"]["login"] != BOT]
+            replies = bound_replies([f"{c['user']['login']} ({c['created_at']}): {c['body']}"
+                                     for c in comments if c["user"]["login"] != BOT])
             user = "\n\n".join([
                 "Rules (from main, trusted):\n" + repo_rules(),
                 f"PR #{n}: {pr['title']}\n\n{pr.get('body') or ''}",
