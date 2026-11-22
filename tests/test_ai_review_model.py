@@ -389,8 +389,37 @@ class MainReasks(unittest.TestCase):
         self.assertIn("blocking: F2", statuses[-1][2])
         self.assertNotIn("No findings.", posted[0])
 
-    def test_retry_failing_for_another_reason_keeps_the_error_status(self):
-        _, statuses, posted, _ = self.run_main([answer(BAD), ai_review.CutOff("cut off")])
+    def test_retry_cut_off_at_its_cap_fails_and_keeps_the_first_answers_findings(self):
+        code, statuses, posted, _ = self.run_main([answer(GOOD, BAD), ai_review.CutOff("cut off at 16000")])
+        self.assertEqual((code, statuses[-1][1]), (1, "failure"))
+        self.assertIn("good one", posted[0])
+        self.assertIn("second answer: cut off at 16000", posted[0])
+
+    def test_a_finding_the_retry_leaves_out_still_counts(self):
+        blocker = {**GOOD, "id": "F2", "severity": "blocking"}
+        code, statuses, posted, _ = self.run_main([answer(blocker, BAD), answer(GOOD)])
+        self.assertEqual((code, statuses[-1][1:]), (1, ("failure", "1 blocking: F2")))
+        state = json.loads(base64.b64decode(posted[0].split("ai-review-state ")[1].split(" ")[0]))
+        self.assertEqual(sorted(f["id"] for f in state), ["F1", "F2"])
+
+    def test_a_finding_restated_by_the_retry_is_taken_from_the_retry(self):
+        first = {**GOOD, "title": "first wording"}
+        code, _, posted, _ = self.run_main([answer(first, BAD), answer({**GOOD, "title": "second wording"})])
+        self.assertEqual(code, 0)
+        self.assertIn("second wording", posted[0])
+        self.assertNotIn("first wording", posted[0])
+
+    def test_a_finding_the_retry_resolves_stays_resolved(self):
+        saved = {**GOOD, "id": "F2", "severity": "blocking"}
+        code, statuses, _, _ = self.run_main([answer(BAD), answer({**saved, "status": "resolved"})], prior=[saved])
+        self.assertEqual((code, statuses[-1][1]), (0, "success"))
+
+    def test_a_success_after_a_retry_says_so_in_the_status(self):
+        _, statuses, _, _ = self.run_main([ValueError("no JSON object in the model's answer"), answer()])
+        self.assertEqual(statuses[-1][1:], ("success", "No blocking findings (0 total, after a retry)"))
+
+    def test_a_retry_with_a_bad_server_reply_still_fails_closed(self):
+        _, statuses, posted, _ = self.run_main([answer(BAD), KeyError("model")])
         self.assertEqual(statuses[-1][1], "error")
         self.assertEqual(posted, [])
 

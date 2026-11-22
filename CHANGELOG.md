@@ -6,6 +6,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- AI review: a finding from the first answer that the retry leaves out still counts, a retry cut off
+  at its token cap fails the check with the first answer's findings shown instead of an error, and a
+  pass after a retry says so in the status (#119).
 - AI review: replies on the PR are bounded like the rest of the prompt (each kept to about 4,000
   characters of its start and end, about 30,000 in all, oldest dropped first with a note); a
   blocking finding's line must be a real integer, not `true`, including one carried over from an

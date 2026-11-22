@@ -365,7 +365,8 @@ def validate(result, files, prior, lenient=False):
             f["detail"] = (f.get("detail") or "") + NOT_BLOCKING
         findings.append(f)
     # A finding the model forgot is not a finding it withdrew: carry it over, except that a blocker
-    # saved before the exact line check (with `line: true`) is held to it now.
+    # saved before the exact line check (with `line: true`) is held to it now. One whose file has
+    # left the diff still blocks until the model resolves it: dropping it would fail open.
     seen = {f["id"] for f in findings}
     for saved in prior:
         if saved.get("id") in seen:
@@ -402,9 +403,9 @@ def restate(messages, note):
 
 def get_result(messages, files, prior):
     """Ask the model; an answer that cannot be read or checked goes back to it once with the
-    error, to be restated as the JSON object. A second bad answer still fails the review
-    (`malformed` is set), but whatever in either answer was well-formed is kept so the author can
-    see it. A retry that succeeds says so."""
+    error, to be restated as the JSON object. A second bad answer, or one cut off at the retry's
+    cap, still fails the review (`malformed` is set). Whatever in either answer was well-formed is
+    kept, so a finding the retry leaves out still counts. A retry that succeeds says so."""
     answer = None
     try:
         answer = ask_model(messages)
@@ -429,10 +430,16 @@ def get_result(messages, files, prior):
     print(f"model answer rejected ({first}); asking once more")
     try:
         result = validate(restate(messages, note), files, prior, lenient=True)
-    except UNREADABLE as e:
+    except (*UNREADABLE, CutOff) as e:
+        second = str(e) or type(e).__name__
+        if isinstance(e, CutOff):
+            # The same prompt meets the same cap, so only a quieter Studio or a smaller PR helps.
+            second += "; re-review when the Studio is idle, or split the PR"
         return {"summary": "The model's answer could not be used, even after one retry.",
                 "findings": fallback,
-                "malformed": [f"first answer: {first}", f"second answer: {str(e) or type(e).__name__}"]}
+                "malformed": [f"first answer: {first}", f"second answer: {second}"]}
+    seen = {f["id"] for f in result["findings"]}
+    result["findings"] += [f for f in fallback if f.get("id") not in seen]
     result["retried"] = first
     return result
 
@@ -460,7 +467,7 @@ def render(result, sha):
         lines += [f"- {problem}".replace("\n", " ") for problem in result["malformed"]]
         lines.append("")
     if result.get("retried") and not result.get("malformed"):
-        lines += [f"(The model's first answer was rejected ({result['retried']}); this is its second.)", ""]
+        lines += [f"(The model's first answer was rejected ({result['retried']}); this is its second, with any finding the first had that it left out.)", ""]
     lines += ["", "Disagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.",
               # Base64, so no finding text can close the HTML comment that carries the state. Always
               # the body's last line: main reads the last marker, so one echoed in text above loses.
@@ -541,7 +548,8 @@ def main():
         elif blocking:
             set_status(sha, "failure", f"{len(blocking)} blocking: " + ", ".join(f["id"] for f in blocking))
         else:
-            set_status(sha, "success", f"No blocking findings ({len(result['findings'])} total)")
+            retried = ", after a retry" if result.get("retried") else ""
+            set_status(sha, "success", f"No blocking findings ({len(result['findings'])} total{retried})")
     except Exception as e:
         # The check stays pending; a failed job at least shows on the PR's Actions tab.
         sys.exit(f"review saved but its status could not be set: {e}")
