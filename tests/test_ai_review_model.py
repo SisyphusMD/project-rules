@@ -123,6 +123,24 @@ class AskModel(unittest.TestCase):
         self.assertIn("cut off", str(result))
         self.assertIn("finish_reason=length", out)
 
+    def test_cut_off_keeps_the_end_of_its_reasoning_for_the_retry(self):
+        tail = "x" * ai_review.RESTATE_REASONING_CHARS
+        choices = [{"finish_reason": "length", "message": {"content": "", "reasoning_content": "early " + tail}}]
+        result, _, _ = self.call(None, None, choices=choices)
+        self.assertIsInstance(result, ai_review.ReasoningCutOff)
+        self.assertEqual(result.raw, {"reasoning": tail})
+        # Reasoning left in the content, closed or not, is quoted the same way.
+        self.assertEqual(self.call("length", "<think>half a thought")[0].raw, {"reasoning": "<think>half a thought"})
+        self.assertIsInstance(self.call("length", "<think>a</think> ")[0], ai_review.ReasoningCutOff)
+        self.assertIsNone(self.call("length", "")[0].raw)
+
+    def test_cut_off_mid_answer_is_not_retried(self):
+        # A finding already written could be lost by a retry, so these fail closed in main.
+        for result in (self.call("length", '<think>a</think>{"summary": "s", "findings": [{"id": "F1"')[0],
+                       self.call(None, None, choices=[{"finish_reason": "length"}])[0]):
+            self.assertIsInstance(result, ai_review.CutOff)
+            self.assertNotIsInstance(result, ai_review.ReasoningCutOff)
+
     def test_usage_at_the_cap_counts_as_cut_off_without_a_finish_reason(self):
         cap = USAGE["completion_tokens"]
         ok = '{"summary": "ok", "findings": []}'
@@ -187,12 +205,13 @@ class AskModel(unittest.TestCase):
         self.assertEqual(module.MAX_OUTPUT_TOKENS, 1234)
 
 
-class MainCutOff(unittest.TestCase):
-    def test_cut_off_review_posts_the_cap_status_and_exits(self):
-        pr = {"head": {"sha": "abc123"}, "state": "open", "title": "t", "body": ""}
+PR = {"head": {"sha": "abc123"}, "state": "open", "title": "t", "body": ""}
 
+
+class MainCutOff(unittest.TestCase):
+    def test_cut_off_mid_answer_posts_the_cap_status_and_exits(self):
         def api(method, path, data=None, raw=False):
-            return "diff --git a/x b/x\n" if raw else pr
+            return "diff --git a/x b/x\n" if raw else PR
 
         statuses = []
         with (mock.patch.dict(os.environ, {**ENV, "PR": "7"}),
@@ -204,10 +223,7 @@ class MainCutOff(unittest.TestCase):
               self.assertRaises(SystemExit)):
             ai_review.main()
         self.assertEqual(statuses[-1][1], "error")
-        self.assertIn("split the PR or raise MAX_OUTPUT_TOKENS", statuses[-1][2])
-
-
-PR = {"head": {"sha": "abc123"}, "state": "open", "title": "t", "body": ""}
+        self.assertIn("cap mid-answer: split the PR or raise MAX_OUTPUT_TOKENS", statuses[-1][2])
 
 
 class MainFailsClosed(unittest.TestCase):
@@ -393,6 +409,29 @@ class MainReasks(unittest.TestCase):
         code, statuses, posted, _ = self.run_main([answer(GOOD, BAD), ai_review.CutOff("cut off at 16000")])
         self.assertEqual((code, statuses[-1][1]), (1, "failure"))
         self.assertIn("good one", posted[0])
+        self.assertIn("second answer: cut off at 16000", posted[0])
+
+    def test_reasoning_cut_off_at_the_cap_is_retried_under_the_schema(self):
+        # A small PR whose review only reasoned until the cap (k8s#2688) passes on the retry.
+        cut = ai_review.ReasoningCutOff("cut off at 40000", {"reasoning": "F1 looks real"})
+        code, statuses, posted, asked = self.run_main([cut, answer(GOOD)])
+        self.assertEqual((code, statuses[-1][1:]), (0, ("success", "No blocking findings (1 total, after a retry)")))
+        self.assertEqual(self.schemas, [None, ai_review.ANSWER_SCHEMA])
+        note = asked[1][-1]["content"]
+        self.assertIn("Review the whole diff again", note)
+        self.assertIn("F1 looks real", note)
+        self.assertIn("good one", posted[0])
+
+    def test_a_cut_off_with_no_reasoning_is_retried_without_a_quote(self):
+        code, _, _, asked = self.run_main([ai_review.ReasoningCutOff("cut off at 40000"), answer()])
+        self.assertEqual(code, 0)
+        self.assertNotIn("The rejected answer was", asked[1][-1]["content"])
+
+    def test_cut_off_twice_fails_the_check_and_says_why(self):
+        code, statuses, posted, _ = self.run_main([ai_review.ReasoningCutOff("cut off at 40000"),
+                                                    ai_review.ReasoningCutOff("cut off at 16000")])
+        self.assertEqual((code, statuses[-1][1]), (1, "failure"))
+        self.assertIn("first answer: cut off at 40000", posted[0])
         self.assertIn("second answer: cut off at 16000", posted[0])
 
     def test_a_finding_the_retry_leaves_out_still_counts(self):

@@ -6,6 +6,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- AI review: an answer cut off at the output cap before the model wrote any of it (all reasoning)
+  is asked once more for the whole review under the answer schema, which bounds the reasoning,
+  instead of failing the check with "split the PR or raise MAX_OUTPUT_TOKENS". A second cut-off
+  answer fails the check and says so in the comment; one cut off mid-answer still fails closed at
+  once, so a finding it had already written cannot be lost (#121).
 - AI review: a finding from the first answer that the retry leaves out still counts, a retry cut off
   at its token cap fails the check with the first answer's findings shown instead of an error, and a
   pass after a retry says so in the status (#119).
