@@ -58,7 +58,7 @@ jobs:
           FORGEJO_URL: ${{ github.server_url }}
         run: |
           set -euo pipefail
-          # Always project-rules main (#78): one copy for every repo, outside the PR's checkout and
+          # Always main (SisyphusMD/project-rules#78): one copy for every repo, outside the PR's checkout and
           # with no local fallback, so the job fails when it cannot be fetched. The repo is public.
           timeout 120 git clone --quiet --depth 1 --single-branch --branch main \
             "$FORGEJO_URL/SisyphusMD/project-rules.git" /tmp/gate
