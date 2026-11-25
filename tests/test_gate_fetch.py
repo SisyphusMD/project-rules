@@ -20,6 +20,10 @@ GATE_JOBS = {
     ("ci.yml", "tests-with-code"): "tests-with-code",
     ("ci.yml", "diff-size"): "diff-size",
     ("ai-review.yml", "review"): "ai-review",
+    ("gate.yml", "issue-link"): "issue-link",
+    ("gate.yml", "tests-with-code"): "tests-with-code",
+    ("gate.yml", "diff-size"): "diff-size",
+    ("review.yml", "review"): "ai-review",
 }
 
 
@@ -61,9 +65,10 @@ def test_the_job_fails_when_its_fetched_script_does(
     assert result.returncode == 7, result.stderr
 
 
+@pytest.mark.parametrize("workflow", ["ai-review.yml", "review.yml"])
 @pytest.mark.parametrize("state", ["open", "closed"])
-def test_a_rereview_replaces_the_old_pass_before_anything_can_fail(state: str) -> None:
-    found = steps("ai-review.yml", "review")
+def test_a_rereview_replaces_the_old_pass_before_anything_can_fail(state: str, workflow: str) -> None:
+    found = steps(workflow, "review")
     hold = found[0]
     assert hold["name"] == "Hold the check until this review answers"
     assert found[1]["name"] == FETCH
