@@ -20,8 +20,9 @@
    A public repo also copies [`mirror-lockdown.yml`](../.github/workflows/mirror-lockdown.yml)
    to `.github/workflows/`, and its GitHub copy has Actions on, limited to that one action, with
    a read-only default token.
-2. **Workflows**: copy this repo's `.forgejo/` workflows, scripts and issue templates in, create
-   the labels listed above, and copy `RULES.md` as
+2. **Workflows**: copy this repo's `.forgejo/` workflows except `tests.yml`, its issue templates
+   and `scripts/issue-archive.py` in (the gate scripts are not copied: each run fetches them from
+   this repo's `main`), create the labels listed above, and copy `RULES.md` as
    `.forgejo/RULES.md`: the AI review reads the rules from there, since it cannot follow a link.
 3. **`SECURITY.md`** from [the template](../templates/SECURITY.md), so a vulnerability is reported
    privately rather than in a public issue.

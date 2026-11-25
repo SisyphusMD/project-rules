@@ -66,9 +66,9 @@ and nowhere else. How code, tests and docs are written is in [conventions/][conv
 ## Review and merge
 
 15. **Required checks**: `Issue link`, `Tests with code`, `Diff size`, `Lint`, `Secrets` and
-    `AI review`, plus the repo's own tests and coverage. They run from `main`'s copy
-    (`pull_request_target`), never run the PR's code, and fail closed, so a PR cannot weaken
-    the check that judges it.
+    `AI review`, plus the repo's own tests and coverage. They run the workflow on `main`
+    (`pull_request_target`) and the gate scripts on project-rules' `main`, never run the PR's
+    code, and fail closed, so a PR cannot weaken the check that judges it.
 16. **AI review findings**: fix what is real and push. When a finding is wrong, reply on the PR
     with the reason (the code is correct, the case cannot occur, a decision requires it, or
     the cost outweighs the risk); it re-reviews. Taste and "temporary" are not reasons. A

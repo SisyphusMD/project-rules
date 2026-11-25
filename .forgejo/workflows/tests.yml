@@ -59,6 +59,31 @@ jobs:
           RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || '' }}
         run: pytest -q tests/
 
+  gate-fetch:
+    name: The gate scripts can be fetched
+    if: github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.flow == 0)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # The required checks run from main, so a broken fetch step would only show once it blocks
+      # every PR. This runs the same step (a test holds them equal) from the PR's own file.
+      - name: Fetch the gate scripts
+        env:
+          FORGEJO_URL: ${{ github.server_url }}
+        run: |
+          set -euo pipefail
+          # Always project-rules main (#78): one copy for every repo, outside the PR's checkout and
+          # with no local fallback, so the job fails when it cannot be fetched. The repo is public.
+          timeout 120 git clone --quiet --depth 1 --single-branch --branch main \
+            "$FORGEJO_URL/SisyphusMD/project-rules.git" /tmp/gate
+          git -C /tmp/gate log -1 --format='gate scripts: project-rules %H'
+      - name: Every gate script is there and parses
+        run: |
+          set -euo pipefail
+          for name in ai-review diff-size issue-link tests-with-code; do
+            python3 -I -m py_compile "/tmp/gate/.forgejo/scripts/$name.py"
+          done
+
   hygiene:
     name: Shell scripts
     if: github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.flow == 0)
