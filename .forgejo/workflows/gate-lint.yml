@@ -1,0 +1,86 @@
+# The Lint and Secrets jobs every repo's CI calls, so no repo carries a copy (#78). A repo with
+# its own Lint and Secrets jobs does not call this file, so no check name is posted twice.
+name: Lint and secrets
+on:
+  workflow_call:
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Refuse a fork's code
+        # checkout refuses a fork's PR head under pull_request_target, but it reads the event name,
+        # which is workflow_call in a called file, so the job applies the same rule itself.
+        env:
+          BASE_ID: ${{ github.event.repository.id }}
+          HEAD_ID: ${{ github.event.pull_request.head.repo.id }}
+        run: |
+          if [ -n "$HEAD_ID" ] && [ "$HEAD_ID" != "$BASE_ID" ]; then
+            echo "Refusing to check out a fork's pull request code in this trusted run." >&2
+            exit 1
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      # -I everywhere: the checkout is the PR's, so Python must not import modules from it.
+      - name: Install linters
+        env:
+          # renovate: datasource=pypi depName=ruff
+          RUFF: "0.17.5"
+          # renovate: datasource=pypi depName=yamllint
+          YAMLLINT: "1.37.1"
+        run: |
+          python3 -I -m venv /tmp/lint
+          /tmp/lint/bin/pip install -q --index-url https://artifacts.lan.bryantserver.com/pypi.org/simple/ \
+            "ruff==$RUFF" "yamllint==$YAMLLINT"
+      - name: Python
+        run: |
+          /tmp/lint/bin/ruff check .
+          git ls-files -z '*.py' | xargs -0 -r python3 -I -m py_compile
+      - name: YAML
+        run: |
+          /tmp/lint/bin/yamllint -s -d '{extends: relaxed, rules: {line-length: disable}}' .forgejo
+  secrets:
+    name: Secrets
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Refuse a fork's code
+        # checkout refuses a fork's PR head under pull_request_target, but it reads the event name,
+        # which is workflow_call in a called file, so the job applies the same rule itself.
+        env:
+          BASE_ID: ${{ github.event.repository.id }}
+          HEAD_ID: ${{ github.event.pull_request.head.repo.id }}
+        run: |
+          if [ -n "$HEAD_ID" ] && [ "$HEAD_ID" != "$BASE_ID" ]; then
+            echo "Refusing to check out a fork's pull request code in this trusted run." >&2
+            exit 1
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: gitleaks over the PR head's history
+        env:
+          # renovate: datasource=github-tags depName=gitleaks/gitleaks
+          GITLEAKS_VERSION: 8.28.0
+          GITLEAKS_SHA256: a65b5253807a68ac0cafa4414031fd740aeb55f54fb7e55f386acb52e6a840eb
+        run: |
+          set -euo pipefail
+          tgz="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -fsSL -o "/tmp/$tgz" \
+            "https://artifacts.lan.bryantserver.com/github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/$tgz"
+          echo "$GITLEAKS_SHA256  /tmp/$tgz" | sha256sum -c -
+          tar -xzf "/tmp/$tgz" -C /tmp gitleaks
+          # Allowlists come from main only, so a PR cannot allowlist its own secret.
+          rm -f .gitleaks.toml .gitleaksignore
+          git show "${{ github.event.pull_request.base.sha }}:.gitleaks.toml" > .gitleaks.toml 2>/dev/null || rm -f .gitleaks.toml
+          git show "${{ github.event.pull_request.base.sha }}:.gitleaksignore" > .gitleaksignore 2>/dev/null || rm -f .gitleaksignore
+          # Only the PR head's history: the clone also holds issue-archive (rule 21), whose nightly
+          # copy of issue text is not code and would fail every PR on a hex string quoted in an
+          # issue. gitleaks exits 0 when it scans nothing, so re-prove both directions (a head
+          # secret fails, an archive-only one passes) on any version bump; proven on 8.28.0.
+          /tmp/gitleaks git --no-banner --redact --log-opts="${{ github.event.pull_request.head.sha }}" .

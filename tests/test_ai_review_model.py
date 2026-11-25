@@ -848,5 +848,10 @@ class ReviewWorkflow(unittest.TestCase):
         self.assertIn("persist-credentials: false", step)
 
 
+class SharedReviewWorkflow(ReviewWorkflow):
+    # The job repos call (#78) must hold the same pins as the copied one.
+    TEXT = (SCRIPT.parents[1] / "workflows/review.yml").read_text()
+
+
 if __name__ == "__main__":
     unittest.main()

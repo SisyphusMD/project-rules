@@ -7,12 +7,14 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-# tests.yml is this repo's own; docs/adopting.md has every other workflow copied.
+# tests.yml is this repo's own; repos call gate.yml, gate-lint.yml and review.yml from here (#78);
+# docs/adopting.md has every other workflow copied.
+NOT_COPIED = {"tests.yml", "gate.yml", "gate-lint.yml", "review.yml"}
 COPIED = sorted(
     path.relative_to(ROOT).as_posix()
     for folder in (".forgejo/workflows", ".github/workflows")
     for path in (ROOT / folder).glob("*.y*ml")
-    if path.name != "tests.yml"
+    if path.name not in NOT_COPIED
 )
 
 
