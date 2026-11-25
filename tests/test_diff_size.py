@@ -81,6 +81,28 @@ class DiffSizeTest(unittest.TestCase):
         head = self.commit()
         self.assertEqual(diff_size.changed_lines(self.base, head), 0)
 
+    def test_attributes_added_by_the_change_do_not_hide_its_lines(self):
+        self.write(".gitattributes", "large.py -diff\n")
+        self.write("large.py", self.lines(401))
+        head = self.commit()
+        self.assertEqual(diff_size.changed_lines(self.base, head), 402)
+
+    def test_base_attributes_still_apply_when_the_change_removes_them(self):
+        self.write("data/.gitattributes", "blob.py -diff\n")
+        self.base = self.commit()
+        os.remove(pathlib.Path(self.repo, "data/.gitattributes"))
+        self.write("data/blob.py", self.lines(401))
+        head = self.commit()
+        self.assertEqual(diff_size.changed_lines(self.base, head), 1)
+
+    def test_user_attributes_are_ignored(self):
+        attributes = pathlib.Path(self.repo, ".git/user-attributes")
+        attributes.write_text("*.py -diff\n")
+        git(self.repo, "config", "core.attributesFile", str(attributes))
+        self.write("app.py", self.lines(10))
+        head = self.commit()
+        self.assertEqual(diff_size.changed_lines(self.base, head), 10)
+
     def test_at_limit_passes(self):
         self.write("app/main.py", self.lines(400))
         self.run_main(self.commit())
