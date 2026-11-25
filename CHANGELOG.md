@@ -6,6 +6,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- The gate jobs (`Issue link`, `Tests with code`, `Diff size`, `AI review`) fetch their scripts from
+  project-rules main on every run instead of running the repo's own copy, so a fix reaches every
+  repo when it merges and a copy cannot drift. A fetch that fails fails the check (#78).
 - `Diff size` reads `.gitattributes` from the base commit only, so a PR cannot mark its own files
   binary to make them count nothing. `Tests with code` also counts tracked executables and `.zsh`
   files as code, and no longer skips a file whose path git quotes (#123).
