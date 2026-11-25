@@ -6,6 +6,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- `Diff size` reads `.gitattributes` from the base commit only, so a PR cannot mark its own files
+  binary to make them count nothing. `Tests with code` also counts tracked executables and `.zsh`
+  files as code, and no longer skips a file whose path git quotes (#123).
 - AI review: an answer cut off at the output cap before the model wrote any of it (all reasoning)
   is asked once more for the whole review under the answer schema, which bounds the reasoning,
   instead of failing the check with "split the PR or raise MAX_OUTPUT_TOKENS". A second cut-off

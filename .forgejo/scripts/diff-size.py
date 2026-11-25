@@ -11,6 +11,8 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
+from pathlib import Path
 
 LOCKFILES = {"package-lock.json", "pnpm-lock.yaml", "yarn.lock", "poetry.lock", "uv.lock",
              "Cargo.lock", "go.sum", "flake.lock", "Package.resolved", "Gemfile.lock",
@@ -29,8 +31,29 @@ def counted(path):
 
 
 def changed_lines(base, head):
-    out = subprocess.run(["git", "diff", "--numstat", "-M", "-z", f"{base}...{head}"],
-                         capture_output=True, text=True, check=True).stdout
+    git_dir = subprocess.check_output(["git", "rev-parse", "--absolute-git-dir"], text=True).strip()
+    # Load only the base tree's attributes. Git reads working-tree attributes for a
+    # diff, so a proposed binary attribute must never be visible to this command.
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory)
+        worktree = root / "work"
+        worktree.mkdir()
+        env = {**os.environ, "GIT_DIR": git_dir, "GIT_WORK_TREE": str(worktree),
+               "GIT_INDEX_FILE": str(root / "index"), "GIT_ATTR_NOSYSTEM": "1"}
+        subprocess.run(["git", "read-tree", base], cwd=worktree, env=env, check=True)
+        attributes = subprocess.check_output(
+            ["git", "ls-files", "-z", "--", ":(glob)**/.gitattributes"],
+            cwd=worktree, env=env,
+        )
+        subprocess.run(
+            ["git", "checkout-index", "-z", "--stdin"], cwd=worktree, env=env,
+            input=attributes, check=True,
+        )
+        out = subprocess.check_output(
+            ["git", "-c", "core.attributesFile=/dev/null", "diff", "--no-textconv", "--no-ext-diff", "--numstat", "-M", "-z",
+             f"{base}...{head}"],
+            cwd=worktree, env=env, text=True,
+        )
     # -z: "added\tdeleted\tpath\0", or for a rename "added\tdeleted\t\0old\0new\0".
     fields = out.split("\0")
     total, i = 0, 0
