@@ -1,3 +1,4 @@
+import contextlib
 import importlib.util
 import io
 import json
@@ -67,25 +68,56 @@ class RepoRulesTest(unittest.TestCase):
         pathlib.Path(path).parent.mkdir(parents=True, exist_ok=True)
         pathlib.Path(path).write_text(text)
 
-    def test_synced_rules_copy_wins_and_all_three_files_are_included(self):
-        self.write(".forgejo/RULES.md", "synced rules")
+    def test_rules_come_with_the_script_and_never_from_the_checkout(self):
+        self.write(".forgejo/RULES.md", "stale copy")
         self.write("RULES.md", "repo's own RULES.md")
         self.write("CONTRIBUTING.md", "run pytest")
         self.write("README.md", "what it is")
         text = ai_review.repo_rules()
-        self.assertIn("synced rules", text)
+        canonical = (SCRIPT.parents[2] / "RULES.md").read_text()
+        self.assertTrue(text.startswith("## Project rules (RULES.md)\n" + canonical))
+        self.assertNotIn("stale copy", text)
         self.assertNotIn("repo's own RULES.md", text)
         self.assertIn("run pytest", text)
         self.assertIn("what it is", text)
 
-    def test_root_rules_used_in_the_rules_repo(self):
-        self.write("RULES.md", "the rules")
-        self.assertIn("## Project rules (RULES.md)\nthe rules", ai_review.repo_rules())
+    def test_missing_rules_fail_the_check_without_asking_the_model(self):
+        # The fetched tree has the script but no RULES.md; the repo still has an old copy.
+        gate = pathlib.Path(self.tmp.name, "gate/.forgejo/scripts/ai-review.py")
+        self.write(gate, SCRIPT.read_text())
+        self.write(".forgejo/RULES.md", "stale copy")
+        with mock.patch.dict(os.environ, ENV):
+            spec = importlib.util.spec_from_file_location("ai_review_without_rules", gate)
+            review = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(review)
 
-    def test_missing_files_say_none(self):
+        def api(method, path, body=None, raw=False):
+            if raw:
+                return "diff --git a/x b/x\n"
+            return {"head": {"sha": "abc"}, "state": "open", "title": "t", "body": ""}
+
+        statuses = []
+        model = mock.Mock(return_value='{"summary": "fine", "findings": []}')
+        with (mock.patch.dict(os.environ, {**ENV, "PR": "7"}),
+              mock.patch.object(review, "api", api),
+              mock.patch.object(review, "pages", lambda path: iter(())),
+              mock.patch.object(review, "set_status", lambda *a: statuses.append(a)),
+              mock.patch.object(review, "ask_model", model),
+              contextlib.redirect_stdout(io.StringIO())):
+            try:
+                review.main()
+                code = None
+            except SystemExit as e:
+                code = e.code
+        model.assert_not_called()
+        self.assertEqual(statuses[-1][1], "error")
+        self.assertIn("FileNotFoundError", statuses[-1][2])
+        self.assertTrue(code)
+
+    def test_other_missing_files_say_none(self):
         text = ai_review.repo_rules()
-        self.assertIn("## Project rules\nnone", text)
         self.assertIn("## CONTRIBUTING.md\nnone", text)
+        self.assertIn("## README.md (what the project is)\nnone", text)
 
 
 class LinkedIssuesTest(unittest.TestCase):

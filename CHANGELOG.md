@@ -6,6 +6,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- AI review reads `RULES.md` from project-rules main, with its script, so a rule change applies when
+  it merges. A repo drops its `.forgejo/RULES.md` in the change that moves it to the fetched scripts,
+  not before: an older reviewer copy still reads it (rule 22, #78).
 - `mirror-lockdown.yml` says it is a copy of project-rules' file, as the other copied workflows do (#78).
 - The gate jobs (`Issue link`, `Tests with code`, `Diff size`, `AI review`) fetch their scripts from
   project-rules main on every run instead of running the repo's own copy, so a fix reaches every

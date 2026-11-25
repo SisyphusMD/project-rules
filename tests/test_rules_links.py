@@ -1,7 +1,6 @@
-"""RULES.md is copied into every repo as .forgejo/RULES.md, so its links must work from anywhere.
+"""RULES.md is read in every repo's AI review, so its links must work from anywhere.
 
-A relative link resolves to nothing in the copy and fails that repo's doc-link check; an absolute
-link to this repository is checked here instead, against the files it names. RULES.md links to
+A relative link resolves to nothing outside this repo; an absolute link to this repository is checked here instead, against the files it names. RULES.md links to
 no headings, so fragments are not checked.
 """
 
