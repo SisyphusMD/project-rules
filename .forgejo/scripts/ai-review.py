@@ -121,24 +121,22 @@ def changed_files(diff):
 
 
 REF = re.compile(r"(?i)\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?|refs?):?\s+(?:([\w.-]+/[\w.-]+))?#(\d+)\b")
-# Project rules: RULES.md in SisyphusMD/project-rules itself, a synced copy everywhere else.
-RULE_FILES = (("Project rules", (".forgejo/RULES.md", "RULES.md")),
-              ("CONTRIBUTING.md", ("CONTRIBUTING.md",)),
-              ("README.md (what the project is)", ("README.md",)))
+# The rules come with this script, from project-rules main, so no repo has a copy that goes stale.
+PROJECT_RULES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "RULES.md")
+RULE_FILES = (("CONTRIBUTING.md", "CONTRIBUTING.md"),
+              ("README.md (what the project is)", "README.md"))
 
 
 def repo_rules():
+    # A missing PROJECT_RULES raises, and the review fails closed rather than judge by no rules.
+    with open(PROJECT_RULES, encoding="utf-8") as f:
+        parts = [f"## Project rules (RULES.md)\n{f.read()[:20000]}"]
     # The workflow checks out main, so these are the trusted copies, not the PR's.
-    parts = []
-    for title, paths in RULE_FILES:
-        for path in paths:
-            try:
-                with open(path, encoding="utf-8") as f:
-                    parts.append(f"## {title} ({path})\n{f.read()[:20000]}")
-                break
-            except OSError:
-                continue
-        else:
+    for title, path in RULE_FILES:
+        try:
+            with open(path, encoding="utf-8") as f:
+                parts.append(f"## {title} ({path})\n{f.read()[:20000]}")
+        except OSError:
             parts.append(f"## {title}\nnone")
     return "\n\n".join(parts)
 

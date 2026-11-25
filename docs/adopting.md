@@ -22,8 +22,8 @@
    a read-only default token.
 2. **Workflows**: copy this repo's `.forgejo/` workflows except `tests.yml`, its issue templates
    and `scripts/issue-archive.py` in (the gate scripts are not copied: each run fetches them from
-   this repo's `main`), create the labels listed above, and copy `RULES.md` as
-   `.forgejo/RULES.md`: the AI review reads the rules from there, since it cannot follow a link.
+   this repo's `main`, and the AI review reads `RULES.md` from there too), and create the labels
+   listed above.
 3. **`SECURITY.md`** from [the template](../templates/SECURITY.md), so a vulnerability is reported
    privately rather than in a public issue.
 4. **`CONTRIBUTING.md`**: how its tests run, what counts as a test, its safety-critical code,

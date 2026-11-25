@@ -95,8 +95,8 @@ and nowhere else. How code, tests and docs are written is in [conventions/][conv
     workflow closes any pull request opened there with a pointer to Forgejo.
 22. **A `CONTRIBUTING.md` and a `SECURITY.md`.** The first points here, from
     [templates/CONTRIBUTING.md][contributing-template]; the second is copied from
-    `templates/SECURITY.md`, so vulnerabilities are reported privately. Plus a synced copy of this
-    file at `.forgejo/RULES.md`, which the AI review reads.
+    `templates/SECURITY.md`, so vulnerabilities are reported privately. The AI review reads
+    these rules from project-rules' `main`, so no repo keeps a copy of this file.
 23. **A public repo's checks never see private data.** Its CI reads other repos anonymously, so
     a linked private issue is reported as not found rather than quoted in a public log or
     review.
@@ -122,7 +122,7 @@ This is an exception to the issue and PR path in rules 1, 6, and 19. Changes to
 tools, scripts, workflows, hooks, shared or local settings, and instructions
 follow the issue and PR path.
 
-<!-- Absolute, not relative: every repo carries this file as .forgejo/RULES.md, where a relative
+<!-- Absolute, not relative: the AI review reads this file outside this repo, where a relative
      link points at nothing. tests/test_rules_links.py checks that this repo's targets exist. -->
 [conventions]: https://forgejo.bryantserver.com/SisyphusMD/project-rules/src/branch/main/conventions/
 [code]: https://forgejo.bryantserver.com/SisyphusMD/project-rules/src/branch/main/conventions/code.md
