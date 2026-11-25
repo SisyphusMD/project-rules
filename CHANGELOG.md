@@ -6,6 +6,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- `mirror-lockdown.yml` says it is a copy of project-rules' file, as the other copied workflows do (#78).
 - The gate jobs (`Issue link`, `Tests with code`, `Diff size`, `AI review`) fetch their scripts from
   project-rules main on every run instead of running the repo's own copy, so a fix reaches every
   repo when it merges and a copy cannot drift. A fetch that fails fails the check (#78).
