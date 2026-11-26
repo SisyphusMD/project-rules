@@ -20,17 +20,24 @@
    A public repo also copies [`mirror-lockdown.yml`](../.github/workflows/mirror-lockdown.yml)
    to `.github/workflows/`, and its GitHub copy has Actions on, limited to that one action, with
    a read-only default token.
-2. **Workflows**: copy this repo's `.forgejo/` workflows except `tests.yml`, its issue templates
-   and `scripts/issue-archive.py` in (the gate scripts are not copied: each run fetches them from
-   this repo's `main`, and the AI review reads `RULES.md` from there too), and create the labels
-   listed above.
+2. **Workflows**: copy this repo's `.forgejo/` workflows except `tests.yml`, `gate.yml`,
+   `gate-lint.yml` and `review.yml`, its issue templates and `scripts/issue-archive.py` in, and
+   create the labels listed above. `ci.yml` and `ai-review.yml` are only callers: their jobs run
+   from this repo's `main` (`gate.yml`, `gate-lint.yml`, `review.yml`), and so do the gate scripts
+   and the `RULES.md` the AI review reads. A repo whose secret `ISSUE_READ_TOKEN` is not a
+   read:issue token drops that mapping from both callers rather than hand the jobs something else.
+   A repo with its own Lint and Secrets jobs keeps them and drops the `shared-lint` call, so no
+   check name is posted twice. Whatever lands on this repo's `main` runs as trusted code in every
+   such repo's `pull_request_target` runs, with that repo's job token.
 3. **`SECURITY.md`** from [the template](../templates/SECURITY.md), so a vulnerability is reported
    privately rather than in a public issue.
 4. **`CONTRIBUTING.md`**: how its tests run, what counts as a test, its safety-critical code,
    its own required checks and its break-glass steps.
 5. **Protect `main`** once the workflows are on it: no direct pushes, admins included, branch
    up to date, 0 approvals, and every required check from the rules with the exact context
-   name Forgejo reports (`CI / <job> (pull_request_target)`, `AI review`). A
+   name Forgejo reports (`CI / <job> (pull_request_target)`, `AI review`). Never require the
+   calling jobs' own checks (`CI / shared-gate`, `AI review / shared-review` and so on): one passes
+   when the jobs it calls are skipped. A
    `pull_request_target` workflow does not run on the PR that adds it, so prove each new check
    on the next PR, one passing run and one deliberate failure, before requiring it. A
    misnamed required check blocks every PR. Set up [releases from protected main](releasing.md)

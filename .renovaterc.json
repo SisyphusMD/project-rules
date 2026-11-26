@@ -35,7 +35,7 @@
       "description": "The gitleaks download is checked against GITLEAKS_SHA256 beside it, which Renovate cannot compute, so the bump PR fails the Secrets job until a person updates the checksum. Never automerge it.",
       "matchDepNames": ["gitleaks/gitleaks"],
       "automerge": false,
-      "prBodyNotes": ["Set `GITLEAKS_SHA256` in `.forgejo/workflows/ci.yml` to the checksum of `gitleaks_<version>_linux_x64.tar.gz` from the release's checksums file before merging; the Secrets job fails until then."]
+      "prBodyNotes": ["Set `GITLEAKS_SHA256` in `.forgejo/workflows/gate-lint.yml` to the checksum of `gitleaks_<version>_linux_x64.tar.gz` from the release's checksums file before merging; the Secrets job fails until then."]
     }
   ],
   "customManagers": [

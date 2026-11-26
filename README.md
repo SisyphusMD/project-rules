@@ -10,7 +10,7 @@ How SisyphusMD projects are run, and the shared tooling that holds them to it.
 | [docs/adopting.md](docs/adopting.md) | Bringing a repo under these rules |
 | [templates/CONTRIBUTING.md](templates/CONTRIBUTING.md) | The `CONTRIBUTING.md` each repo starts from |
 | [SECURITY.md](SECURITY.md) | Where to report a vulnerability; [templates/SECURITY.md](templates/SECURITY.md) is each repo's copy |
-| `.forgejo/` | The checks every repo runs on a pull request (issue link, tests with code, diff size, lint, secrets, AI review) and the nightly issue archive; repos carry copies |
+| `.forgejo/` | The checks every repo runs on a pull request (issue link, tests with code, diff size, lint, secrets, AI review), which repos call from `main`, and the nightly issue archive, which repos copy |
 | `shared/`, `tools/` | Release and packaging helpers vendored into consumers, and the tools that vendor them and check for drift |
 
 Decisions about the rules are comments on issue #1. A rule change is a pull request here that

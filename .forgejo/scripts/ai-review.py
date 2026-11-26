@@ -199,7 +199,7 @@ MAX_OUTPUT_TOKENS = int(os.environ.get("MAX_OUTPUT_TOKENS", "40000"))
 # Everything between the pending status and the saved comment, counted from the script's start,
 # the model's queueing on the shared Studio included. urlopen's timeout bounds each socket read,
 # not the call, so a slow answer ran into the job's timeout-minutes and the kill left the required
-# check pending. It stays a few minutes under that limit (45 in ai-review.yml) for the status
+# check pending. It stays a few minutes under that limit (45 in review.yml) for the status
 # write, so an override can only shorten it.
 MODEL_DEADLINE = min(int(os.environ.get("MODEL_DEADLINE_SECONDS", "2400")), 2400)
 STARTED = time.monotonic()

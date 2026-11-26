@@ -6,7 +6,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-- `gate.yml`, `gate-lint.yml` and `review.yml` hold the gate and AI review jobs for repos to call from project-rules main instead of copying them. Nothing calls them yet: a pilot repo proves them first, then every repo's `ci.yml` and `ai-review.yml` become small callers (#78).
+- `ci.yml` and `ai-review.yml` only call `gate.yml`, `gate-lint.yml` and `review.yml` from main, so a repo copies a caller of about twenty lines instead of the jobs. Check names are unchanged; each calling job adds one check of its own (`CI / shared-gate` and so on), which nothing requires. Proven in homebrew-tap first (#78).
+- `gate.yml`, `gate-lint.yml` and `review.yml` hold the gate and AI review jobs for repos to call from project-rules main instead of copying them (#78).
 - AI review reads `RULES.md` from project-rules main, with its script, so a rule change applies when
   it merges. A repo drops its `.forgejo/RULES.md` in the change that moves it to the fetched scripts,
   not before: an older reviewer copy still reads it (rule 22, #78).

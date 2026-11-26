@@ -831,7 +831,8 @@ class MainBoundsReplies(unittest.TestCase):
 
 
 class ReviewWorkflow(unittest.TestCase):
-    TEXT = (SCRIPT.parents[1] / "workflows/ai-review.yml").read_text()
+    # The job repos call (#78); their ai-review.yml only calls it.
+    TEXT = (SCRIPT.parents[1] / "workflows/review.yml").read_text()
 
     def test_the_job_skips_the_same_login_the_script_treats_as_its_own(self):
         skipped = re.search(r"comment\.user\.login != '([^']+)'", self.TEXT).group(1)
@@ -846,11 +847,6 @@ class ReviewWorkflow(unittest.TestCase):
         step = re.search(r"(?ms)uses: actions/checkout@\S+.*?(?=\n      - )", self.TEXT).group(0)
         self.assertIn("ref: ${{ github.sha }}", step)
         self.assertIn("persist-credentials: false", step)
-
-
-class SharedReviewWorkflow(ReviewWorkflow):
-    # The job repos call (#78) must hold the same pins as the copied one.
-    TEXT = (SCRIPT.parents[1] / "workflows/review.yml").read_text()
 
 
 if __name__ == "__main__":
