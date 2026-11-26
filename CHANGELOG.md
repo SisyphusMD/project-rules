@@ -7,6 +7,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 - Rules 6 and 19: a repo may name a preview branch in its `CONTRIBUTING.md`; changes land there through pull requests and the required checks, the branch is protected like `main`, and `main` takes only promotion pull requests of a commit that passed the preview checks and was approved. Rule 15 says the checks run the workflow on the protected branch a PR targets, which for a preview PR is the preview branch. The template has a `Preview branch` section. Rule 20 says git host, not forge (#137).
+- `.forgejo/scripts/manifest.py` validates an owner's `.project-rules` manifest (`env.json`), prints its values as job env lines, and fails when owners on one git host disagree on a setting they share. Nothing calls it yet (#134).
 
 - The caller headers name SisyphusMD/project-rules#78 in full, since a bare #78 in a copy points at that repo's own issue (#78).
 - `ci.yml` and `ai-review.yml` only call `gate.yml`, `gate-lint.yml` and `review.yml` from main, so a repo copies a caller of about twenty lines instead of the jobs. Check names are unchanged; each calling job adds one check of its own (`CI / shared-gate` and so on), which nothing requires. Proven in homebrew-tap first (#78).
