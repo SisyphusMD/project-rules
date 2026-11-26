@@ -6,6 +6,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- `.forgejo/scripts/manifest.py` validates an owner's `.project-rules` manifest (`env.json`), prints its values as job env lines, and fails when owners on one git host disagree on a setting they share. Nothing calls it yet (#134).
+
 - The caller headers name SisyphusMD/project-rules#78 in full, since a bare #78 in a copy points at that repo's own issue (#78).
 - `ci.yml` and `ai-review.yml` only call `gate.yml`, `gate-lint.yml` and `review.yml` from main, so a repo copies a caller of about twenty lines instead of the jobs. Check names are unchanged; each calling job adds one check of its own (`CI / shared-gate` and so on), which nothing requires. Proven in homebrew-tap first (#78).
 - `gate.yml`, `gate-lint.yml` and `review.yml` hold the gate and AI review jobs for repos to call from project-rules main instead of copying them (#78).
