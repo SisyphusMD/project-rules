@@ -1,0 +1,153 @@
+"""The owner manifest the gate jobs read: its schema, the env lines they get, and drift (#133)."""
+
+from __future__ import annotations
+
+import importlib.util
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+
+SCRIPT = Path(__file__).resolve().parents[1] / ".forgejo/scripts/manifest.py"
+GOOD = {
+    "mirror_url": "https://backup.example",
+    "llm_url": "http://llm.example:8080/v1/chat/completions",
+    "ai_review": "required",
+    "package_index": "https://mirror.example/pypi.org/simple/",
+    "release_mirror": "https://mirror.example/github.com",
+    "bot_email": "issue-archive@noreply.example.com",
+}
+EXEMPT = {**{k: v for k, v in GOOD.items() if k != "llm_url"}, "ai_review": {"exempt": "acme/k8s#976"}}
+
+
+def run(tmp_path: Path, command: str, *manifests: object) -> subprocess.CompletedProcess[str]:
+    paths = []
+    for i, data in enumerate(manifests):
+        path = tmp_path / f"m{i}.json"
+        path.write_text(data if isinstance(data, str) else json.dumps(data))
+        paths.append(str(path))
+    return subprocess.run([sys.executable, "-I", SCRIPT, command, *paths],
+                          capture_output=True, text=True, check=False)
+
+
+def test_a_valid_manifest_becomes_env_lines_for_the_job(tmp_path: Path) -> None:
+    result = run(tmp_path, "env", GOOD)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.splitlines() == [
+        "AI_REVIEW=required", "AI_REVIEW_EXEMPT=",
+        "MIRROR_URL=https://backup.example",
+        "LLM_URL=http://llm.example:8080/v1/chat/completions",
+        "PACKAGE_INDEX=https://mirror.example/pypi.org/simple/",
+        "RELEASE_MIRROR=https://mirror.example/github.com",
+        "BOT_EMAIL=issue-archive@noreply.example.com",
+    ]
+
+
+def test_an_exempt_owner_names_the_issue_and_needs_no_model(tmp_path: Path) -> None:
+    result = run(tmp_path, "env", EXEMPT)
+    assert result.returncode == 0, result.stderr
+    lines = result.stdout.splitlines()
+    assert lines[:2] == ["AI_REVIEW=exempt", "AI_REVIEW_EXEMPT=acme/k8s#976"]
+    assert not any(line.startswith("LLM_URL=") for line in lines)
+
+
+@pytest.mark.parametrize(("change", "problem"), [
+    ({"llm_url": None}, "missing key 'llm_url'"),
+    ({"bot_email": None}, "missing key 'bot_email'"),
+    ({"ai_review": None}, "ai_review must be"),
+    ({"ai_review": "off"}, "ai_review must be"),
+    ({"ai_review": {"exempt": "a reason"}}, "ai_review must be"),
+    ({"ai_review": {"exempt": "acme/k8s#9", "until": "x"}}, "ai_review must be"),
+    ({"ai_review": {"exempt": 976}}, "ai_review must be"),
+    ({"aireview": "required"}, "unknown key 'aireview'"),
+    ({"package_index": "https://mirror.example/simple/\nLD_PRELOAD=/tmp/x"}, "package_index is not a valid URL"),
+    ({"package_index": "https://mirror.example/simple/ --extra"}, "package_index is not a valid URL"),
+    ({"llm_url": "file:///etc/passwd"}, "llm_url is not a valid URL"),
+    ({"mirror_url": 7}, "mirror_url is not a valid URL"),
+    ({"llm_url": "http://llm.example:99999/v1"}, "llm_url is not a valid URL"),
+    ({"llm_url": "http://llm.example:0/v1"}, "llm_url is not a valid URL"),
+    ({"ai_review": {"exempt": "acme/k8s#0"}}, "ai_review must be"),
+    ({"ai_review": {"exempt": "acme/..#1"}}, "ai_review must be"),
+    ({"llm_url": "https://."}, "llm_url is not a valid URL"),
+    ({"mirror_url": "https://mirror..example"}, "mirror_url is not a valid URL"),
+    ({"bot_email": "bot@example\nX=1"}, "bot_email is not a valid email"),
+    ({"release_mirror": "https://mirror.example/github.com/"}, "release_mirror must not end in /"),
+], ids=lambda value: str(value)[:40])
+def test_an_invalid_manifest_fails_and_says_why(tmp_path: Path, change: dict, problem: str) -> None:
+    data = {k: v for k, v in {**GOOD, **change}.items() if v is not None}
+    for command in ("env", "check"):
+        result = run(tmp_path, command, data)
+        assert result.returncode != 0
+        assert problem in result.stderr
+        assert result.stdout == ""
+
+
+@pytest.mark.parametrize("text", ["", "{", "[]", '"required"'])
+def test_a_file_that_is_not_a_manifest_fails(tmp_path: Path, text: str) -> None:
+    result = run(tmp_path, "env", text)
+    assert result.returncode != 0
+    assert "m0.json" in result.stderr
+
+
+def test_a_missing_manifest_fails(tmp_path: Path) -> None:
+    result = subprocess.run([sys.executable, "-I", SCRIPT, "env", str(tmp_path / "none.json")],
+                            capture_output=True, text=True, check=False)
+    assert result.returncode != 0
+    assert "cannot read the manifest" in result.stderr
+
+
+@pytest.mark.parametrize("args", [[], ["env"], ["lint", "x"], ["env", "a", "b"]])
+def test_a_bad_command_line_prints_the_usage(args: list[str]) -> None:
+    result = subprocess.run([sys.executable, "-I", SCRIPT, *args], capture_output=True, text=True, check=False)
+    assert result.returncode != 0
+    assert "Usage:" in result.stderr
+
+
+def test_check_takes_several_manifests_and_fails_on_any(tmp_path: Path) -> None:
+    assert run(tmp_path, "check", GOOD, EXEMPT).stdout.strip() == "2 manifests valid"
+    assert run(tmp_path, "check", GOOD, {**GOOD, "ai_review": "no"}).returncode != 0
+
+
+def test_owners_that_agree_pass_the_drift_check(tmp_path: Path) -> None:
+    result = run(tmp_path, "drift", GOOD, GOOD, {**GOOD, "ai_review": {"exempt": "acme/k8s#1"}})
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.startswith("3 manifests agree")
+
+
+def test_an_exempt_owner_without_a_model_is_not_drift(tmp_path: Path) -> None:
+    assert run(tmp_path, "drift", GOOD, EXEMPT).returncode == 0
+
+
+@pytest.mark.parametrize("key", ["mirror_url", "llm_url", "package_index", "release_mirror", "bot_email"])
+def test_drift_on_a_shared_key_fails_and_names_it(tmp_path: Path, key: str) -> None:
+    other = {**GOOD, key: "https://other.example" if key != "bot_email" else "bot@other.example"}
+    result = run(tmp_path, "drift", GOOD, GOOD, other)
+    assert result.returncode != 0
+    assert f"{key} differs" in result.stderr
+    assert "m2.json" in result.stderr
+
+
+def test_drift_validates_every_manifest_first(tmp_path: Path) -> None:
+    result = run(tmp_path, "drift", GOOD, {**GOOD, "bot_email": "nope"})
+    assert result.returncode != 0
+    assert "bot_email is not a valid email" in result.stderr
+
+
+def test_importing_the_script_runs_nothing() -> None:
+    spec = importlib.util.spec_from_file_location("manifest", SCRIPT)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert module.validate(GOOD) == []
+
+
+def test_a_repeated_key_fails_rather_than_the_last_one_winning(tmp_path: Path) -> None:
+    text = json.dumps(GOOD)[:-1] + ', "ai_review": {"exempt": "acme/k8s#1"}}'
+    result = run(tmp_path, "env", text)
+    assert result.returncode != 0
+    assert "repeated key 'ai_review'" in result.stderr
+
+
+def test_the_highest_port_is_a_valid_url(tmp_path: Path) -> None:
+    assert run(tmp_path, "check", {**GOOD, "llm_url": "http://llm.example:65535/v1"}).returncode == 0
