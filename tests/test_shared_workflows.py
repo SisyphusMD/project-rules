@@ -10,7 +10,7 @@ import pytest
 import yaml
 
 WORKFLOWS = Path(__file__).resolve().parents[1] / ".forgejo" / "workflows"
-SHARED = {"gate.yml": "ci.yml", "gate-lint.yml": "ci.yml", "review.yml": "ai-review.yml"}
+SHARED = ("gate.yml", "gate-lint.yml", "review.yml")
 
 
 def load(name: str) -> dict:
@@ -31,18 +31,39 @@ def test_a_shared_workflow_sets_no_concurrency(name: str) -> None:
 
 
 GUARD = "Refuse a fork's code"
+MAIN = "SisyphusMD/project-rules/.forgejo/workflows/{}@main"
+TOKEN = {"ISSUE_READ_TOKEN": "${{ secrets.ISSUE_READ_TOKEN }}"}
 
 
-def without_guard(jobs: dict) -> dict:
-    return {name: {**job, "steps": [s for s in job["steps"] if s.get("name") != GUARD]}
-            for name, job in jobs.items()}
+def test_the_called_jobs_carry_the_required_check_names() -> None:
+    names = {name: sorted(job["name"] for job in load(name)["jobs"].values()) for name in SHARED}
+    assert names == {"gate.yml": ["Diff size", "Issue link", "Tests with code"],
+                     "gate-lint.yml": ["Lint", "Secrets"], "review.yml": ["Review"]}
 
 
-def test_the_gate_files_hold_every_ci_job_once() -> None:
-    gate, lint = load("gate.yml")["jobs"], load("gate-lint.yml")["jobs"]
-    assert not set(gate) & set(lint)
-    # The same jobs as the copied ci.yml, plus the fork guard below.
-    assert without_guard({**gate, **lint}) == load("ci.yml")["jobs"]
+def test_the_canonical_callers_call_main_and_hand_over_only_the_issue_reader() -> None:
+    # Named, never `secrets: inherit`, so main's jobs see no other secret of the calling repo.
+    assert load("ci.yml")["jobs"] == {
+        "shared-gate": {"uses": MAIN.format("gate.yml"), "secrets": TOKEN},
+        "shared-lint": {"uses": MAIN.format("gate-lint.yml")},
+    }
+    assert load("ai-review.yml")["jobs"] == {
+        "shared-review": {"uses": MAIN.format("review.yml"), "secrets": TOKEN}}
+
+
+def test_the_callers_keep_the_triggers_and_concurrency() -> None:
+    ci, review = load("ci.yml"), load("ai-review.yml")
+    assert set(ci[True]) == {"pull_request_target"}
+    assert set(review[True]) == {"pull_request_target", "issue_comment"}
+    assert ci["concurrency"]["cancel-in-progress"] is True
+    # A review is never cancelled between saving its findings and its status.
+    assert review["concurrency"]["cancel-in-progress"] is False
+
+
+def test_a_calling_job_never_shares_a_name_with_a_required_check() -> None:
+    required = {job["name"].lower() for name in SHARED for job in load(name)["jobs"].values()}
+    callers = {job.lower() for name in ("ci.yml", "ai-review.yml") for job in load(name)["jobs"]}
+    assert not required & callers
 
 
 def head_checkouts() -> list[tuple[str, str]]:
@@ -75,14 +96,3 @@ def test_the_fork_guard_applies_checkouts_rule(head: str, refused: bool) -> None
     result = subprocess.run(["bash", "-e", "-c", step["run"]], capture_output=True, text=True,
                             env={**os.environ, "BASE_ID": "7", "HEAD_ID": head}, check=False)
     assert (result.returncode != 0) is refused, result.stderr
-
-
-def test_the_review_job_matches_the_copied_one_but_for_its_trigger_rule() -> None:
-    shared, copied = load("review.yml")["jobs"], load("ai-review.yml")["jobs"]
-    assert set(shared) == set(copied) == {"review"}
-    shared, copied = dict(shared["review"]), dict(copied["review"])
-    # The rule differs only in how it spots a PR event: github.event_name reads workflow_call in a
-    # called file, so it tests for the pull_request payload instead.
-    assert shared.pop("if").replace("github.event.pull_request ||", "github.event_name == 'pull_request_target' ||") \
-        == copied.pop("if")
-    assert shared == copied

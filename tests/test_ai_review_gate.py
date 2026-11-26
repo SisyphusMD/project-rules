@@ -8,10 +8,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-WORKFLOWS = Path(__file__).resolve().parents[1] / ".forgejo" / "workflows"
-WORKFLOW = WORKFLOWS / "ai-review.yml"
 # The file repos call (#78): there github.event_name reads workflow_call for every event.
-SHARED = WORKFLOWS / "review.yml"
+WORKFLOW = Path(__file__).resolve().parents[1] / ".forgejo" / "workflows" / "review.yml"
 REF = re.compile(r"github(?:\.[A-Za-z_]+)+")
 LITERAL = re.compile(r"'[^']*'")
 
@@ -60,21 +58,6 @@ def comment(by: str, *, can_push: bool, pr_author: str = "alice", on_pr: bool = 
     }
 
 
-@pytest.mark.parametrize(
-    ("payload", "runs"),
-    [
-        pytest.param({"event_name": "pull_request_target", "event": {}}, True, id="pr-event"),
-        pytest.param(comment("cody", can_push=True), True, id="maintainer-reply"),
-        pytest.param(comment("alice", can_push=False), True, id="pr-author-reply"),
-        pytest.param(comment("stranger", can_push=False), False, id="outside-comment"),
-        pytest.param(comment("forgejo-actions", can_push=True), False, id="reviewer-own-comment"),
-        pytest.param(comment("cody", can_push=True, on_pr=False), False, id="issue-not-pr"),
-    ],
-)
-def test_who_starts_a_review(payload: dict, runs: bool) -> None:
-    assert evaluate(job_condition(), payload) is runs
-
-
 def called(payload: dict) -> dict:
     return {**payload, "event_name": "workflow_call"}
 
@@ -93,21 +76,20 @@ PR_EVENT = {"event_name": "pull_request_target", "event": {"pull_request": {"num
         pytest.param(comment("cody", can_push=True, on_pr=False), False, id="issue-not-pr"),
     ],
 )
-def test_the_called_job_starts_a_review_for_the_same_events(payload: dict, runs: bool) -> None:
-    assert evaluate(job_condition(SHARED), called(payload)) is runs
-    assert evaluate(job_condition(), payload) is runs
+def test_who_starts_a_review(payload: dict, runs: bool) -> None:
+    assert evaluate(job_condition(), called(payload)) is runs
 
 
 def test_the_called_job_does_not_read_the_event_name() -> None:
     # It always reads workflow_call there, so a rule built on it would never see a PR event.
-    assert "event_name" not in job_condition(SHARED)
+    assert "event_name" not in job_condition()
 
 
 @pytest.mark.parametrize("by, runs", [("stranger", False), ("alice", True)])
 def test_a_payload_without_permissions_falls_back_to_the_pr_author(by: str, runs: bool) -> None:
     payload = comment(by, can_push=True)
     del payload["event"]["repository"]
-    assert evaluate(job_condition(), payload) is runs
+    assert evaluate(job_condition(), called(payload)) is runs
 
 
 def test_the_evaluator_reads_the_old_ungated_condition_as_open(tmp_path: Path) -> None:
