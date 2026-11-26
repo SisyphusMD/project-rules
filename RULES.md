@@ -27,7 +27,10 @@ and nowhere else. How code, tests and docs are written is in [conventions/][conv
 ## Pull requests
 
 6. **Every change lands as a pull request** into a protected `main`, and its description names
-   its issue: `Closes #n`, or `Closes owner/repo#n` for an issue in another repo.
+   its issue: `Closes #n`, or `Closes owner/repo#n` for an issue in another repo. A repo may
+   name a preview branch in its `CONTRIBUTING.md` (a client site's `staging`, say). Changes,
+   Renovate's included, then land on that branch the same way, and `main` takes only promotion
+   pull requests that pin a commit which passed the preview branch's checks and was approved.
 7. **One concern per PR.** Every hunk maps to the issue or to something the change cannot work
    without. Independently useful fixes, cleanups or speedups are separate PRs, even when they
    touch the same file. A list of audit findings is not one PR.
@@ -66,8 +69,8 @@ and nowhere else. How code, tests and docs are written is in [conventions/][conv
 ## Review and merge
 
 15. **Required checks**: `Issue link`, `Tests with code`, `Diff size`, `Lint`, `Secrets` and
-    `AI review`, plus the repo's own tests and coverage. They run the workflow on `main`
-    (`pull_request_target`) and the gate scripts on project-rules' `main`, never run the PR's
+    `AI review`, plus the repo's own tests and coverage. They run the workflow on the
+    protected branch the PR targets (`pull_request_target`) and the gate scripts on project-rules' `main`, never run the PR's
     code, and fail closed, so a PR cannot weaken the check that judges it.
 16. **AI review findings**: fix what is real and push. When a finding is wrong, reply on the PR
     with the reason (the code is correct, the case cannot occur, a decision requires it, or
@@ -79,11 +82,11 @@ and nowhere else. How code, tests and docs are written is in [conventions/][conv
     checkout, remove the worktrees and scratch files the work used, move the issues it
     unblocked to `status:ready`, and leave the status comment on its issue. Never delete a
     branch `main` does not contain; ask instead.
-19. **`main` is protected**: no direct pushes, admins included; the branch must be up to date;
-    0 approvals, because the checks and the AI review are the gate.
+19. **`main` is protected**, and so is a preview branch: no direct pushes, admins included; the
+    branch must be up to date; 0 approvals, because the checks and the AI review are the gate.
 20. **Break-glass.** When a required check cannot run (its model host or the runners are down),
     the maintainer removes only that check from `main`'s required list, merges what is urgent,
-    puts it back, and comments on the issue what was merged without it. When the forge itself
+    puts it back, and comments on the issue what was merged without it. When the git host itself
     is down nothing merges at all.
 
 ## Every repo

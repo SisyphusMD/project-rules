@@ -33,9 +33,11 @@
    privately rather than in a public issue.
 4. **`CONTRIBUTING.md`**: how its tests run, what counts as a test, its safety-critical code,
    its own required checks and its break-glass steps.
-5. **Protect `main`** once the workflows are on it: no direct pushes, admins included, branch
-   up to date, 0 approvals, and every required check from the rules with the exact context
-   name Forgejo reports (`CI / <job> (pull_request_target)`, `AI review`). Never require the
+5. **Protect `main`**, and a preview branch if the repo names one (rule 6), whose name then also
+   goes in `ci.yml`'s `pull_request_target` branches (Forgejo runs the callers from the branch
+   a PR targets, so the preview branch carries them too), once the workflows are on it: no direct
+   pushes, admins included, branch up to date, 0 approvals, and every required check from the
+   rules with the exact context name Forgejo reports (`CI / <job> (pull_request_target)`, `AI review`). Never require the
    calling jobs' own checks (`CI / shared-gate`, `AI review / shared-review` and so on): one passes
    when the jobs it calls are skipped. A
    `pull_request_target` workflow does not run on the PR that adds it, so prove each new check

@@ -26,6 +26,10 @@ no AI attribution, such as a `Co-Authored-By` trailer for an assistant, anywhere
 
 The standard set from the rules, plus: <this repo's own checks>.
 
+## Preview branch
+
+<"None", or its name and the checks a commit passes there before a promotion PR into main (rule 6).>
+
 ## Break-glass
 
 <What can be down that blocks a merge here, and the exact recovery steps.>
