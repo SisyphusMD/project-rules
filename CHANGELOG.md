@@ -6,6 +6,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- main requires the four `Tests` checks too, since every repo runs the gate from it (#132).
 - `.forgejo/scripts/manifest.py` validates an owner's `.project-rules` manifest (`env.json`), prints its values as job env lines, and fails when owners on one git host disagree on a setting they share. Nothing calls it yet (#134).
 
 - The caller headers name SisyphusMD/project-rules#78 in full, since a bare #78 in a copy points at that repo's own issue (#78).
