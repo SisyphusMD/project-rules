@@ -9,7 +9,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 # tests.yml and owners.yml are this repo's own; repos call gate.yml, gate-lint.yml, review.yml and archive.yml from here (#78, #144);
 # docs/adopting.md has every other workflow copied.
-NOT_COPIED = {"tests.yml", "owners.yml", "gate.yml", "gate-lint.yml", "review.yml", "archive.yml", "proof-147.yml"}
+NOT_COPIED = {"tests.yml", "owners.yml", "gate.yml", "gate-lint.yml", "review.yml", "archive.yml"}
 COPIED = sorted(
     path.relative_to(ROOT).as_posix()
     for folder in (".forgejo/workflows", ".github/workflows")

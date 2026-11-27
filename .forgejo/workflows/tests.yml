@@ -132,6 +132,3 @@ jobs:
           echo 'PROJECT_REPO_SLUG="SisyphusMD/scratch"' > "$scratch/packaging/project.env"
           python3 tools/vendor.py "$scratch"
           ( cd "$scratch" && python3 "$GITHUB_WORKSPACE/tools/check.py" )
-  proof-147:
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.flow == 0
-    uses: ./.forgejo/workflows/proof-147.yml
