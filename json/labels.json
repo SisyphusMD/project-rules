@@ -1,0 +1,57 @@
+[
+ {
+  "color": "8a8a8a",
+  "description": "",
+  "name": "pr-record"
+ },
+ {
+  "color": "1f77b4",
+  "description": "",
+  "name": "renovate"
+ },
+ {
+  "color": "000000",
+  "description": "",
+  "name": "status:blocked"
+ },
+ {
+  "color": "fbca04",
+  "description": "",
+  "name": "status:in-progress"
+ },
+ {
+  "color": "e99695",
+  "description": "",
+  "name": "status:needs-decision"
+ },
+ {
+  "color": "0e8a16",
+  "description": "",
+  "name": "status:ready"
+ },
+ {
+  "color": "b60205",
+  "description": "",
+  "name": "type:bug"
+ },
+ {
+  "color": "cccccc",
+  "description": "",
+  "name": "type:chore"
+ },
+ {
+  "color": "d93f0b",
+  "description": "",
+  "name": "type:decision"
+ },
+ {
+  "color": "0e8a16",
+  "description": "",
+  "name": "type:feature"
+ },
+ {
+  "color": "5319e7",
+  "description": "",
+  "name": "type:spike"
+ }
+]
