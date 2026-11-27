@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   shared-archive:
-    uses: SisyphusMD/project-rules/.forgejo/workflows/archive.yml@feat/144-shared-archive
+    uses: SisyphusMD/project-rules/.forgejo/workflows/archive.yml@main
     secrets:
       # Read-only on the owner's .project-rules, for the archive's committer address.
       PROJECT_RULES_TOKEN: ${{ secrets.PROJECT_RULES_TOKEN }}
