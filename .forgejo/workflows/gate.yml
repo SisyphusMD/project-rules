@@ -28,7 +28,6 @@ jobs:
           ISSUE_READ_TOKEN: ${{ secrets.ISSUE_READ_TOKEN }}
           FORGEJO_URL: ${{ github.server_url }}
           REPO: ${{ github.repository }}
-          PR_BODY: ${{ github.event.pull_request.body }}
         run: python3 -I /tmp/gate/.forgejo/scripts/issue-link.py
   tests-with-code:
     name: Tests with code
@@ -63,7 +62,6 @@ jobs:
           persist-credentials: false
       - name: Code changes come with tests
         env:
-          PR_BODY: ${{ github.event.pull_request.body }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -109,7 +107,6 @@ jobs:
           persist-credentials: false
       - name: Diff stays small
         env:
-          PR_BODY: ${{ github.event.pull_request.body }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
