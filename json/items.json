@@ -4150,6 +4150,13 @@
     "id": 48461,
     "updated_at": "2026-11-26T18:47:42-08:00",
     "user": "cody"
+   },
+   {
+    "body": "Decision: Drop the nightly drift job. Instead the shared gate gets a \"Copies match\" job: on every PR, the repo compares its own copied files (ci.yml and ai-review.yml callers, issue templates) with this repo's main. issue-archive becomes a shared workflow with a small caller, so its script is no longer copied (own issue). Why: Each repo checks only itself in its own CI: no cross-repo read token, and nothing private appears in a public repo's log or issues (rule 23). The callers matter only when a PR runs, which is when the check runs. Cody: \"Sure\", 2026-11-27, to dropping the nightly job for this.\n\nDecided by: Cody, 2026-11-27.",
+    "created_at": "2026-11-27T06:38:25-08:00",
+    "id": 49806,
+    "updated_at": "2026-11-27T06:38:25-08:00",
+    "user": "cody"
    }
   ],
   "created_at": "2026-11-26T09:55:19-08:00",
@@ -4161,7 +4168,7 @@
   "milestone": null,
   "number": 141,
   "state": "open",
-  "title": "Scheduled drift check for copied files in house repos",
+  "title": "Copies match: the shared gate checks each repo's copied files",
   "user": "cody"
  },
  {
@@ -4222,6 +4229,23 @@
   "number": 143,
   "state": "closed",
   "title": "Map PROJECT_RULES_TOKEN in every caller before the shared jobs require it",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Every repo copies issue-archive.yml and .forgejo/scripts/issue-archive.py, and the copies fall behind whenever main changes them: after #140 every consumer's two files differ from main. Make the job a reusable workflow here (called from main, script fetched from main like the gate scripts), so each repo keeps only a small caller with the schedule, concurrency and the PROJECT_RULES_TOKEN mapping, and drops its script copy. The job still pushes the calling repo's own issue-archive branch with that repo's job token. Prove it from a branch before merge, then roll out one PR per repo. Decided on #141 (Cody, 2026-11-27).",
+  "closed_at": null,
+  "comments": [],
+  "created_at": "2026-11-27T06:38:26-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:in-progress",
+   "type:feature"
+  ],
+  "milestone": null,
+  "number": 144,
+  "state": "open",
+  "title": "issue-archive runs from project-rules main like the gate",
   "user": "cody"
  }
 ]

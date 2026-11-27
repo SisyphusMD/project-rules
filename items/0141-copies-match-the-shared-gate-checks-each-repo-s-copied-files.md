@@ -1,4 +1,4 @@
-# #141 Scheduled drift check for copied files in house repos
+# #141 Copies match: the shared gate checks each repo's copied files
 
 - Kind: issue, state: open, by cody, created 2026-11-26T09:55:19-08:00
 - Labels: status:needs-decision, type:feature; milestone: none
@@ -29,3 +29,9 @@ Depends on nothing; runs alongside #136 (if #136 changes issue-archive.yml, repo
 Technical call: The Copy drift read token (secret COPY_DRIFT_READ_TOKEN) is read:repository limited to the private repos the check reads (several private repos; several private repos); public repos need no token. A private repo that adopts the rules is added by re-minting the token (docs/adopting.md). Why: The other 27 private repos on the host do not copy these files, so the check never reads them; an account-wide token would expose them all for nothing (Cody, 2026-11-26: "Those other 35 private repos don't need it?").
 
 Decided by: Claude, 2026-11-26.
+
+## cody, 2026-11-27T06:38:25-08:00
+
+Decision: Drop the nightly drift job. Instead the shared gate gets a "Copies match" job: on every PR, the repo compares its own copied files (ci.yml and ai-review.yml callers, issue templates) with this repo's main. issue-archive becomes a shared workflow with a small caller, so its script is no longer copied (own issue). Why: Each repo checks only itself in its own CI: no cross-repo read token, and nothing private appears in a public repo's log or issues (rule 23). The callers matter only when a PR runs, which is when the check runs. Cody: "Sure", 2026-11-27, to dropping the nightly job for this.
+
+Decided by: Cody, 2026-11-27.

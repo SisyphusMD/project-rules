@@ -144,6 +144,7 @@ Generated nightly from the primary Forgejo; do not edit. `json/` holds the full 
 | 138 | pull | closed | [feat(gate): add the owner manifest reader and schema check](items/0138-feat-gate-add-the-owner-manifest-reader-and-schema-check.md) |
 | 139 | pull | closed | [docs(rules): add the preview-branch rule and say git host](items/0139-docs-rules-add-the-preview-branch-rule-and-say-git-host.md) |
 | 140 | pull | closed | [feat(gate): read host and owner settings from the owner's private .project-rules manifest](items/0140-feat-gate-read-host-and-owner-settings-from-the-owner-s-priv.md) |
-| 141 | issue | open | [Scheduled drift check for copied files in house repos](items/0141-scheduled-drift-check-for-copied-files-in-house-repos.md) |
+| 141 | issue | open | [Copies match: the shared gate checks each repo's copied files](items/0141-copies-match-the-shared-gate-checks-each-repo-s-copied-files.md) |
 | 142 | issue | open | [Keep private repo names and internal hosts out of public text and tracked files](items/0142-keep-private-repo-names-and-internal-hosts-out-of-public-tex.md) |
 | 143 | issue | closed | [Map PROJECT_RULES_TOKEN in every caller before the shared jobs require it](items/0143-map-project-rules-token-in-every-caller-before-the-shared-jo.md) |
+| 144 | issue | open | [issue-archive runs from project-rules main like the gate](items/0144-issue-archive-runs-from-project-rules-main-like-the-gate.md) |
