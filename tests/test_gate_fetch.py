@@ -20,6 +20,7 @@ GATE_JOBS = {
     ("gate.yml", "issue-link"): "issue-link",
     ("gate.yml", "tests-with-code"): "tests-with-code",
     ("gate.yml", "diff-size"): "diff-size",
+    ("gate.yml", "copies-match"): "copies-match",
     ("review.yml", "review"): "ai-review",
 }
 

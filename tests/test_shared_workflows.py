@@ -38,7 +38,7 @@ MANIFEST = {"PROJECT_RULES_TOKEN": "${{ secrets.PROJECT_RULES_TOKEN }}"}
 
 def test_the_called_jobs_carry_the_required_check_names() -> None:
     names = {name: sorted(job["name"] for job in load(name)["jobs"].values()) for name in SHARED}
-    assert names == {"gate.yml": ["Diff size", "Issue link", "Tests with code"],
+    assert names == {"gate.yml": ["Copies match", "Diff size", "Issue link", "Tests with code"],
                      "gate-lint.yml": ["Lint", "Secrets"], "review.yml": ["Review"],
                      "archive.yml": ["Archive"]}
 
@@ -78,7 +78,8 @@ def head_checkouts() -> list[tuple[str, str]]:
 
 def test_the_jobs_that_check_out_a_pr_head_are_known() -> None:
     assert head_checkouts() == [("gate.yml", "tests-with-code"), ("gate.yml", "diff-size"),
-                                ("gate-lint.yml", "lint"), ("gate-lint.yml", "secrets")]
+                                ("gate.yml", "copies-match"), ("gate-lint.yml", "lint"),
+                                ("gate-lint.yml", "secrets")]
 
 
 @pytest.mark.parametrize(("name", "job"), head_checkouts())
