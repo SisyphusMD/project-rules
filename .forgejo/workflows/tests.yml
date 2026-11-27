@@ -80,7 +80,7 @@ jobs:
       - name: Every gate script is there and parses
         run: |
           set -euo pipefail
-          for name in ai-review diff-size issue-link tests-with-code; do
+          for name in ai-review diff-size issue-link manifest tests-with-code; do
             python3 -I -m py_compile "/tmp/gate/.forgejo/scripts/$name.py"
           done
 

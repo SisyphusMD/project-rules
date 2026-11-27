@@ -33,6 +33,7 @@ def test_a_shared_workflow_sets_no_concurrency(name: str) -> None:
 GUARD = "Refuse a fork's code"
 MAIN = "SisyphusMD/project-rules/.forgejo/workflows/{}@main"
 TOKEN = {"ISSUE_READ_TOKEN": "${{ secrets.ISSUE_READ_TOKEN }}"}
+MANIFEST = {"PROJECT_RULES_TOKEN": "${{ secrets.PROJECT_RULES_TOKEN }}"}
 
 
 def test_the_called_jobs_carry_the_required_check_names() -> None:
@@ -41,14 +42,14 @@ def test_the_called_jobs_carry_the_required_check_names() -> None:
                      "gate-lint.yml": ["Lint", "Secrets"], "review.yml": ["Review"]}
 
 
-def test_the_canonical_callers_call_main_and_hand_over_only_the_issue_reader() -> None:
+def test_the_canonical_callers_call_main_and_hand_over_only_the_two_read_tokens() -> None:
     # Named, never `secrets: inherit`, so main's jobs see no other secret of the calling repo.
     assert load("ci.yml")["jobs"] == {
         "shared-gate": {"uses": MAIN.format("gate.yml"), "secrets": TOKEN},
-        "shared-lint": {"uses": MAIN.format("gate-lint.yml")},
+        "shared-lint": {"uses": MAIN.format("gate-lint.yml"), "secrets": MANIFEST},
     }
     assert load("ai-review.yml")["jobs"] == {
-        "shared-review": {"uses": MAIN.format("review.yml"), "secrets": TOKEN}}
+        "shared-review": {"uses": MAIN.format("review.yml"), "secrets": {**TOKEN, **MANIFEST}}}
 
 
 def test_the_callers_keep_the_triggers_and_concurrency() -> None:

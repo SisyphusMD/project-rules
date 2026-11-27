@@ -2,10 +2,10 @@
 """Export a Forgejo repo's issues, PRs, comments, reviews, labels and milestones to files.
 
 Usage: issue-archive.py <out-dir>
-Env: FORGEJO_URL (e.g. https://forgejo.bryantserver.com), REPO (owner/name), TOKEN.
+Env: FORGEJO_URL (e.g. https://git.example.com), REPO (owner/name), TOKEN.
 
 Forgejo push mirrors carry git only, so this export, committed to an `issue-archive` branch,
-is how issue history reaches the annex mirror. The output is deterministic (sorted, no fetch
+is how issue history reaches the backup mirror. The output is deterministic (sorted, no fetch
 timestamps) so an unchanged tracker produces no commit.
 """
 import json

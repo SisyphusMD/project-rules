@@ -25,6 +25,8 @@ jobs:
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
           API: ${{ github.server_url }}/api/v1/repos/${{ github.repository }}
           PR: ${{ github.event.pull_request.number || github.event.issue.number }}
+          STATE: pending
+          DESCRIPTION: Starting
         # A head that already passed is reviewed again on an edit or a reply. The script sets the
         # status itself, so without this a failure before it starts would leave the old pass standing.
         run: |
@@ -41,7 +43,7 @@ jobs:
           pr = api("/pulls/" + os.environ["PR"])
           if pr["state"] == "open":
               api("/statuses/" + pr["head"]["sha"],
-                  {"state": "pending", "context": "AI review", "description": "Starting"})
+                  {"state": os.environ["STATE"], "context": "AI review", "description": os.environ["DESCRIPTION"]})
           EOS
       - name: Fetch the gate scripts
         env:
@@ -53,6 +55,56 @@ jobs:
           timeout 120 git clone --quiet --depth 1 --single-branch --branch main \
             "$FORGEJO_URL/SisyphusMD/project-rules.git" /tmp/gate
           git -C /tmp/gate log -1 --format='gate scripts: project-rules %H'
+      - name: Read the owner's manifest
+        env:
+          FORGEJO_URL: ${{ github.server_url }}
+          OWNER: ${{ github.repository_owner }}
+          # Read-only on the owner's .project-rules and nothing else; the manifest is private.
+          TOKEN: ${{ secrets.PROJECT_RULES_TOKEN }}
+        run: |
+          set -euo pipefail
+          # The owner's settings for these jobs (SisyphusMD/project-rules#133), from its main and never
+          # the PR's, with no defaults: a missing or invalid manifest fails the job. Later steps get the
+          # values via $GITHUB_ENV.
+          url="$FORGEJO_URL/$OWNER/.project-rules.git"
+          if [ -z "$TOKEN" ]; then
+            echo "No PROJECT_RULES_TOKEN: the owner keeps it as an Actions secret and the caller maps it in." >&2
+            exit 1
+          fi
+          auth="Authorization: Basic $(printf 'x:%s' "$TOKEN" | base64 -w0)"
+          # git's error names the git host's internal address, and a public repo's log is public.
+          if ! timeout 120 git -c http.extraHeader="$auth" clone --quiet --depth 1 --single-branch \
+              --branch main "$url" /tmp/manifest 2>/dev/null; then
+            echo "Cannot read $OWNER/.project-rules: every owner keeps its settings in its env.json." >&2
+            exit 1
+          fi
+          git -C /tmp/manifest log -1 --format="owner manifest: $OWNER/.project-rules %H"
+          python3 -I /tmp/gate/.forgejo/scripts/manifest.py env /tmp/manifest/env.json >> "$GITHUB_ENV"
+      - name: Fail the check when the review cannot start
+        # Only a failed fetch or manifest read gets here: the review script posts its own failures.
+        if: failure()
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          API: ${{ github.server_url }}/api/v1/repos/${{ github.repository }}
+          PR: ${{ github.event.pull_request.number || github.event.issue.number }}
+          STATE: error
+          DESCRIPTION: "Could not fetch the gate scripts or read the owner's .project-rules manifest; see the job log"
+        run: |
+          python3 -I - <<'EOS'
+          import json, os, urllib.request
+
+          def api(path, body=None):
+              req = urllib.request.Request(
+                  os.environ["API"] + path, data=None if body is None else json.dumps(body).encode(),
+                  headers={"Authorization": "token " + os.environ["TOKEN"], "Content-Type": "application/json"})
+              with urllib.request.urlopen(req, timeout=60) as r:
+                  return json.loads(r.read())
+
+          pr = api("/pulls/" + os.environ["PR"])
+          if pr["state"] == "open":
+              api("/statuses/" + pr["head"]["sha"],
+                  {"state": os.environ["STATE"], "context": "AI review", "description": os.environ["DESCRIPTION"]})
+          EOS
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # github.sha is the base branch's commit (pull_request_target) or the default branch's
@@ -67,8 +119,7 @@ jobs:
           FORGEJO_URL: ${{ github.server_url }}
           REPO: ${{ github.repository }}
           PR: ${{ github.event.pull_request.number || github.event.issue.number }}
-          # Keyless proxy in forgejo-runner (bryantserver/k8s apps/forgejo/runner/llm-proxy).
-          LLM_URL: http://studio-llm.forgejo-runner.svc.cluster.local:8080/v1/chat/completions
+          # LLM_URL, AI_REVIEW and AI_REVIEW_EXEMPT come from the owner's manifest.
           MODEL: qwen3.8-flash-next
           BOT_LOGIN: forgejo-actions
         run: python3 -I /tmp/gate/.forgejo/scripts/ai-review.py

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """CodeRabbit-style PR review on the house LLM, posted as the required `AI review` status.
 
-Env: FORGEJO_URL, REPO, TOKEN, PR (number), LLM_URL (chat-completions endpoint, keyless proxy),
-MODEL. Optional: MAX_DIFF_CHARS, MAX_OUTPUT_TOKENS, MODEL_DEADLINE_SECONDS, STATUS_CONTEXT, BOT_LOGIN, ISSUE_READ_TOKEN
+Env: FORGEJO_URL, REPO, TOKEN, PR (number), MODEL, and from the owner's manifest AI_REVIEW
+(`required` or `exempt`), AI_REVIEW_EXEMPT (the issue an exemption cites) and LLM_URL
+(chat-completions endpoint, keyless proxy). Optional: MAX_DIFF_CHARS, MAX_OUTPUT_TOKENS, MODEL_DEADLINE_SECONDS, STATUS_CONTEXT, BOT_LOGIN, ISSUE_READ_TOKEN
 (linked issues in other repos).
 
 Each run reads the PR, its diff and every human comment, plus the findings this reviewer left
@@ -139,6 +140,26 @@ def repo_rules():
         except OSError:
             parts.append(f"## {title}\nnone")
     return "\n\n".join(parts)
+
+
+def exemption_state(ref):
+    """The state of the issue an AI review exemption cites, or None when nothing here can read it."""
+    repo, n = ref.rsplit("#", 1)
+    url = f"{os.environ['FORGEJO_URL'].rstrip('/')}/api/v1/repos/{repo}/issues/{n}"
+    for token in (os.environ["TOKEN"], os.environ.get("ISSUE_READ_TOKEN")):
+        if not token:
+            continue
+        try:
+            req = urllib.request.Request(url, headers={"Authorization": f"token {token}"})
+            with urllib.request.urlopen(req, timeout=60) as r:
+                issue = json.loads(r.read())
+            # The issues endpoint also returns pull requests, which cannot carry an exemption.
+            return "a pull request, not an issue" if issue.get("pull_request") else issue["state"]
+        except urllib.error.HTTPError as e:
+            # Hidden or missing: try the next token. Anything else fails the check closed.
+            if e.code not in (403, 404):
+                raise
+    return None
 
 
 def linked_issues(body):
@@ -505,6 +526,28 @@ def main():
     if pr.get("state") != "open":
         print("PR is not open; nothing to review.")
         return
+    # From the owner's manifest (manifest.py). Anything but the two values it writes fails closed.
+    policy, cited = os.environ.get("AI_REVIEW"), os.environ.get("AI_REVIEW_EXEMPT")
+    if policy == "exempt" and cited:
+        try:
+            state = exemption_state(cited)
+        except Exception as e:
+            set_status(sha, "error", f"Could not check the issue the AI review exemption cites: {type(e).__name__}")
+            sys.exit(f"review failed closed: {e}")
+        if state == "open":
+            set_status(sha, "success", f"Not reviewed: the owner's manifest exempts AI review until {cited}")
+            print(f"AI review exempt by the owner's manifest, citing {cited}.")
+            return
+        if state:
+            set_status(sha, "failure", f"The AI review exemption cites {cited}, which is {state}: "
+                       "turn AI review on in the owner's manifest")
+        else:
+            set_status(sha, "error", f"The AI review exemption cites {cited}, which this repo cannot read: "
+                       "cite an issue every repo can read")
+        sys.exit(f"review failed closed: the exemption's issue {cited} is {state or 'unreadable'}")
+    if policy != "required":
+        set_status(sha, "error", "No AI review policy from the owner's .project-rules manifest")
+        sys.exit("review failed closed: AI_REVIEW is neither required nor an exemption citing an issue")
     set_status(sha, "pending", "Reviewing")
     signal.signal(signal.SIGALRM, _deadline)
     signal.alarm(max(1, int(MODEL_DEADLINE - (time.monotonic() - STARTED))))

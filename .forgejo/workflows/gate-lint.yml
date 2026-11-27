@@ -20,6 +20,41 @@ jobs:
             echo "Refusing to check out a fork's pull request code in this trusted run." >&2
             exit 1
           fi
+      - name: Fetch the gate scripts
+        env:
+          FORGEJO_URL: ${{ github.server_url }}
+        run: |
+          set -euo pipefail
+          # Always main (SisyphusMD/project-rules#78): one copy for every repo, outside the PR's checkout and
+          # with no local fallback, so the job fails when it cannot be fetched. The repo is public.
+          timeout 120 git clone --quiet --depth 1 --single-branch --branch main \
+            "$FORGEJO_URL/SisyphusMD/project-rules.git" /tmp/gate
+          git -C /tmp/gate log -1 --format='gate scripts: project-rules %H'
+      - name: Read the owner's manifest
+        env:
+          FORGEJO_URL: ${{ github.server_url }}
+          OWNER: ${{ github.repository_owner }}
+          # Read-only on the owner's .project-rules and nothing else; the manifest is private.
+          TOKEN: ${{ secrets.PROJECT_RULES_TOKEN }}
+        run: |
+          set -euo pipefail
+          # The owner's settings for these jobs (SisyphusMD/project-rules#133), from its main and never
+          # the PR's, with no defaults: a missing or invalid manifest fails the job. Later steps get the
+          # values via $GITHUB_ENV.
+          url="$FORGEJO_URL/$OWNER/.project-rules.git"
+          if [ -z "$TOKEN" ]; then
+            echo "No PROJECT_RULES_TOKEN: the owner keeps it as an Actions secret and the caller maps it in." >&2
+            exit 1
+          fi
+          auth="Authorization: Basic $(printf 'x:%s' "$TOKEN" | base64 -w0)"
+          # git's error names the git host's internal address, and a public repo's log is public.
+          if ! timeout 120 git -c http.extraHeader="$auth" clone --quiet --depth 1 --single-branch \
+              --branch main "$url" /tmp/manifest 2>/dev/null; then
+            echo "Cannot read $OWNER/.project-rules: every owner keeps its settings in its env.json." >&2
+            exit 1
+          fi
+          git -C /tmp/manifest log -1 --format="owner manifest: $OWNER/.project-rules %H"
+          python3 -I /tmp/gate/.forgejo/scripts/manifest.py env /tmp/manifest/env.json >> "$GITHUB_ENV"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.sha }}
@@ -32,8 +67,9 @@ jobs:
           # renovate: datasource=pypi depName=yamllint
           YAMLLINT: "1.37.1"
         run: |
+          set -eu
           python3 -I -m venv /tmp/lint
-          /tmp/lint/bin/pip install -q --index-url https://artifacts.lan.bryantserver.com/pypi.org/simple/ \
+          /tmp/lint/bin/pip install -q --index-url "${PACKAGE_INDEX:?from the owner manifest}" \
             "ruff==$RUFF" "yamllint==$YAMLLINT"
       - name: Python
         run: |
@@ -58,6 +94,41 @@ jobs:
             echo "Refusing to check out a fork's pull request code in this trusted run." >&2
             exit 1
           fi
+      - name: Fetch the gate scripts
+        env:
+          FORGEJO_URL: ${{ github.server_url }}
+        run: |
+          set -euo pipefail
+          # Always main (SisyphusMD/project-rules#78): one copy for every repo, outside the PR's checkout and
+          # with no local fallback, so the job fails when it cannot be fetched. The repo is public.
+          timeout 120 git clone --quiet --depth 1 --single-branch --branch main \
+            "$FORGEJO_URL/SisyphusMD/project-rules.git" /tmp/gate
+          git -C /tmp/gate log -1 --format='gate scripts: project-rules %H'
+      - name: Read the owner's manifest
+        env:
+          FORGEJO_URL: ${{ github.server_url }}
+          OWNER: ${{ github.repository_owner }}
+          # Read-only on the owner's .project-rules and nothing else; the manifest is private.
+          TOKEN: ${{ secrets.PROJECT_RULES_TOKEN }}
+        run: |
+          set -euo pipefail
+          # The owner's settings for these jobs (SisyphusMD/project-rules#133), from its main and never
+          # the PR's, with no defaults: a missing or invalid manifest fails the job. Later steps get the
+          # values via $GITHUB_ENV.
+          url="$FORGEJO_URL/$OWNER/.project-rules.git"
+          if [ -z "$TOKEN" ]; then
+            echo "No PROJECT_RULES_TOKEN: the owner keeps it as an Actions secret and the caller maps it in." >&2
+            exit 1
+          fi
+          auth="Authorization: Basic $(printf 'x:%s' "$TOKEN" | base64 -w0)"
+          # git's error names the git host's internal address, and a public repo's log is public.
+          if ! timeout 120 git -c http.extraHeader="$auth" clone --quiet --depth 1 --single-branch \
+              --branch main "$url" /tmp/manifest 2>/dev/null; then
+            echo "Cannot read $OWNER/.project-rules: every owner keeps its settings in its env.json." >&2
+            exit 1
+          fi
+          git -C /tmp/manifest log -1 --format="owner manifest: $OWNER/.project-rules %H"
+          python3 -I /tmp/gate/.forgejo/scripts/manifest.py env /tmp/manifest/env.json >> "$GITHUB_ENV"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.sha }}
@@ -72,7 +143,7 @@ jobs:
           set -euo pipefail
           tgz="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
           curl -fsSL -o "/tmp/$tgz" \
-            "https://artifacts.lan.bryantserver.com/github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/$tgz"
+            "${RELEASE_MIRROR:?from the owner manifest}/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/$tgz"
           echo "$GITLEAKS_SHA256  /tmp/$tgz" | sha256sum -c -
           tar -xzf "/tmp/$tgz" -C /tmp gitleaks
           # Allowlists come from main only, so a PR cannot allowlist its own secret.

@@ -98,7 +98,7 @@ class RepoRulesTest(unittest.TestCase):
 
         statuses = []
         model = mock.Mock(return_value='{"summary": "fine", "findings": []}')
-        with (mock.patch.dict(os.environ, {**ENV, "PR": "7"}),
+        with (mock.patch.dict(os.environ, {**ENV, "PR": "7", "AI_REVIEW": "required"}),
               mock.patch.object(review, "api", api),
               mock.patch.object(review, "pages", lambda path: iter(())),
               mock.patch.object(review, "set_status", lambda *a: statuses.append(a)),

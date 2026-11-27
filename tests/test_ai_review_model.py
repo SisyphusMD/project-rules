@@ -10,10 +10,11 @@ import re
 import signal
 import time
 import unittest
+import urllib.error
 from unittest import mock
 
 SCRIPT = pathlib.Path(__file__).resolve().parents[1] / ".forgejo/scripts/ai-review.py"
-ENV = {"FORGEJO_URL": "https://forgejo.example", "REPO": "example/rules", "TOKEN": "job"}
+ENV = {"FORGEJO_URL": "https://forgejo.example", "REPO": "example/rules", "TOKEN": "job", "AI_REVIEW": "required"}
 with mock.patch.dict(os.environ, ENV):
     spec = importlib.util.spec_from_file_location("ai_review_model", SCRIPT)
     ai_review = importlib.util.module_from_spec(spec)
@@ -847,6 +848,103 @@ class ReviewWorkflow(unittest.TestCase):
         step = re.search(r"(?ms)uses: actions/checkout@\S+.*?(?=\n      - )", self.TEXT).group(0)
         self.assertIn("ref: ${{ github.sha }}", step)
         self.assertIn("persist-credentials: false", step)
+
+
+class ManifestPolicy(unittest.TestCase):
+    """AI_REVIEW and AI_REVIEW_EXEMPT come from the owner's manifest (#136)."""
+
+    EXEMPT = (("AI_REVIEW", "exempt"), ("AI_REVIEW_EXEMPT", "acme/k8s#976"))
+
+    def run_main(self, policy, state=None, **patches):
+        statuses = []
+        model = mock.Mock(return_value={"findings": []})
+        env = {k: v for k, v in {**ENV, "PR": "7", **dict(policy)}.items() if v is not None}
+        with (mock.patch.dict(os.environ, env, clear=True),
+              mock.patch.object(ai_review, "api", lambda method, path, data=None, raw=False: PR),
+              mock.patch.object(ai_review, "set_status", lambda *a: statuses.append(a)),
+              mock.patch.object(ai_review, "ask_model", model),
+              mock.patch.object(ai_review, "exemption_state", patches.pop("exemption_state",
+                                                                          mock.Mock(return_value=state))),
+              contextlib.redirect_stdout(io.StringIO())):
+            try:
+                ai_review.main()
+                code = None
+            except SystemExit as e:
+                code = e.code
+        return statuses, model, code
+
+    def test_an_exempt_owner_passes_and_names_the_issue_without_asking_the_model(self):
+        statuses, model, code = self.run_main(self.EXEMPT, "open")
+        self.assertIsNone(code)
+        model.assert_not_called()
+        self.assertEqual(statuses, [("abc123", "success",
+                                     "Not reviewed: the owner's manifest exempts AI review until acme/k8s#976")])
+
+    def test_an_exemption_whose_issue_closed_fails_and_asks_for_the_review_back(self):
+        statuses, model, code = self.run_main(self.EXEMPT, "closed")
+        self.assertTrue(code)
+        model.assert_not_called()
+        expected = ("The AI review exemption cites acme/k8s#976, which is closed: "
+                    "turn AI review on in the owner's manifest")
+        self.assertEqual(statuses, [("abc123", "failure", expected)])
+
+    def test_an_exemption_this_repo_cannot_read_fails_closed(self):
+        statuses, _, code = self.run_main(self.EXEMPT, None)
+        self.assertTrue(code)
+        self.assertEqual(statuses[-1][1], "error")
+        self.assertIn("which this repo cannot read: cite an issue every repo can read", statuses[-1][2])
+
+    def test_a_failed_issue_lookup_fails_closed(self):
+        statuses, _, code = self.run_main(self.EXEMPT, exemption_state=mock.Mock(side_effect=OSError("down")))
+        self.assertTrue(code)
+        self.assertEqual(statuses, [("abc123", "error",
+                                     "Could not check the issue the AI review exemption cites: OSError")])
+
+    def lookup(self, answers, read_token="reader"):
+        """exemption_state against a fake server: answers maps a token to a state or an HTTP code."""
+        seen = []
+
+        def urlopen(req, timeout):
+            token = req.get_header("Authorization").split()[1]
+            seen.append((req.full_url, token))
+            answer = answers[token]
+            if isinstance(answer, int):
+                raise urllib.error.HTTPError(req.full_url, answer, "x", {}, io.BytesIO(b""))
+            body = {"state": "open", "pull_request": {"merged": False}} if answer == "pr" else {"state": answer}
+            return contextlib.nullcontext(io.BytesIO(json.dumps(body).encode()))
+
+        env = {**ENV, "ISSUE_READ_TOKEN": read_token} if read_token else ENV
+        with mock.patch.dict(os.environ, env, clear=True), mock.patch.object(ai_review.urllib.request, "urlopen", urlopen):
+            return ai_review.exemption_state("acme/k8s#976"), seen
+
+    def test_the_lookup_reads_the_cited_issue_with_the_job_token_first(self):
+        state, seen = self.lookup({"job": "open"})
+        self.assertEqual(state, "open")
+        self.assertEqual(seen, [("https://forgejo.example/api/v1/repos/acme/k8s/issues/976", "job")])
+
+    def test_the_lookup_falls_back_to_the_issue_reader(self):
+        self.assertEqual(self.lookup({"job": 404, "reader": "closed"})[0], "closed")
+
+    def test_an_issue_neither_token_can_see_is_unreadable(self):
+        self.assertIsNone(self.lookup({"job": 403, "reader": 404})[0])
+        self.assertIsNone(self.lookup({"job": 404}, read_token=None)[0])
+
+    def test_an_open_pull_request_is_no_issue_to_cite(self):
+        self.assertEqual(self.lookup({"job": "pr"})[0], "a pull request, not an issue")
+
+    def test_a_server_error_is_not_taken_for_a_hidden_issue(self):
+        with self.assertRaises(urllib.error.HTTPError):
+            self.lookup({"job": 500})
+
+    def test_no_policy_or_an_unknown_one_fails_closed(self):
+        for policy in ({"AI_REVIEW": None}, {"AI_REVIEW": "off"}, {"AI_REVIEW": "exempt", "AI_REVIEW_EXEMPT": ""},
+                       {"AI_REVIEW": "exempt", "AI_REVIEW_EXEMPT": None}):
+            with self.subTest(policy=policy):
+                statuses, model, code = self.run_main(policy)
+                self.assertTrue(code)
+                model.assert_not_called()
+                self.assertEqual(statuses, [("abc123", "error",
+                                             "No AI review policy from the owner's .project-rules manifest")])
 
 
 if __name__ == "__main__":

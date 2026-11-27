@@ -1,7 +1,11 @@
 # Project rules
 
-These rules apply to every SisyphusMD repository, public or private, and to everyone who works in
-one: the maintainer, agents working for the maintainer, and outside contributors. A repo's
+These rules apply to every repository whose owner keeps a `.project-rules` manifest, public or
+private, and to everyone who works in one: the maintainer, agents working for the maintainer, and
+outside contributors. The manifest is `env.json` in the owner's private `.project-rules` repository
+on the same git host. It holds the owner's own settings (what visibility its repos may have, where
+they mirror, who decides) and the git host's (model endpoint, package mirrors, AI review policy),
+and the shared workflows fail closed without a valid one. A repo's
 `CONTRIBUTING.md` adds what is specific to it (how to run its tests, what counts as a test there,
 its safety-critical code). It never loosens a rule; exceptions are listed at the end of this file
 and nowhere else. How code, tests and docs are written is in [conventions/][conventions].
@@ -13,7 +17,7 @@ and nowhere else. How code, tests and docs are written is in [conventions/][conv
    given, and the current task resumes.
 2. **Decisions are issue comments**, one per comment: `Decision: <what>. Why: <why>.` then
    `Decided by: <who>, <YYYY-MM-DD>.` The maintainer decides (on a shared project, its named
-   owners). Anyone may propose; an agent's own technical call is a comment labelled
+   owners: the manifest's `decided_by`). Anyone may propose; an agent's own technical call is a comment labelled
    `Technical call:` so it is easy to revisit.
 3. **Decisions that shape a whole system** also get a record in `docs/decisions/NNNN-*.md`
    linking its issue. A record is never edited after merge; a later one supersedes it.
@@ -70,8 +74,11 @@ and nowhere else. How code, tests and docs are written is in [conventions/][conv
 
 15. **Required checks**: `Issue link`, `Tests with code`, `Diff size`, `Lint`, `Secrets` and
     `AI review`, plus the repo's own tests and coverage. They run the workflow on the
-    protected branch the PR targets (`pull_request_target`) and the gate scripts on project-rules' `main`, never run the PR's
-    code, and fail closed, so a PR cannot weaken the check that judges it.
+    protected branch the PR targets (`pull_request_target`) and the gate scripts on
+    project-rules' `main`, never run the PR's code, and fail closed, so a PR cannot weaken the
+    check that judges it. `AI review` is required unless the owner's manifest exempts it citing
+    an open issue, the one that brings the review back; the check then passes and names that
+    issue.
 16. **AI review findings**: fix what is real and push. When a finding is wrong, reply on the PR
     with the reason (the code is correct, the case cannot occur, a decision requires it, or
     the cost outweighs the risk); it re-reviews. Taste and "temporary" are not reasons. A
@@ -91,11 +98,12 @@ and nowhere else. How code, tests and docs are written is in [conventions/][conv
 
 ## Every repo
 
-21. **The primary is forgejo.bryantserver.com.** Each repo has a push mirror on the maintainer's
-    backup forge, synced on every commit, and a nightly `issue-archive` branch that carries its
-    issues and PRs there too, because mirrors carry git only. A public repo's GitHub copy is a
-    read-only mirror: issues and pull requests are opened on Forgejo, and the mirror-lockdown
-    workflow closes any pull request opened there with a pointer to Forgejo.
+21. **A repo's primary is the git host it lives on**, push-mirrored to every mirror in its owner's
+    manifest (`mirrors`), synced on every commit, with a nightly `issue-archive` branch that
+    carries its issues and PRs there too, because mirrors carry git only. Its visibility is the
+    one the manifest's `visibility` sets for the owner; a nightly check flags any repo that differs. A public repo's GitHub
+    copy is a read-only mirror: issues and pull requests are opened on the primary, and the
+    mirror-lockdown workflow closes any pull request opened there with a pointer to it.
 22. **A `CONTRIBUTING.md` and a `SECURITY.md`.** The first points here, from
     [templates/CONTRIBUTING.md][contributing-template]; the second is copied from
     `templates/SECURITY.md`, so vulnerabilities are reported privately. The AI review reads
