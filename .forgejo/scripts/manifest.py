@@ -51,7 +51,7 @@ def problem(key, value, pattern):
         return None if good and len(set(value)) == len(value) else "mirrors must be a list of distinct URLs"
     if isinstance(value, str) and pattern.fullmatch(value):
         return None
-    kind = {id(EMAIL): "an email address", id(NAMES): "names such as 'Cody and Anna'"}.get(id(pattern), "a URL")
+    kind = "an email address" if pattern is EMAIL else "names such as 'Cody and Anna'" if pattern is NAMES else "a URL"
     return f"{key} is not {kind}"
 
 

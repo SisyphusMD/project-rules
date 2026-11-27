@@ -76,6 +76,7 @@ def test_an_exempt_owner_names_the_issue_and_needs_no_model(tmp_path: Path) -> N
     ({"mirrors": []}, "mirrors must be a list of distinct URLs"),
     ({"mirrors": ["https://a.example", "https://a.example"]}, "mirrors must be a list of distinct URLs"),
     ({"mirrors": ["https://a.example", "ftp://b.example"]}, "mirrors must be a list of distinct URLs"),
+    ({"mirrors": ["https://a.example", 7]}, "mirrors must be a list of distinct URLs"),
     ({"decided_by": "cody"}, "decided_by is not names"),
     ({"decided_by": "Cody\nX=1"}, "decided_by is not names"),
     ({"package_index": "https://mirror.example/simple/\nLD_PRELOAD=/tmp/x"}, "package_index is not a URL"),
