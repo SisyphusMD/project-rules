@@ -6,6 +6,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- The Tests workflow compiles main's copies-match.py with the other gate scripts (#149).
 - The gate gains a `Copies match` check: each PR fails when the repo's copied callers, issue templates or mirror-lockdown.yml have fallen behind main, or it still carries a retired copy. Each repo checks only its own files, so no token or other repo is involved (#141).
 - The gate jobs read the PR description from the event payload instead of the environment, so a body over 128 KB, such as a Renovate PR's release notes across many versions, no longer fails Issue link, Tests with code and Diff size before they start (#147).
 - issue-archive runs from main as `archive.yml`: repos keep a small `issue-archive.yml` caller and drop their copy of the script, which fell behind whenever main changed it (#144).
