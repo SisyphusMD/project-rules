@@ -62,13 +62,13 @@ class PrBodyTest(unittest.TestCase):
             self.assertEqual(pr_body(), "env")
 
     def test_the_gate_passes_no_free_text_through_the_environment(self):
-        # SHAs and ids are short; a body, title or message has no length bound.
+        # SHAs, ids and the visibility flag are short; a body, title or message has no length bound.
         jobs = yaml.safe_load((ROOT / ".forgejo/workflows/gate.yml").read_text())["jobs"]
         for job in jobs.values():
             for step in job["steps"]:
                 for key, value in (step.get("env") or {}).items():
                     if "github.event" in str(value):
-                        self.assertRegex(str(value), r"\.(sha|id)\s*}}", key)
+                        self.assertRegex(str(value), r"^\$\{\{ github\.event\.[\w.]+\.(sha|id|private) \}\}$", key)
 
 
 if __name__ == "__main__":

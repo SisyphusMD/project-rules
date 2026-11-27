@@ -44,7 +44,12 @@
    a read-only default token.
 2. **Workflows**: copy this repo's `.forgejo/` workflows except `tests.yml`, `owners.yml`, `gate.yml`,
    `gate-lint.yml`, `review.yml` and `archive.yml`, and its issue templates, in, and create the
-   labels listed above. A repo that still has `.forgejo/scripts/issue-archive.py` deletes it. `ci.yml`, `ai-review.yml` and `issue-archive.yml` are only callers: their
+   labels listed above. A repo that still has `.forgejo/scripts/issue-archive.py` deletes it.
+   The gate's `Copies match` check fails a PR when a copy has fallen behind main: the callers must
+   match apart from comments, the allowances below and one preview branch beside `main` in
+   `ci.yml` (their name, triggers, schedule and concurrency are fixed), the issue templates may
+   reword their prompts but keep `name` and `labels`, and a public repo's `mirror-lockdown.yml`
+   matches byte for byte. When main changes a copied file, every repo copies it again. `ci.yml`, `ai-review.yml` and `issue-archive.yml` are only callers: their
    jobs run from this repo's `main` (`gate.yml`, `gate-lint.yml`, `review.yml`, `archive.yml`), and
    so do the gate scripts, `.forgejo/scripts/issue-archive.py` and the `RULES.md` the AI review reads; the
    jobs take the package
