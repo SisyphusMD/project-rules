@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import base64
 import json
 import os
 import re
+import shutil
 import subprocess
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -138,27 +140,90 @@ def test_the_archive_job_runs_only_the_fetched_script() -> None:
 
 def test_every_copy_of_the_fetch_step_is_the_one_the_tests_workflow_proves() -> None:
     proven = fetch_step("tests.yml", "gate-fetch")
-    for where in [*GATE_JOBS, ("archive.yml", "archive")]:
+    for where in [*GATE_JOBS, ("archive.yml", "archive"), ("gate-lint.yml", "lint"),
+                  ("gate-lint.yml", "secrets")]:
         assert fetch_step(*where) == proven, where
 
 
-def fetch(tmp_path: Path, url: str) -> subprocess.CompletedProcess[str]:
+def test_the_fetch_step_gets_the_job_token() -> None:
+    assert fetch_step("tests.yml", "gate-fetch")["env"]["TOKEN"] == "${{ secrets.GITHUB_TOKEN }}"
+
+
+TOKEN = "s3cret-job-token"
+BASIC = base64.b64encode(f"x:{TOKEN}".encode()).decode()
+
+
+def serve_git(root: Path):
+    """Smart HTTP through git http-backend, refusing any request without the job token's header."""
+    class Handler(BaseHTTPRequestHandler):
+        def handle_one(self) -> None:
+            if self.headers.get("Authorization") != f"Basic {BASIC}":
+                self.send_response(401)
+                self.send_header("WWW-Authenticate", 'Basic realm="t"')
+                self.end_headers()
+                return
+            path, _, query = self.path.partition("?")
+            body = self.rfile.read(int(self.headers.get("Content-Length") or 0))
+            out = subprocess.run(
+                ["git", "http-backend"], input=body, capture_output=True, check=True,
+                env={**os.environ, "GIT_PROJECT_ROOT": str(root), "GIT_HTTP_EXPORT_ALL": "1",
+                     "PATH_INFO": path, "QUERY_STRING": query, "REQUEST_METHOD": self.command,
+                     "CONTENT_TYPE": self.headers.get("Content-Type", "")},
+            ).stdout
+            head, _, rest = out.partition(b"\r\n\r\n")
+            lines = head.decode().split("\r\n")
+            status = next((int(v.split()[0]) for k, _, v in (h.partition(": ") for h in lines)
+                           if k == "Status"), 200)
+            self.send_response(status)
+            for k, _, v in (h.partition(": ") for h in lines):
+                if k != "Status":
+                    self.send_header(k, v)
+            self.send_header("Content-Length", str(len(rest)))
+            self.end_headers()
+            self.wfile.write(rest)
+
+        do_GET = do_POST = handle_one
+
+        def log_message(self, *args: object) -> None:
+            pass
+
+    server = HTTPServer(("127.0.0.1", 0), Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    return server
+
+
+def fetch(tmp_path: Path, path: str, token: str = TOKEN) -> subprocess.CompletedProcess[str]:
     run = fetch_step("tests.yml", "gate-fetch")["run"]
     assert run.count("/tmp/gate") == 2
     # macOS has no timeout(1); the runner does.
     shim = tmp_path / "bin/timeout"
-    shim.parent.mkdir()
+    shim.parent.mkdir(exist_ok=True)
     shim.write_text('#!/bin/sh\nshift\nexec "$@"\n')
     shim.chmod(0o755)
-    return subprocess.run(
-        ["bash", "-c", run.replace("/tmp/gate", str(tmp_path / "gate"))],
-        cwd=tmp_path,
-        env={**os.environ, "PATH": f"{shim.parent}:{os.environ['PATH']}", "FORGEJO_URL": url},
-        capture_output=True, text=True, check=False,
-    )
+    server = serve_git(tmp_path)
+    try:
+        return subprocess.run(
+            ["bash", "-c", run.replace("/tmp/gate", str(tmp_path / "gate"))],
+            cwd=tmp_path,
+            env={**os.environ, "PATH": f"{shim.parent}:{os.environ['PATH']}",
+                 "FORGEJO_URL": f"http://127.0.0.1:{server.server_port}/{path}", "TOKEN": token,
+                 "GIT_TRACE2": str(tmp_path / "trace"), "GIT_TERMINAL_PROMPT": "0"},
+            capture_output=True, text=True, check=False,
+        )
+    finally:
+        server.shutdown()
+        server.server_close()
 
 
-def test_fetch_takes_main_and_names_its_commit(tmp_path: Path) -> None:
+def no_token_in(tmp_path: Path, result: subprocess.CompletedProcess[str]) -> None:
+    texts = [result.stdout, result.stderr, (tmp_path / "trace").read_text()]
+    if (tmp_path / "gate/.git/config").exists():
+        texts.append((tmp_path / "gate/.git/config").read_text())
+    for text in texts:
+        assert TOKEN not in text and BASIC not in text
+
+
+def test_fetch_takes_main_with_the_job_token_and_names_its_commit(tmp_path: Path) -> None:
     source = tmp_path / "forge/SisyphusMD/project-rules.git"
     source.mkdir(parents=True)
 
@@ -177,13 +242,28 @@ def test_fetch_takes_main_and_names_its_commit(tmp_path: Path) -> None:
     (source / "which").write_text("other")
     git("commit", "-qam", "other")
 
-    result = fetch(tmp_path, f"file://{tmp_path}/forge")
+    result = fetch(tmp_path, "forge")
     assert result.returncode == 0, result.stderr
     assert result.stdout.strip() == f"gate scripts: project-rules {main}"
     assert (tmp_path / "gate/which").read_text() == "main"
+    # The header was on the clone only: never in its URL, the output, git's trace or the config.
+    no_token_in(tmp_path, result)
+
+    # A wrong token is refused, so the header is what the server read.
+    shutil.rmtree(tmp_path / "gate")
+    refused = fetch(tmp_path, "forge", token="wrong")
+    assert refused.returncode != 0
+    assert not (tmp_path / "gate/which").exists()
 
 
 def test_fetch_fails_when_the_repo_cannot_be_read(tmp_path: Path) -> None:
-    result = fetch(tmp_path, f"file://{tmp_path}/missing")
+    result = fetch(tmp_path, "missing")
     assert result.returncode != 0
     assert "missing/SisyphusMD/project-rules.git" in result.stderr
+    no_token_in(tmp_path, result)
+
+
+def test_fetch_fails_without_a_job_token(tmp_path: Path) -> None:
+    result = fetch(tmp_path, "forge", token="")
+    assert result.returncode == 1
+    assert "No job token" in result.stderr

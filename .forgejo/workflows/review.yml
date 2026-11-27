@@ -48,12 +48,21 @@ jobs:
       - name: Fetch the gate scripts
         env:
           FORGEJO_URL: ${{ github.server_url }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           # Always main (SisyphusMD/project-rules#78): one copy for every repo, outside the PR's checkout and
-          # with no local fallback, so the job fails when it cannot be fetched. The repo is public.
-          timeout 120 git clone --quiet --depth 1 --single-branch --branch main \
-            "$FORGEJO_URL/SisyphusMD/project-rules.git" /tmp/gate
+          # with no local fallback, so the job fails when it cannot be fetched. With the job token, since a
+          # git host may require sign-in to view even a public repo (SisyphusMD/project-rules#151); as a header on this one command
+          # it stays out of the URL, the log and .git/config.
+          if [ -z "$TOKEN" ]; then
+            echo "No job token to read SisyphusMD/project-rules with." >&2
+            exit 1
+          fi
+          # From the environment, not argv, which git's trace output records.
+          GATE_AUTH="Authorization: Basic $(printf 'x:%s' "$TOKEN" | base64 | tr -d '\n')" \
+            timeout 120 git --config-env=http.extraHeader=GATE_AUTH clone --quiet --depth 1 \
+            --single-branch --branch main "$FORGEJO_URL/SisyphusMD/project-rules.git" /tmp/gate
           git -C /tmp/gate log -1 --format='gate scripts: project-rules %H'
       - name: Read the owner's manifest
         env:
