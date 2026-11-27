@@ -2,12 +2,13 @@
 """Fail a PR that changes code without changing tests.
 
 Usage: tests-with-code.py <base-sha> <head-sha>
-Env: PR_BODY.
+Env: GITHUB_EVENT_PATH (or PR_BODY).
 Code is any source file or tracked executable outside a test path and outside .forgejo/ (CI
 tooling, proven by live runs). A test path is a `tests/` or `test/` directory, or a `test_*` / `*_test.*` / `*.test.*`
 file. An escape hatch, `No tests: <reason>` in the PR description, lets docs-shaped or
 generated-code PRs through; the AI review judges the reason.
 """
+import json
 import os
 import re
 import subprocess
@@ -15,6 +16,21 @@ import sys
 
 CODE_EXT = {".py", ".js", ".mjs", ".ts", ".tsx", ".jsx", ".go", ".rs", ".swift", ".kt", ".java",
             ".rb", ".sh", ".zsh", ".c", ".h", ".cc", ".cpp", ".cs", ".php"}
+
+
+def pr_body():
+    # The event payload, not the environment: Linux refuses an environment string over
+    # 128 KB, and Renovate bodies with many releases' notes pass that. PR_BODY overrides it.
+    if "PR_BODY" in os.environ:
+        return os.environ["PR_BODY"]
+    path = os.environ.get("GITHUB_EVENT_PATH")
+    if not path:
+        sys.exit("Cannot read the PR description: GITHUB_EVENT_PATH is not set.")
+    with open(path, encoding="utf-8") as f:
+        event = json.load(f)
+    if "pull_request" not in event:
+        sys.exit("Cannot read the PR description: this event is not a pull request.")
+    return event["pull_request"].get("body") or ""
 
 
 def is_test(path):
@@ -57,7 +73,7 @@ def main(base, head):
     if tests:
         print(f"{len(code)} code file(s) with {len(tests)} test file(s).")
         return
-    m = re.search(r"(?im)^[ \t]*No tests:[ \t]*(\S.*)$", os.environ.get("PR_BODY") or "")
+    m = re.search(r"(?im)^[ \t]*No tests:[ \t]*(\S.*)$", pr_body())
     if m:
         print(f"No tests, by the description: {m.group(1).strip()}")
         return

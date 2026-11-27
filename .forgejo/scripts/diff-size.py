@@ -2,11 +2,12 @@
 """Fail a PR that changes more than LIMIT lines outside tests and lockfiles.
 
 Usage: diff-size.py <base-sha> <head-sha>
-Env: PR_BODY, optional DIFF_LIMIT (default 400).
+Env: GITHUB_EVENT_PATH (or PR_BODY), optional DIFF_LIMIT (default 400).
 Counts added plus deleted lines from `git diff --numstat base...head`; binary files count 0.
 Test paths match tests-with-code.py. `Large diff: <reason>` in the PR description lets a PR
 through; the AI review judges the reason.
 """
+import json
 import os
 import re
 import subprocess
@@ -17,6 +18,21 @@ from pathlib import Path
 LOCKFILES = {"package-lock.json", "pnpm-lock.yaml", "yarn.lock", "poetry.lock", "uv.lock",
              "Cargo.lock", "go.sum", "flake.lock", "Package.resolved", "Gemfile.lock",
              "composer.lock", "Podfile.lock"}
+
+
+def pr_body():
+    # The event payload, not the environment: Linux refuses an environment string over
+    # 128 KB, and Renovate bodies with many releases' notes pass that. PR_BODY overrides it.
+    if "PR_BODY" in os.environ:
+        return os.environ["PR_BODY"]
+    path = os.environ.get("GITHUB_EVENT_PATH")
+    if not path:
+        sys.exit("Cannot read the PR description: GITHUB_EVENT_PATH is not set.")
+    with open(path, encoding="utf-8") as f:
+        event = json.load(f)
+    if "pull_request" not in event:
+        sys.exit("Cannot read the PR description: this event is not a pull request.")
+    return event["pull_request"].get("body") or ""
 
 
 def is_test(path):
@@ -75,7 +91,7 @@ def main(base, head):
     if total <= limit:
         print(f"{total} changed lines outside tests and lockfiles (limit {limit}).")
         return
-    m = re.search(r"(?im)^[ \t]*Large diff:[ \t]*(\S.*)$", os.environ.get("PR_BODY") or "")
+    m = re.search(r"(?im)^[ \t]*Large diff:[ \t]*(\S.*)$", pr_body())
     if m:
         print(f"{total} changed lines, over {limit}, by the description: {m.group(1).strip()}")
         return
