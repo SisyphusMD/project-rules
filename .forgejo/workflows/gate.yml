@@ -18,7 +18,7 @@ jobs:
           set -euo pipefail
           # Always main (SisyphusMD/project-rules#78): one copy for every repo, outside the PR's checkout and
           # with no local fallback, so the job fails when it cannot be fetched. The repo is public.
-          timeout 120 git clone --quiet --depth 1 --single-branch --branch issue-147-pr-body-file \
+          timeout 120 git clone --quiet --depth 1 --single-branch --branch main \
             "$FORGEJO_URL/SisyphusMD/project-rules.git" /tmp/gate
           git -C /tmp/gate log -1 --format='gate scripts: project-rules %H'
       - name: PR names its issue
@@ -41,7 +41,7 @@ jobs:
           set -euo pipefail
           # Always main (SisyphusMD/project-rules#78): one copy for every repo, outside the PR's checkout and
           # with no local fallback, so the job fails when it cannot be fetched. The repo is public.
-          timeout 120 git clone --quiet --depth 1 --single-branch --branch issue-147-pr-body-file \
+          timeout 120 git clone --quiet --depth 1 --single-branch --branch main \
             "$FORGEJO_URL/SisyphusMD/project-rules.git" /tmp/gate
           git -C /tmp/gate log -1 --format='gate scripts: project-rules %H'
       - name: Refuse a fork's code
@@ -86,7 +86,7 @@ jobs:
           set -euo pipefail
           # Always main (SisyphusMD/project-rules#78): one copy for every repo, outside the PR's checkout and
           # with no local fallback, so the job fails when it cannot be fetched. The repo is public.
-          timeout 120 git clone --quiet --depth 1 --single-branch --branch issue-147-pr-body-file \
+          timeout 120 git clone --quiet --depth 1 --single-branch --branch main \
             "$FORGEJO_URL/SisyphusMD/project-rules.git" /tmp/gate
           git -C /tmp/gate log -1 --format='gate scripts: project-rules %H'
       - name: Refuse a fork's code

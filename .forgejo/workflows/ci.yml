@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   shared-gate:
-    uses: SisyphusMD/project-rules/.forgejo/workflows/gate.yml@issue-147-pr-body-file
+    uses: SisyphusMD/project-rules/.forgejo/workflows/gate.yml@main
     secrets:
       # read:issue only, for `owner/repo#n`: the job token cannot read other private repos.
       ISSUE_READ_TOKEN: ${{ secrets.ISSUE_READ_TOKEN }}
