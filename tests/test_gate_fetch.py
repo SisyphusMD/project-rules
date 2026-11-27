@@ -126,9 +126,18 @@ def post_status(step: dict, state: str) -> list[tuple[str, ...]]:
     return posted
 
 
+def test_the_archive_job_runs_only_the_fetched_script() -> None:
+    # Not in GATE_JOBS: its last step clones and pushes, so it cannot be run here.
+    run = "\n".join(step.get("run", "") for step in steps("archive.yml", "archive")
+                    if step.get("name") != MANIFEST)
+    assert re.findall(r"(\S*\.forgejo/scripts/\S+)", run) == ["/tmp/gate/.forgejo/scripts/issue-archive.py"]
+    assert "python3 -I /tmp/gate/.forgejo/scripts/issue-archive.py archive\n" in run
+    assert "git -C archive add -A" in run
+
+
 def test_every_copy_of_the_fetch_step_is_the_one_the_tests_workflow_proves() -> None:
     proven = fetch_step("tests.yml", "gate-fetch")
-    for where in GATE_JOBS:
+    for where in [*GATE_JOBS, ("archive.yml", "archive")]:
         assert fetch_step(*where) == proven, where
 
 

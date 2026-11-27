@@ -43,10 +43,11 @@
    to `.github/workflows/`, and its GitHub copy has Actions on, limited to that one action, with
    a read-only default token.
 2. **Workflows**: copy this repo's `.forgejo/` workflows except `tests.yml`, `owners.yml`, `gate.yml`,
-   `gate-lint.yml` and `review.yml`, its issue templates and `scripts/issue-archive.py` in, and
-   create the labels listed above. `ci.yml` and `ai-review.yml` are only callers: their jobs run
-   from this repo's `main` (`gate.yml`, `gate-lint.yml`, `review.yml`), and so do the gate scripts
-   and the `RULES.md` the AI review reads; the jobs and `issue-archive.yml` take the package
+   `gate-lint.yml`, `review.yml` and `archive.yml`, and its issue templates, in, and create the
+   labels listed above. A repo that still has `.forgejo/scripts/issue-archive.py` deletes it. `ci.yml`, `ai-review.yml` and `issue-archive.yml` are only callers: their
+   jobs run from this repo's `main` (`gate.yml`, `gate-lint.yml`, `review.yml`, `archive.yml`), and
+   so do the gate scripts, `.forgejo/scripts/issue-archive.py` and the `RULES.md` the AI review reads; the
+   jobs take the package
    index, release mirror, model endpoint and bot address from the owner's manifest, read with `PROJECT_RULES_TOKEN`. A repo whose secret `ISSUE_READ_TOKEN` is not a
    read:issue token drops that mapping from both callers rather than hand the jobs something else.
    A repo with its own Lint and Secrets jobs keeps them and drops the `shared-lint` call, so no

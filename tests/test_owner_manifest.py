@@ -16,7 +16,7 @@ WORKFLOWS = ROOT / ".forgejo" / "workflows"
 FETCH = "Fetch the gate scripts"
 READ = "Read the owner's manifest"
 READERS = [("gate-lint.yml", "lint"), ("gate-lint.yml", "secrets"), ("review.yml", "review"),
-           ("issue-archive.yml", "archive")]
+           ("archive.yml", "archive")]
 GOOD = {
     "visibility": "private",
     "mirrors": ["https://backup.example"],
@@ -58,7 +58,7 @@ def test_the_manifest_is_read_after_the_fetch_and_before_any_checkout(where: tup
 @pytest.mark.parametrize(("where", "name", "variable"), [
     (("gate-lint.yml", "lint"), "Install linters", "PACKAGE_INDEX"),
     (("gate-lint.yml", "secrets"), "gitleaks over the PR head's history", "RELEASE_MIRROR"),
-    (("issue-archive.yml", "archive"), "Export to the issue-archive branch", "BOT_EMAIL"),
+    (("archive.yml", "archive"), "Export to the issue-archive branch", "BOT_EMAIL"),
 ])
 def test_a_job_takes_its_host_value_from_the_manifest_or_fails(where: tuple[str, str], name: str,
                                                                variable: str) -> None:

@@ -10,7 +10,7 @@ import pytest
 import yaml
 
 WORKFLOWS = Path(__file__).resolve().parents[1] / ".forgejo" / "workflows"
-SHARED = ("gate.yml", "gate-lint.yml", "review.yml")
+SHARED = ("gate.yml", "gate-lint.yml", "review.yml", "archive.yml")
 
 
 def load(name: str) -> dict:
@@ -39,7 +39,8 @@ MANIFEST = {"PROJECT_RULES_TOKEN": "${{ secrets.PROJECT_RULES_TOKEN }}"}
 def test_the_called_jobs_carry_the_required_check_names() -> None:
     names = {name: sorted(job["name"] for job in load(name)["jobs"].values()) for name in SHARED}
     assert names == {"gate.yml": ["Diff size", "Issue link", "Tests with code"],
-                     "gate-lint.yml": ["Lint", "Secrets"], "review.yml": ["Review"]}
+                     "gate-lint.yml": ["Lint", "Secrets"], "review.yml": ["Review"],
+                     "archive.yml": ["Archive"]}
 
 
 def test_the_canonical_callers_call_main_and_hand_over_only_the_two_read_tokens() -> None:
@@ -50,6 +51,8 @@ def test_the_canonical_callers_call_main_and_hand_over_only_the_two_read_tokens(
     }
     assert load("ai-review.yml")["jobs"] == {
         "shared-review": {"uses": MAIN.format("review.yml"), "secrets": {**TOKEN, **MANIFEST}}}
+    assert load("issue-archive.yml")["jobs"] == {
+        "shared-archive": {"uses": MAIN.format("archive.yml"), "secrets": MANIFEST}}
 
 
 def test_the_callers_keep_the_triggers_and_concurrency() -> None:
@@ -63,7 +66,7 @@ def test_the_callers_keep_the_triggers_and_concurrency() -> None:
 
 def test_a_calling_job_never_shares_a_name_with_a_required_check() -> None:
     required = {job["name"].lower() for name in SHARED for job in load(name)["jobs"].values()}
-    callers = {job.lower() for name in ("ci.yml", "ai-review.yml") for job in load(name)["jobs"]}
+    callers = {job.lower() for name in ("ci.yml", "ai-review.yml", "issue-archive.yml") for job in load(name)["jobs"]}
     assert not required & callers
 
 
