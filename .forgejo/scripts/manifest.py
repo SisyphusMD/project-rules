@@ -2,14 +2,18 @@
 """Validate an owner's `.project-rules` manifest (env.json) and hand its values to a job.
 
 Usage:
-  manifest.py check FILE...  validate each manifest
-  manifest.py env FILE       validate, then print KEY=value lines for $GITHUB_ENV
-  manifest.py drift FILE...  validate each, then fail if the keys meant to match differ
+  manifest.py check FILE...             validate each manifest
+  manifest.py env FILE                  validate, then print KEY=value lines for $GITHUB_ENV
+  manifest.py drift FILE...             validate each, then fail if their host keys differ
+  manifest.py visibility FILE REPOS...  fail on a repo (a JSON list from the repos API) whose
+                                        visibility breaks the owner's policy
 
 Every owner keeps its own manifest at `<owner>/.project-rules` on its git host, and the jobs read
-the one of the repo they run in (SisyphusMD/project-rules#133). There are no defaults: a missing
-key, an unknown key or a malformed value fails, so the gate never runs on a guess. Values go into
-$GITHUB_ENV and into commands, so each must be a single token with no whitespace or quotes.
+the one of the repo they run in (SisyphusMD/project-rules#133). Owner keys say what the owner
+decides; host keys repeat the git host's settings in each owner's manifest. There are no
+defaults: a missing key, an unknown key or a malformed value fails, so the gate never runs on a
+guess. Values go into $GITHUB_ENV and into commands, so each is checked against a strict pattern.
+Messages name keys, never values: a public repo's job log is public, and the manifest is not.
 """
 import json
 import re
@@ -20,18 +24,35 @@ LABEL = r"[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?"
 HOST = rf"{LABEL}(?:\.{LABEL})*"
 URL = re.compile(rf"https?://{HOST}(:{PORT})?(/[A-Za-z0-9._~%/+-]*)?")
 EMAIL = re.compile(rf"[A-Za-z0-9._+-]+@{HOST}\.[A-Za-z]{{2,}}")
-# A name starts with a word character or dash, so `.` and `..` are no repo.
-ISSUE = re.compile(r"[\w-][\w.-]*/[\w-][\w.-]*#[1-9][0-9]*")
-# key: (env name, pattern, required when AI review is exempt)
+# Names joined by commas and "and", as rule 2's `Decided by:` line writes them.
+NAMES = re.compile(r"[A-Z][A-Za-z'-]*(?:(?:, | and )[A-Z][A-Za-z'-]*)*")
+# `.` and `..` are no owner or repo; a dot-leading name such as `.project-rules` is.
+ISSUE = re.compile(r"(?!\.{1,2}/)[\w.-]+/(?!\.{1,2}#)[\w.-]+#[1-9][0-9]*")
+VISIBILITY = ("public", "private")
+# key: (env name or None, pattern, required when AI review is exempt)
 KEYS = {
-    "mirror_url": ("MIRROR_URL", URL, True),
+    "visibility": ("VISIBILITY", None, True),
+    "mirrors": (None, None, True),
+    "decided_by": (None, NAMES, True),
+    "bot_email": ("BOT_EMAIL", EMAIL, True),
     "llm_url": ("LLM_URL", URL, False),
     "package_index": ("PACKAGE_INDEX", URL, True),
     "release_mirror": ("RELEASE_MIRROR", URL, True),
-    "bot_email": ("BOT_EMAIL", EMAIL, True),
 }
-# Settings of the git host, the same for every owner on it; ai_review is each owner's own policy.
-SHARED = ("mirror_url", "llm_url", "package_index", "release_mirror", "bot_email")
+# The git host's settings: every owner on one host repeats them, and drift compares only these.
+HOST_KEYS = ("llm_url", "ai_review", "package_index", "release_mirror")
+
+
+def problem(key, value, pattern):
+    if key == "visibility":
+        return None if value in VISIBILITY else 'visibility must be "public" or "private"'
+    if key == "mirrors":
+        good = isinstance(value, list) and value and all(isinstance(v, str) and URL.fullmatch(v) for v in value)
+        return None if good and len(set(value)) == len(value) else "mirrors must be a list of distinct URLs"
+    if isinstance(value, str) and pattern.fullmatch(value):
+        return None
+    kind = "an email address" if pattern is EMAIL else "names such as 'Cody and Anna'" if pattern is NAMES else "a URL"
+    return f"{key} is not {kind}"
 
 
 def validate(data):
@@ -49,8 +70,8 @@ def validate(data):
         if key not in data:
             if always or not exempt:
                 problems.append(f"missing key {key!r}")
-        elif not isinstance(data[key], str) or not pattern.fullmatch(data[key]):
-            problems.append(f"{key} is not a valid {'email' if pattern is EMAIL else 'URL'}: {data[key]!r}")
+        elif found := problem(key, data[key], pattern):
+            problems.append(found)
     # Jobs append a path to it, so a trailing slash would double up.
     if isinstance(data.get("release_mirror"), str) and data["release_mirror"].endswith("/"):
         problems.append("release_mirror must not end in /")
@@ -66,12 +87,17 @@ def unique(pairs):
     return dict(pairs)
 
 
-def load(path):
+def read_json(path, what):
     try:
         with open(path, encoding="utf-8") as f:
-            data = json.load(f, object_pairs_hook=unique)
+            return json.load(f, object_pairs_hook=unique)
     except (OSError, ValueError) as e:
-        sys.exit(f"{path}: cannot read the manifest: {e}")
+        # json's messages give a position or a key name, never the text around it.
+        sys.exit(f"{path}: cannot read the {what}: {e}")
+
+
+def load(path):
+    data = read_json(path, "manifest")
     problems = validate(data)
     if problems:
         sys.exit("\n".join(f"{path}: {p}" for p in problems))
@@ -82,25 +108,52 @@ def env_lines(data):
     review = data["ai_review"]
     lines = [f"AI_REVIEW={'required' if review == 'required' else 'exempt'}",
              f"AI_REVIEW_EXEMPT={'' if review == 'required' else review['exempt']}"]
-    lines += [f"{name}={data[key]}" for key, (name, _, _) in KEYS.items() if key in data]
+    lines += [f"{name}={data[key]}" for key, (name, _, _) in KEYS.items() if name and key in data]
     return lines
 
 
 def drift(manifests):
-    """One line per shared key whose value differs between the given manifests."""
+    """One line per host key whose value differs between the given manifests."""
     lines = []
-    for key in SHARED:
+    for key in HOST_KEYS:
         # An exempt owner may leave llm_url out; the others must still agree.
-        values = {path: data[key] for path, data in manifests.items() if key in data}
+        values = {path: json.dumps(data[key], sort_keys=True) for path, data in manifests.items() if key in data}
         if len(set(values.values())) > 1:
-            lines.append(f"{key} differs: " + ", ".join(f"{p}={v!r}" for p, v in values.items()))
+            groups = {}
+            for path, value in values.items():
+                groups.setdefault(value, []).append(path)
+            lines.append(f"{key} differs between " + " | ".join(", ".join(g) for g in groups.values()))
+    return lines
+
+
+def violations(data, repos):
+    """Repos whose visibility breaks the owner's policy; the manifest repo is private either way.
+    A public repo is named; a private one only counted, since this runs where its log is public."""
+    lines = [f"{r['full_name']} is public, but the manifest repo is always private"
+             for r in repos if r["name"] == ".project-rules" and not r["private"]]
+    wrong = [r for r in repos if r["name"] != ".project-rules"
+             and bool(r["private"]) != (data["visibility"] == "private")]
+    lines += [f"{r['full_name']} is public, but the owner's policy is private" for r in wrong if not r["private"]]
+    hidden = sum(1 for r in wrong if r["private"])
+    if hidden:
+        lines.append(f"{hidden} private repo(s) under an owner whose policy is public")
     return lines
 
 
 def main(argv):
-    if len(argv) < 2 or argv[0] not in ("check", "env", "drift") or (argv[0] == "env" and len(argv) != 2):
+    counts = {"check": (1, None), "env": (1, 1), "drift": (1, None), "visibility": (2, None)}
+    if not argv or argv[0] not in counts or len(argv) - 1 < counts[argv[0]][0] or (
+            counts[argv[0]][1] and len(argv) - 1 > counts[argv[0]][1]):
         sys.exit(__doc__)
     command, paths = argv[0], argv[1:]
+    if command == "visibility":
+        data = load(paths[0])
+        repos = [r for path in paths[1:] for r in read_json(path, "repo list")]
+        found = violations(data, repos)
+        if found:
+            sys.exit("\n".join(found))
+        print(f"{len(repos)} repos match the owner's policy")
+        return
     manifests = {path: load(path) for path in paths}
     if command == "env":
         print("\n".join(env_lines(manifests[paths[0]])))
@@ -108,7 +161,7 @@ def main(argv):
         found = drift(manifests)
         if found:
             sys.exit("\n".join(found))
-        print(f"{len(paths)} manifests agree on {', '.join(SHARED)}")
+        print(f"{len(paths)} manifests agree on {', '.join(HOST_KEYS)}")
     else:
         print(f"{len(paths)} manifests valid")
 

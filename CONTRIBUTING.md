@@ -25,8 +25,10 @@ gate when a pull request carries a different workflow.
 
 The standard set from the rules, plus the `Tests` workflow: lint and unit tests, shell scripts, a
 fetch of the gate scripts as every repo's CI does it, and a scratch vendor that `tools/check.py`
-must report in sync. Every repo runs the gate from this `main`, so a branch pull request with a
-failing test never merges (#132); an AGit or fork pull request skips all four, so it goes through
+must report in sync; and the `Owners` workflow (#136): a read of the owners' manifests with a drift
+check across them, and every owner's repos against its visibility policy, which also runs nightly.
+Every repo runs the gate from this `main`, so a branch pull request with a failing test never
+merges (#132); an AGit or fork pull request skips all six, so it goes through
 the maintainer flow above.
 
 ## Releases

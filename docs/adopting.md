@@ -16,15 +16,38 @@
 
 ## An existing repo
 
-1. **Mirror**: the backup-forge push mirror and the nightly `issue-archive` branch (rule 21).
+0. **The owner's manifest**: an owner's first repo needs a private `<owner>/.project-rules` on the
+   same git host, with an `env.json` that `python3 -I .forgejo/scripts/manifest.py check env.json`
+   accepts. Owner keys: `visibility` (`"public"` or `"private"`: what its repos may be),
+   `mirrors` (the push-mirror URLs), `decided_by` (rule 2's deciders, such as `"Cody and Anna"`)
+   and `bot_email` (the owner's noreply committer address). Host keys, copied from another owner
+   on that host, since this repo's `Owners` check fails when they differ: `llm_url`,
+   `package_index`, `release_mirror` and `ai_review` (`"required"`, or
+   `{"exempt": "owner/repo#n"}` citing the open issue that brings the review back, rule 15). Add
+   the owner to `OWNERS` in this repo's `owners.yml`.
+   - **The manifest reader**: the jobs read the manifest with the `project-rules-reader` bot's
+     token, never the job token, which cannot read another private repo. The bot has no other
+     access: in an organization it is the only member of a `project-rules-reader` team with read
+     on `.project-rules` alone; under a user it is a read collaborator on `.project-rules`. The
+     owner keeps its token as the Actions secret `PROJECT_RULES_TOKEN` (an organization secret, or
+     a user secret for a user), and the callers map it in.
+   - **Rotating it**: the bot is a restricted account with no password, so it sees only what it
+     is granted and no one signs in as it. A site admin mints the new token on the git host
+     (`forgejo admin user generate-access-token --username project-rules-reader --scopes
+     read:repository --token-name project-rules-manifests-<date>`, a new name each time),
+     sets it as every owner's `PROJECT_RULES_TOKEN`, dispatches this repo's
+     `Owners` workflow, checks that it read each owner, then deletes the old token from the
+     bot's account. A leaked token reads the manifests and nothing else.
+1. **Mirror**: a push mirror to each of the manifest's `mirrors` and the nightly `issue-archive` branch (rule 21).
    A public repo also copies [`mirror-lockdown.yml`](../.github/workflows/mirror-lockdown.yml)
    to `.github/workflows/`, and its GitHub copy has Actions on, limited to that one action, with
    a read-only default token.
-2. **Workflows**: copy this repo's `.forgejo/` workflows except `tests.yml`, `gate.yml`,
+2. **Workflows**: copy this repo's `.forgejo/` workflows except `tests.yml`, `owners.yml`, `gate.yml`,
    `gate-lint.yml` and `review.yml`, its issue templates and `scripts/issue-archive.py` in, and
    create the labels listed above. `ci.yml` and `ai-review.yml` are only callers: their jobs run
    from this repo's `main` (`gate.yml`, `gate-lint.yml`, `review.yml`), and so do the gate scripts
-   and the `RULES.md` the AI review reads. A repo whose secret `ISSUE_READ_TOKEN` is not a
+   and the `RULES.md` the AI review reads; the jobs and `issue-archive.yml` take the package
+   index, release mirror, model endpoint and bot address from the owner's manifest, read with `PROJECT_RULES_TOKEN`. A repo whose secret `ISSUE_READ_TOKEN` is not a
    read:issue token drops that mapping from both callers rather than hand the jobs something else.
    A repo with its own Lint and Secrets jobs keeps them and drops the `shared-lint` call, so no
    check name is posted twice. Whatever lands on this repo's `main` runs as trusted code in every

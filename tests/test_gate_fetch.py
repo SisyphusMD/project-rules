@@ -15,6 +15,7 @@ import yaml
 
 WORKFLOWS = Path(__file__).resolve().parents[1] / ".forgejo" / "workflows"
 FETCH = "Fetch the gate scripts"
+MANIFEST = "Read the owner's manifest"
 GATE_JOBS = {
     ("gate.yml", "issue-link"): "issue-link",
     ("gate.yml", "tests-with-code"): "tests-with-code",
@@ -37,7 +38,8 @@ def test_gate_job_runs_only_the_fetched_script(where: tuple[str, str], script: s
     names = [step.get("name") for step in found]
     checkouts = [i for i, step in enumerate(found) if "checkout" in step.get("uses", "")]
     assert all(names.index(FETCH) < i for i in checkouts), "fetched before the PR is checked out"
-    runs = "\n".join(step.get("run", "") for step in found)
+    # The manifest step's reader is the fetched copy too; test_owner_manifest.py covers it.
+    runs = "\n".join(step.get("run", "") for step in found if step.get("name") != MANIFEST)
     used = re.findall(r"(\S*\.forgejo/scripts/\S+)", runs)
     assert used == [f"/tmp/gate/.forgejo/scripts/{script}.py"]
 
@@ -61,12 +63,34 @@ def test_the_job_fails_when_its_fetched_script_does(
     assert result.returncode == 7, result.stderr
 
 
+CANNOT_START = "Fail the check when the review cannot start"
+
+
 @pytest.mark.parametrize("state", ["open", "closed"])
 def test_a_rereview_replaces_the_old_pass_before_anything_can_fail(state: str) -> None:
     found = steps("review.yml", "review")
     hold = found[0]
     assert hold["name"] == "Hold the check until this review answers"
     assert found[1]["name"] == FETCH
+    expected = [("/r/statuses/abc", "pending", "AI review", "token t", "Starting")]
+    assert post_status(hold, state) == (expected if state == "open" else [])
+
+
+@pytest.mark.parametrize("state", ["open", "closed"])
+def test_a_failed_fetch_or_manifest_read_turns_the_held_check_into_an_error(state: str) -> None:
+    found = steps("review.yml", "review")
+    names = [step.get("name") for step in found]
+    step = found[names.index(CANNOT_START)]
+    # Right after the reads and before anything the review script does, which posts its own.
+    assert names.index(CANNOT_START) == names.index(MANIFEST) + 1 > names.index(FETCH)
+    assert step["if"] == "failure()"
+    assert step["run"] == found[0]["run"]
+    description = "Could not fetch the gate scripts or read the owner's .project-rules manifest; see the job log"
+    expected = [("/r/statuses/abc", "error", "AI review", "token t", description)]
+    assert post_status(step, state) == (expected if state == "open" else [])
+
+
+def post_status(step: dict, state: str) -> list[tuple[str, ...]]:
     posted = []
 
     class Handler(BaseHTTPRequestHandler):
@@ -81,7 +105,8 @@ def test_a_rereview_replaces_the_old_pass_before_anything_can_fail(state: str) -
 
         def do_POST(self) -> None:
             body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-            posted.append((self.path, body["state"], body["context"], self.headers["Authorization"]))
+            posted.append((self.path, body["state"], body["context"], self.headers["Authorization"],
+                           body["description"]))
             self.reply({})
 
         def log_message(self, *args: object) -> None:
@@ -91,14 +116,14 @@ def test_a_rereview_replaces_the_old_pass_before_anything_can_fail(state: str) -
     threading.Thread(target=server.serve_forever, daemon=True).start()
     try:
         subprocess.run(
-            ["bash", "-e", "-c", hold["run"]], check=True,
-            env={**os.environ, "API": f"http://127.0.0.1:{server.server_port}/r", "PR": "9", "TOKEN": "t"},
+            ["bash", "-e", "-c", step["run"]], check=True,
+            env={**os.environ, "API": f"http://127.0.0.1:{server.server_port}/r", "PR": "9", "TOKEN": "t",
+                 "STATE": step["env"]["STATE"], "DESCRIPTION": step["env"]["DESCRIPTION"]},
         )
     finally:
         server.shutdown()
         server.server_close()
-    expected = [("/r/statuses/abc", "pending", "AI review", "token t")]
-    assert posted == (expected if state == "open" else [])
+    return posted
 
 
 def test_every_copy_of_the_fetch_step_is_the_one_the_tests_workflow_proves() -> None:
