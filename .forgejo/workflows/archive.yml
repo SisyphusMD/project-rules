@@ -1,0 +1,73 @@
+# The nightly issue-archive job every repo's issue-archive.yml calls, so no repo carries a copy of
+# the job or its script (#144). Each caller maps only PROJECT_RULES_TOKEN in; github.repository and
+# the job token are the caller's, so the job pushes the calling repo's own issue-archive branch.
+name: Issue archive job
+on:
+  workflow_call:
+jobs:
+  archive:
+    name: Archive
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Fetch the gate scripts
+        env:
+          FORGEJO_URL: ${{ github.server_url }}
+        run: |
+          set -euo pipefail
+          # Always main (SisyphusMD/project-rules#78): one copy for every repo, outside the PR's checkout and
+          # with no local fallback, so the job fails when it cannot be fetched. The repo is public.
+          timeout 120 git clone --quiet --depth 1 --single-branch --branch main \
+            "$FORGEJO_URL/SisyphusMD/project-rules.git" /tmp/gate
+          git -C /tmp/gate log -1 --format='gate scripts: project-rules %H'
+      - name: Read the owner's manifest
+        env:
+          FORGEJO_URL: ${{ github.server_url }}
+          OWNER: ${{ github.repository_owner }}
+          # Read-only on the owner's .project-rules and nothing else; the manifest is private.
+          TOKEN: ${{ secrets.PROJECT_RULES_TOKEN }}
+        run: |
+          set -euo pipefail
+          # The owner's settings for these jobs (SisyphusMD/project-rules#133), from its main and never
+          # the PR's, with no defaults: a missing or invalid manifest fails the job. Later steps get the
+          # values via $GITHUB_ENV.
+          url="$FORGEJO_URL/$OWNER/.project-rules.git"
+          if [ -z "$TOKEN" ]; then
+            echo "No PROJECT_RULES_TOKEN: the owner keeps it as an Actions secret and the caller maps it in." >&2
+            exit 1
+          fi
+          auth="Authorization: Basic $(printf 'x:%s' "$TOKEN" | base64 -w0)"
+          # git's error names the git host's internal address, and a public repo's log is public.
+          if ! timeout 120 git -c http.extraHeader="$auth" clone --quiet --depth 1 --single-branch \
+              --branch main "$url" /tmp/manifest 2>/dev/null; then
+            echo "Cannot read $OWNER/.project-rules: every owner keeps its settings in its env.json." >&2
+            exit 1
+          fi
+          git -C /tmp/manifest log -1 --format="owner manifest: $OWNER/.project-rules %H"
+          python3 -I /tmp/gate/.forgejo/scripts/manifest.py env /tmp/manifest/env.json >> "$GITHUB_ENV"
+      - name: Export to the issue-archive branch
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORGEJO_URL: ${{ github.server_url }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          basic=$(printf 'x:%s' "$TOKEN" | base64 -w0)
+          git config --global http.extraHeader "Authorization: Basic $basic"
+          git config --global user.name 'issue-archive'
+          git config --global user.email "${BOT_EMAIL:?from the owner manifest}"
+          url="$FORGEJO_URL/$REPO.git"
+          if git ls-remote --exit-code "$url" refs/heads/issue-archive >/dev/null; then
+            git clone --quiet --branch issue-archive --single-branch "$url" archive
+          else
+            git init --quiet -b issue-archive archive
+            git -C archive remote add origin "$url"
+          fi
+          python3 -I /tmp/gate/.forgejo/scripts/issue-archive.py archive
+          git -C archive add -A
+          if git -C archive diff --cached --quiet; then
+            echo "no changes"
+          else
+            git -C archive commit --quiet -m "chore(archive): export issues and PRs (nightly)"
+            git -C archive push --quiet origin issue-archive
+          fi
