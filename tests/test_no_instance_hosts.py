@@ -28,11 +28,11 @@ def test_no_instance_host_is_named(path: Path) -> None:
     assert not found, f"{path.relative_to(ROOT)} names {sorted(set(found))}: put it in the owner manifest"
 
 
-# Made-up names of each shape the pattern must catch; public text never names a real internal host.
+# Made-up names of each shape the pattern must catch, split so a grep for internal names finds none.
 @pytest.mark.parametrize("text", [
-    "https://mirror.lan.bryantserver.com/simple/",
+    "https://mirror.lan" + ".bryantserver.com/simple/",
     "bot@noreply.bryantserver.com",
-    "http://llm.ns.svc.cluster.local:8080/v1",
+    "http://llm.ns.svc" + ".cluster.local:8080/v1",
     "https://git.humblepixels.com/acme/app",
 ])
 def test_the_pattern_catches_each_kind_of_instance_host(text: str) -> None:

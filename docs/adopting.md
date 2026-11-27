@@ -31,7 +31,7 @@
      on `.project-rules` alone; under a user it is a read collaborator on `.project-rules`. The
      owner keeps its token as the Actions secret `PROJECT_RULES_TOKEN` (an organization secret, or
      a user secret for a user), and the callers map it in.
-   - **Rotating it**: the token is `read:repository`, `read:user` and `read:organization` (the
+   - **Rotating it**: the token is `read:repository` and `read:user` (the
      visibility check lists repos), named for the date it was minted. Sign
      in as the bot (its credentials are in the house secret store), mint a new one, set it as
      every owner's `PROJECT_RULES_TOKEN`, dispatch this repo's `Owners` workflow and check it reads
