@@ -1,0 +1,27 @@
+# Temporary proof for #147, removed before merge: a called workflow's job reads the PR body
+# from the event payload, past the 128 KB environment limit. It runs the checkout's
+# issue-link.py, not main's clone, because main does not have the fix yet.
+name: Proof 147
+on:
+  workflow_call:
+jobs:
+  issue-link:
+    name: Proof 147, body from the event payload
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Issue link from the event payload
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORGEJO_URL: ${{ github.server_url }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          test -z "${PR_BODY+x}"
+          bytes=$(python3 -I -c 'import json, os; e = json.load(open(os.environ["GITHUB_EVENT_PATH"])); print(len((e["pull_request"].get("body") or "").encode()))')
+          echo "body bytes in the event payload: $bytes"
+          test "$bytes" -gt 131072
+          python3 -I .forgejo/scripts/issue-link.py
