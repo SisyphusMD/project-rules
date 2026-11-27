@@ -98,9 +98,10 @@ jobs:
           API: ${{ github.server_url }}/api/v1
           FORGEJO_URL: ${{ github.server_url }}
           TOKEN: ${{ secrets.PROJECT_RULES_TOKEN }}
-        # The bot sees every public repo and each owner's manifest, so a public repo under a
-        # private owner is always caught; a private repo under a public owner is out of its sight
-        # unless shared with it. A failed request fails the check rather than pass on less.
+        # The repos are listed signed out, which is what the world sees: any repo there under a
+        # private owner, or a manifest repo there at all, is a breach. The reader bot is a
+        # restricted account that sees only the manifests, so a private repo under a public owner
+        # is out of this check's sight. A failed request fails the check rather than pass on less.
         run: |
           set -euo pipefail
           auth="Authorization: Basic $(printf 'x:%s' "$TOKEN" | base64 -w0)"
@@ -115,8 +116,7 @@ jobs:
             # Forgejo filters a page after applying the limit, so a short page is not the last;
             # only an empty one is.
             for page in $(seq 1 100); do
-              curl -fsS -H "Authorization: token $TOKEN" \
-                "$API/users/$owner/repos?limit=50&page=$page" > "$dir/repos-$page.json"
+              curl -fsS "$API/users/$owner/repos?limit=50&page=$page" > "$dir/repos-$page.json"
               [ "$(python3 -I -c 'import json,sys; print(len(json.load(open(sys.argv[1]))))' "$dir/repos-$page.json")" != 0 ] || break
             done
             echo "== $owner"

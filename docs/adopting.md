@@ -31,11 +31,13 @@
      on `.project-rules` alone; under a user it is a read collaborator on `.project-rules`. The
      owner keeps its token as the Actions secret `PROJECT_RULES_TOKEN` (an organization secret, or
      a user secret for a user), and the callers map it in.
-   - **Rotating it**: the token is `read:repository` and `read:user` (the
-     visibility check lists repos), named for the date it was minted. Sign
-     in as the bot (its credentials are in the house secret store), mint a new one, set it as
-     every owner's `PROJECT_RULES_TOKEN`, dispatch this repo's `Owners` workflow and check it reads
-     each owner, then delete the old token. A leaked token reads only the manifests and public repos.
+   - **Rotating it**: the bot is a restricted account with no password, so it sees only what it
+     is granted and no one signs in as it. A site admin mints the new token on the git host
+     (`forgejo admin user generate-access-token --username project-rules-reader --scopes
+     read:repository --token-name project-rules-manifests-<date>`, a new name each time),
+     sets it as every owner's `PROJECT_RULES_TOKEN`, dispatches this repo's
+     `Owners` workflow, checks that it read each owner, then deletes the old token from the
+     bot's account. A leaked token reads the manifests and nothing else.
 1. **Mirror**: a push mirror to each of the manifest's `mirrors` and the nightly `issue-archive` branch (rule 21).
    A public repo also copies [`mirror-lockdown.yml`](../.github/workflows/mirror-lockdown.yml)
    to `.github/workflows/`, and its GitHub copy has Actions on, limited to that one action, with

@@ -101,7 +101,8 @@ and nowhere else. How code, tests and docs are written is in [conventions/][conv
 21. **A repo's primary is the git host it lives on**, push-mirrored to every mirror in its owner's
     manifest (`mirrors`), synced on every commit, with a nightly `issue-archive` branch that
     carries its issues and PRs there too, because mirrors carry git only. Its visibility is the
-    one the manifest's `visibility` sets for the owner; a nightly check flags any repo that differs. A public repo's GitHub
+    one the manifest's `visibility` sets for the owner; a nightly check flags any repo the world
+    can see under a private owner. A public repo's GitHub
     copy is a read-only mirror: issues and pull requests are opened on the primary, and the
     mirror-lockdown workflow closes any pull request opened there with a pointer to it.
 22. **A `CONTRIBUTING.md` and a `SECURITY.md`.** The first points here, from

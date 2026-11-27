@@ -183,6 +183,15 @@ def test_an_invalid_manifest_fails_the_step_and_hands_on_nothing(tmp_path: Path)
     assert env == ""
 
 
+def test_the_visibility_check_lists_repos_signed_out() -> None:
+    # The reader bot is restricted and sees only the manifests, so a listing with its token
+    # would hide the very public repos the check looks for.
+    run = step("owners.yml", "visibility", "Compare each owner's repos with its policy")["run"]
+    listing = next(line for line in run.splitlines() if "/repos?limit=" in line)
+    assert "Authorization" not in listing and "TOKEN" not in listing
+    assert "curl -fsS " in listing and "set -euo pipefail" in run
+
+
 def test_the_owners_checks_never_run_a_pull_requests_code_with_the_owner_token() -> None:
     # Its token reads every owner's private manifest, so PRs get main's copy (pull_request_target)
     # and the default checkout of main, never the head.
