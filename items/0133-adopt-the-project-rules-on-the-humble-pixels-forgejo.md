@@ -111,3 +111,15 @@ After #140 merges: a consumer proof PR, then CI callers, issue-archive and prote
 ## cody, 2026-11-26T18:28:32-08:00
 
 Decision, Cody 2026-11-26: owner manifests may hold sensitive data, so every `.project-rules` manifest repo is private (nothing under cody is public; SisyphusMD stays fully public and holds nothing private). Done: SisyphusMD, bryantserver and cody `.project-rules` set private 2026-11-26. Workflows read them with a dedicated read-only bot token stored once per owner as an Actions secret, not the job token; no org visibility change. Supersedes the "public manifests" technical call above.
+
+## cody, 2026-11-26T20:15:31-08:00
+
+Decision, Cody 2026-11-26 ("I trust your decision"): manifests carry owner keys as well as host keys. Owner keys: `visibility` (public or private: what repos under the owner may be; a nightly check flags violations), `mirrors` (where repos push-mirror; SisyphusMD also mirrors to GitHub), `decided_by` (rule 2 deciders: SisyphusMD and cody: Cody; bryantserver and humblepixels: Cody and Anna), `bot_email` (per-owner noreply). Host keys (llm_url, ai_review, package_index, release_mirror) repeat per owner; the drift check compares host keys only, among owners on the same git host. Owners on the house host: SisyphusMD, bryantserver, cody, humblepixels.
+
+## cody, 2026-11-26T20:35:54-08:00
+
+Status: step 1 continues in #140 (reworked for private manifests read by a reader bot, the owner keys, and the Owners drift and visibility checks; details on #136). New blocker #143: the reader bot and its secrets, then every caller mapping `PROJECT_RULES_TOKEN`, before #140 merges. Step 2: four private manifest repos on the house host (SisyphusMD, bryantserver, cody, humblepixels) with the new schema; their backup mirrors still wait on the refused backup-host admin token.
+
+## cody, 2026-11-26T22:36:20-08:00
+
+Status: step 1 is merged (#140, with #143 for the bot, its secrets and every consumer mapping them; a proof per owner is on #143), and step 2 holds four private manifests (SisyphusMD, bryantserver, cody, humblepixels) with owner and host keys. Still open: backup-host mirrors of the manifest repos, waiting on the refused backup-host admin token; the visibility check cannot see a private repo under a public owner; and runner infrastructure hostnames in public job logs (#142).

@@ -3901,6 +3901,27 @@
     "id": 48873,
     "updated_at": "2026-11-26T18:28:32-08:00",
     "user": "cody"
+   },
+   {
+    "body": "Decision, Cody 2026-11-26 (\"I trust your decision\"): manifests carry owner keys as well as host keys. Owner keys: `visibility` (public or private: what repos under the owner may be; a nightly check flags violations), `mirrors` (where repos push-mirror; SisyphusMD also mirrors to GitHub), `decided_by` (rule 2 deciders: SisyphusMD and cody: Cody; bryantserver and humblepixels: Cody and Anna), `bot_email` (per-owner noreply). Host keys (llm_url, ai_review, package_index, release_mirror) repeat per owner; the drift check compares host keys only, among owners on the same git host. Owners on the house host: SisyphusMD, bryantserver, cody, humblepixels.",
+    "created_at": "2026-11-26T20:15:31-08:00",
+    "id": 49038,
+    "updated_at": "2026-11-26T20:15:31-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Status: step 1 continues in #140 (reworked for private manifests read by a reader bot, the owner keys, and the Owners drift and visibility checks; details on #136). New blocker #143: the reader bot and its secrets, then every caller mapping `PROJECT_RULES_TOKEN`, before #140 merges. Step 2: four private manifest repos on the house host (SisyphusMD, bryantserver, cody, humblepixels) with the new schema; their backup mirrors still wait on the refused backup-host admin token.",
+    "created_at": "2026-11-26T20:35:54-08:00",
+    "id": 49071,
+    "updated_at": "2026-11-26T20:35:54-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Status: step 1 is merged (#140, with #143 for the bot, its secrets and every consumer mapping them; a proof per owner is on #143), and step 2 holds four private manifests (SisyphusMD, bryantserver, cody, humblepixels) with owner and host keys. Still open: backup-host mirrors of the manifest repos, waiting on the refused backup-host admin token; the visibility check cannot see a private repo under a public owner; and runner infrastructure hostnames in public job logs (#142).",
+    "created_at": "2026-11-26T22:36:20-08:00",
+    "id": 49512,
+    "updated_at": "2026-11-26T22:36:20-08:00",
+    "user": "cody"
    }
   ],
   "created_at": "2026-11-26T06:40:59-08:00",
@@ -3970,7 +3991,7 @@
  {
   "assignees": [],
   "body": "Step 1 of the build order in #133, part 2 of 3. gate-lint (package index, release mirror), review.yml (llm_url, ai_review exemption) and issue-archive (bot email) read `${server_url}/${owner}/.project-rules` env.json, cloned from its main before any PR checkout, and fail closed when it is missing or invalid. An exempt owner's `AI review` passes naming the cited issue. No instance hostnames left in .forgejo/ (a test holds it). The RULES.md scope line, rule 15 and rule 21 move to the manifest wording in the same PR, since they describe this behaviour.\n\nDepends on #134.",
-  "closed_at": null,
+  "closed_at": "2026-11-26T22:03:19-08:00",
   "comments": [
    {
     "body": "Status: PR #140 is open and held, not merged. Proven on the real runner in #140's Tests run: the read step cloned SisyphusMD/.project-rules with the job token and logged `owner manifest: SisyphusMD/.project-rules 415be50a`, then the drift step got HTTP 403 on bryantserver/.project-rules.\n\nBlocker: the bryantserver org's visibility is private, so its repos' job tokens cannot read bryantserver/.project-rules (probed 2026-11-26: 403 with the token, and anonymous fails too). In a limited-visibility org the job token can read it (probed on a throwaway org, since deleted). Merging now would fail Lint, Secrets and AI review in every bryantserver repo. This needs Cody's call: switch the bryantserver org to limited visibility (its private repos stay private), or another way for bryantserver repos to read their manifest.\n\nNext once that is settled: merge #140, then a real consumer PR showing Lint, Secrets and AI review green on the manifest.",
@@ -3980,22 +4001,35 @@
     "user": "cody"
    },
    {
-    "body": "Status: #140 proven before merge, still held.\n\n- A throwaway private repo, cody/manifest-gate-probe (since deleted), called gate.yml, gate-lint.yml and review.yml at `@feat/136-read-manifest`. Its PR got Issue link, Tests with code, Diff size, Lint, Secrets and AI review all green; Lint, Secrets and Review each logged `owner manifest: cody/.project-rules c59b07d5`, and gitleaks found no leaks.\n- issue-archive.yml dispatched from the branch in project-rules (run 48442) read SisyphusMD/.project-rules and pushed the archive with the same committer address as before.\n- #140's Tests job now also checks each value the reader validated arrives unchanged in later steps; on the runner it logged the house PACKAGE_INDEX and BOT_EMAIL. Its drift step still gets 403 on bryantserver/.project-rules.\n- Probed visibility: a public manifest in a limited-visibility org is readable with a job token from the same org and from another owner (cody), and unreadable anonymously; in a private org it is unreadable both ways. So limited would make every bryantserver job and this drift check work.\n- Follow-up in #140: `manifest.py` accepted no dot-leading repo in an exemption, so `owner/.project-rules#n` was refused; now accepted (`.` and `..` still refused). CONTRIBUTING names five Tests checks.\n\nBefore merging: Cody's call on bryantserver's visibility; protect main on the three manifest repos (org members renovate, and anna in bryantserver, may have push through teams); after merge, add `Tests / The owner manifests can be read and agree (pull_request)` to this repo's required checks, then run a consumer proof per owner.",
+    "body": "Status: #140 proven before merge, still held.\n\n- A throwaway private repo (since deleted) called gate.yml, gate-lint.yml and review.yml at `@feat/136-read-manifest`. Its PR got Issue link, Tests with code, Diff size, Lint, Secrets and AI review all green; Lint, Secrets and Review each logged `owner manifest: cody/.project-rules c59b07d5`, and gitleaks found no leaks.\n- issue-archive.yml dispatched from the branch in project-rules (run 48442) read SisyphusMD/.project-rules and pushed the archive with the same committer address as before.\n- #140's Tests job now also checks each value the reader validated arrives unchanged in later steps. Its drift step still gets 403 on bryantserver/.project-rules.\n- Probed visibility: a public manifest in a limited-visibility org is readable with a job token from the same org and from another owner (cody), and unreadable anonymously; in a private org it is unreadable both ways. So limited would make every bryantserver job and this drift check work.\n- Follow-up in #140: `manifest.py` accepted no dot-leading repo in an exemption, so `owner/.project-rules#n` was refused; now accepted (`.` and `..` still refused). CONTRIBUTING names five Tests checks.\n\nBefore merging: Cody's call on bryantserver's visibility; protect main on the three manifest repos (org members renovate, and anna in bryantserver, may have push through teams); after merge, add `Tests / The owner manifests can be read and agree (pull_request)` to this repo's required checks, then run a consumer proof per owner.",
     "created_at": "2026-11-26T10:33:14-08:00",
     "id": 48483,
-    "updated_at": "2026-11-26T10:33:14-08:00",
+    "updated_at": "2026-11-26T20:16:46-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Status: #140 reworked for the private-manifest decision and the owner keys, history rewritten to one commit, still held.\n\n- The read step now clones with the owner's `PROJECT_RULES_TOKEN` (fails before trying when it is unset), and its errors name neither the git host's address nor any value. The canonical callers map that secret in; probed that an unmapped owner secret reaches a called job empty.\n- Schema: owner keys `visibility`, `mirrors`, `decided_by`, `bot_email`; host keys `llm_url`, `ai_review`, `package_index`, `release_mirror`. Drift compares host keys only. All four house manifests carry it, and humblepixels/.project-rules now exists (private, labels and docs as the others).\n- The drift and handoff checks moved to a new `Owners` workflow with the nightly visibility check. It runs on `pull_request_target`, push, schedule and dispatch, never the PR's code, since its token reads every owner's manifest. The manifest repo itself must be private under either policy.\n- Review findings rejected: a private repo under a public owner stays out of the bot's sight (it gets no wider access by decision); exemption citations stay in statuses, since a public owner cites its own public repo.\n\nBlocked: the reader bot does not exist yet (creating a user needs site admin, and the admin route was refused here), and every caller must map the secret before #140 merges (#143).\n",
+    "created_at": "2026-11-26T20:35:53-08:00",
+    "id": 49068,
+    "updated_at": "2026-11-26T20:35:53-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Status: merged in #140 (main 5ac366d). Every consumer maps `PROJECT_RULES_TOKEN` (#143), a proof PR per owner read its own manifest in Lint, Secrets and Review, and the two Owners checks are required on main. Details on #143.",
+    "created_at": "2026-11-26T22:36:20-08:00",
+    "id": 49509,
+    "updated_at": "2026-11-26T22:36:20-08:00",
     "user": "cody"
    }
   ],
   "created_at": "2026-11-26T09:18:33-08:00",
   "kind": "issue",
   "labels": [
-   "status:needs-decision",
    "type:feature"
   ],
   "milestone": null,
   "number": 136,
-  "state": "open",
+  "state": "closed",
   "title": "Gate workflows read the owner's .project-rules manifest instead of house hosts",
   "user": "cody"
  },
@@ -4081,28 +4115,28 @@
  {
   "assignees": [],
   "base": "main",
-  "body": "Closes #136\n\nTrigger: the shared jobs named house-only hosts (gate-lint's package index and gitleaks mirror, review.yml's model endpoint, issue-archive's bot address), so they cannot run on another git host that mirrors project-rules (#133). Now each job reads them from the owner's manifest, `<owner>/.project-rules/env.json`, through `manifest.py` (#134).\n\nWhat happens now:\n- `Lint`, `Secrets`, `Review` and `issue-archive` fetch the gate scripts, then clone the owner's manifest from its `main` with the job token, before any PR checkout, log `owner manifest: <owner>/.project-rules <sha>`, and pass the values on through `$GITHUB_ENV`. The consuming steps use `${PACKAGE_INDEX:?…}`, `${RELEASE_MIRROR:?…}`, `${BOT_EMAIL:?…}`, so an unset value fails the step.\n- A missing or invalid manifest fails the job. In the review job it also turns the held `AI review` status into an error saying so, instead of leaving `pending: Starting`.\n- `ai_review` exempt: the check passes naming the cited issue, only while the job token or `ISSUE_READ_TOKEN` can read it and it is an open issue. A closed issue fails the check; an unreadable one, or a PR, errors. No policy at all fails closed. A pass already posted stays on its head when the issue later closes, like any other check result.\n- House values are unchanged: the three house manifests hold exactly the strings these files had.\n- RULES.md: scope is every repository whose owner keeps a manifest; rule 15 allows the exemption; rule 21 takes the backup from the manifest. adopting.md says how an owner gets one.\n- Tests workflow: a new job runs the identical read step with this branch's reader, then `manifest.py drift` over the house owners.\n\nTests that fail on the old code (run against main's workflows and scripts): every read-step copy equals the proven one and runs before any checkout; each job takes its value from the manifest; the review step has no `LLM_URL`; the read step hands values on, fails on a missing or invalid manifest and writes nothing; the cannot-start step posts the error; the exemption cases; `test_no_instance_hosts.py` fails on any instance hostname or cluster-internal service name in `.forgejo/` or `tools/`.\n\nNot merging yet: the bryantserver org is private, so its repos' job tokens cannot read bryantserver/.project-rules (probed: 403 with the token, anonymous fails). Merging now would fail every bryantserver repo's Lint, Secrets and AI review. This waits on that decision. Existing copies of `issue-archive.yml` keep their hardcoded address until they are re-copied.\n",
-  "closed_at": null,
+  "body": "Closes #136\n\nDepends on #143.\n\nTrigger: the shared jobs named house-only hosts (gate-lint's package index and gitleaks mirror, review.yml's model endpoint, issue-archive's bot address), so they cannot run on another git host that mirrors project-rules (#133). Now each job reads them from the owner's private manifest, `<owner>/.project-rules/env.json`, through `manifest.py` (#134).\n\nWhat happens now:\n- `Lint`, `Secrets`, `Review` and `issue-archive` fetch the gate scripts, then clone the owner's manifest from its `main` with the owner's read-only `PROJECT_RULES_TOKEN`, before any PR checkout, log `owner manifest: <owner>/.project-rules <sha>`, and pass the values on through `$GITHUB_ENV`. The consuming steps use `${PACKAGE_INDEX:?…}`, `${RELEASE_MIRROR:?…}`, `${BOT_EMAIL:?…}`, so an unset value fails the step. The canonical callers map the secret in; nothing else of the caller's is handed over.\n- No token, a missing or an invalid manifest fails the job, with a message that names no host and no value. In the review job it also turns the held `AI review` status into an error, instead of leaving `pending: Starting`.\n- `ai_review` exempt: the check passes naming the cited issue, only while it can be read and is an open issue. A closed issue fails the check; an unreadable one, or a PR, errors. No policy at all fails closed. A pass already posted stays on its head when the issue later closes, like any other check result.\n- Schema: owner keys `visibility`, `mirrors` (replaces `mirror_url`), `decided_by`, `bot_email`; host keys `llm_url`, `ai_review`, `package_index`, `release_mirror`. Drift compares host keys only.\n- House values are unchanged for the jobs: the house manifests hold the same package index, release mirror and model endpoint these files had. Each owner's archive committer is now its own noreply address.\n- RULES.md: scope is every repository whose owner keeps a manifest; rule 2 takes the deciders from it, rule 15 allows the exemption, rule 21 takes the mirrors and visibility from it. adopting.md says how an owner gets a manifest and the reader bot, and how to rotate its token.\n- New `Owners` workflow (this repo only, on `pull_request_target`, push, nightly and dispatch, so PR code never runs with the token): the identical read step and handoff check, `manifest.py drift` over the owners on this git host, and every owner's repos against its visibility policy. Public repos that break a private policy are named; private ones only counted.\n\nTests that fail on the old code: every read-step copy equals the proven one, reads with `PROJECT_RULES_TOKEN` and runs before any checkout; a missing token fails before trying; each job takes its value from the manifest; the review step has no `LLM_URL`; the read step hands values on, fails on a missing or invalid manifest without printing the URL and writes nothing; the cannot-start step posts the error; the exemption cases; the new schema, drift and visibility cases, none echoing a value; `test_no_instance_hosts.py` fails on any instance hostname or cluster-internal service name in `.forgejo/` or `tools/`.\n\nNot merging yet: #143 (the reader bot and its secrets, then every caller mapping the secret) must land first, or every repo's Lint, Secrets and AI review would fail closed.\n\nLarge diff: the reader, every job that reads it, the callers that map its token, the Owners checks that prove it on the real manifests, and the rules text describing it land together, since any one alone fails closed or describes behaviour that is not there.\n",
+  "closed_at": "2026-11-26T22:03:19-08:00",
   "comments": [
    {
-    "body": "<!-- ai-review -->\n**AI review** of `89f836e540`: Well-implemented PR that moves host-specific settings into the owner's .project-rules manifest, with thorough tests covering the exemption policy, manifest read/handoff, fail-closed behaviour, and a regression guard against instance hostnames. No correctness, security, or test-coverage issues found.\n\nNo findings.\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W10= -->",
+    "body": "<!-- ai-review -->\n**AI review** of `ab334249e8`: The PR moves all host-specific settings from hardcoded values in shared workflows to the owner's private `.project-rules` manifest, with comprehensive tests, proper fail-closed behaviour, and no leaked values in error messages. The two earlier findings are resolved by the rewritten `problem()` function and the added non-string mirrors test case.\n\n### Resolved\n\n- **F1** (suggestion, `.forgejo/scripts/manifest.py:53`) `id(pattern)` dict lookup is fragile for future pattern additions: The code now uses an explicit `pattern is EMAIL` / `pattern is NAMES` / else chain instead of the `id(pattern)` dict lookup, making the mapping impossible to miss when a key is added.\n- **F2** (suggestion, `tests/test_manifest.py:62`) No test for a non-string element in the mirrors list (branch-coverage gap): The parametrized invalid-manifest test now includes `({\"mirrors\": [\"https://a.example\", 7]}, \"mirrors must be a list of distinct URLs\")`, covering the `isinstance(v, str)` False branch.\n\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W3siaWQiOiAiRjEiLCAiZmlsZSI6ICIuZm9yZ2Vqby9zY3JpcHRzL21hbmlmZXN0LnB5IiwgImxpbmUiOiA1MywgInNldmVyaXR5IjogInN1Z2dlc3Rpb24iLCAic3RhdHVzIjogInJlc29sdmVkIiwgInRpdGxlIjogImBpZChwYXR0ZXJuKWAgZGljdCBsb29rdXAgaXMgZnJhZ2lsZSBmb3IgZnV0dXJlIHBhdHRlcm4gYWRkaXRpb25zIiwgImRldGFpbCI6ICJUaGUgY29kZSBub3cgdXNlcyBhbiBleHBsaWNpdCBgcGF0dGVybiBpcyBFTUFJTGAgLyBgcGF0dGVybiBpcyBOQU1FU2AgLyBlbHNlIGNoYWluIGluc3RlYWQgb2YgdGhlIGBpZChwYXR0ZXJuKWAgZGljdCBsb29rdXAsIG1ha2luZyB0aGUgbWFwcGluZyBpbXBvc3NpYmxlIHRvIG1pc3Mgd2hlbiBhIGtleSBpcyBhZGRlZC4iLCAicmVzcG9uc2UiOiAiIn0sIHsiaWQiOiAiRjIiLCAiZmlsZSI6ICJ0ZXN0cy90ZXN0X21hbmlmZXN0LnB5IiwgImxpbmUiOiA2MiwgInNldmVyaXR5IjogInN1Z2dlc3Rpb24iLCAic3RhdHVzIjogInJlc29sdmVkIiwgInRpdGxlIjogIk5vIHRlc3QgZm9yIGEgbm9uLXN0cmluZyBlbGVtZW50IGluIHRoZSBtaXJyb3JzIGxpc3QgKGJyYW5jaC1jb3ZlcmFnZSBnYXApIiwgImRldGFpbCI6ICJUaGUgcGFyYW1ldHJpemVkIGludmFsaWQtbWFuaWZlc3QgdGVzdCBub3cgaW5jbHVkZXMgYCh7XCJtaXJyb3JzXCI6IFtcImh0dHBzOi8vYS5leGFtcGxlXCIsIDddfSwgXCJtaXJyb3JzIG11c3QgYmUgYSBsaXN0IG9mIGRpc3RpbmN0IFVSTHNcIilgLCBjb3ZlcmluZyB0aGUgYGlzaW5zdGFuY2Uodiwgc3RyKWAgRmFsc2UgYnJhbmNoLiIsICJyZXNwb25zZSI6ICIifV0= -->",
     "created_at": "2026-11-26T09:58:45-08:00",
     "id": 48398,
-    "updated_at": "2026-11-26T18:47:20-08:00",
+    "updated_at": "2026-11-26T22:02:28-08:00",
     "user": "forgejo-actions"
    }
   ],
   "created_at": "2026-11-26T09:52:03-08:00",
-  "head": "feat/136-read-manifest",
+  "head": "refs/pull/140/head",
   "kind": "pull",
   "labels": [],
-  "merge_commit_sha": null,
-  "merged": false,
+  "merge_commit_sha": "5ac366d73525af127515db0ee0f8d28b2c3d9fe2",
+  "merged": true,
   "milestone": null,
   "number": 140,
   "reviews": [],
-  "state": "open",
-  "title": "feat(gate): read host settings from the owner's .project-rules manifest",
+  "state": "closed",
+  "title": "feat(gate): read host and owner settings from the owner's private .project-rules manifest",
   "user": "cody"
  },
  {
@@ -4128,6 +4162,66 @@
   "number": 141,
   "state": "open",
   "title": "Scheduled drift check for copied files in house repos",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Trigger: on 2026-11-26 private repository names and internal hostnames were found in this repo's public issue and PR text and in the nightly `issue-archive` branch, which push-mirrors to GitHub. The text was redacted and the archive branch rebuilt as a single commit (approved by Cody that day). Two follow-ups remain.\n\n## 1. House hostnames in tracked files\n\nTracked files on main still name house-internal hosts: the release tooling under `shared/packaging/` hardcodes the house mirror host in its scripts. Move them to the owner manifest (or an argument) as #136 does for the gate workflows, so a public checkout names no internal host. The gate-lint and review.yml values are covered by #136; this issue is only the `shared/packaging/` scripts and anything else a grep for the house internal domains finds on main after #136 merges.\n\n## 2. A check that keeps private names out of public issue text\n\nA scheduled or event-driven job in this repo that, for every public repo it covers, reads issue, PR and comment text and fails or opens a single report issue when it finds a private repository name or an internal hostname. The list of private names comes from a source that is itself not public (a token-scoped repo search at run time, not a list committed here). Include editing history, since Forgejo shows prior revisions of an edited body or comment, and note that a changed title leaves a \"changed title\" timeline entry showing the old title that no API can remove. The check should therefore run on create and edit events where possible, so a leak is caught before it is mirrored.\n\nOpen: where the check runs (this repo's Tests workflow only covers this repo; other public repos copy the workflows), and whether a pre-mirror hold on the `issue-archive` branch is wanted as well.",
+  "closed_at": null,
+  "comments": [
+   {
+    "body": "Status 2026-11-26: the seven \"changed title\" timeline entries left by the redaction (Forgejo API delete was a no-op for that comment type) were deleted directly in the database with Cody's yes, after a row backup kept locally. No remaining title-change entry in this repo names a private repo; the issue pages no longer show them. The guard this issue asks for should cover title-change entries too.",
+    "created_at": "2026-11-26T20:22:38-08:00",
+    "id": 49043,
+    "updated_at": "2026-11-26T20:22:38-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Found 2026-11-26: public repos' Actions job logs are anonymously readable, and the runner's own lines (actions/checkout origin and extraheader setup, the runner image mirror, the host actions are fetched from) print internal hostnames in every job. The gate's own output carried no manifest value or private repo name. Fix belongs here: either the runner config stops printing internal names in public repos' jobs (public URL for checkout and actions), or public repos' logs stop being anonymous. Existing logs need pruning once fixed.",
+    "created_at": "2026-11-26T22:13:39-08:00",
+    "id": 49457,
+    "updated_at": "2026-11-26T22:13:39-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-26T18:51:44-08:00",
+  "kind": "issue",
+  "labels": [],
+  "milestone": null,
+  "number": 142,
+  "state": "open",
+  "title": "Keep private repo names and internal hosts out of public text and tracked files",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Part of step 1 in #133; #140 (#136) depends on it.\n\nTrigger: #140 makes the shared `Lint`, `Secrets` and `Review` jobs read the owner's private `.project-rules` manifest with the owner's Actions secret `PROJECT_RULES_TOKEN` (Cody's decision on #133, 2026-11-26). A called workflow sees only the secrets its caller maps in (probed 2026-11-26: an unmapped owner secret arrives empty in the called job, a mapped one arrives whole), and every repo's `ci.yml` and `ai-review.yml` call these jobs at `@main`. If #140 merged first, every repo's required Lint, Secrets and AI review checks would fail closed, including on the PR that fixes its caller.\n\nOrder, each step verified before the next:\n\n1. The `project-rules-reader` bot exists with read on each owner's `.project-rules` only (a team per organization, a collaborator under a user), and its token (`read:repository`, plus `read:user` for the repo listing) is every house owner's `PROJECT_RULES_TOKEN`.\n2. Every repo that calls the shared jobs maps `PROJECT_RULES_TOKEN` in `ci.yml` (`shared-lint`) and `ai-review.yml` (`shared-review`), as the canonical callers in #140 do. The mapping is harmless before #140: the jobs on `main` ignore it.\n3. #140 merges; one consumer PR per owner proves Lint, Secrets and AI review green, each logging the manifest it read.\n4. `Owners / The owner manifests can be read and agree` and `Owners / Every repo follows its owner's visibility policy` join this repo's required checks.\n\nRe-copied `issue-archive.yml` files read the secret directly, so they need no caller change.\n",
+  "closed_at": "2026-11-26T22:36:20-08:00",
+  "comments": [
+   {
+    "body": "Status: steps 1 and 2 done.\n\n1. The `project-rules-reader` bot is a restricted account. It reads each owner's `.project-rules` and nothing else: a read team in each of the three organizations, and read as a collaborator under cody. Checked with its token: all four manifests return 200; private non-manifest repos and a public repo return 404; a write gets 403; each owner's repo listing shows only `.project-rules`. Its token is set as `PROJECT_RULES_TOKEN`: an organization secret on SisyphusMD, bryantserver and humblepixels, and a user secret on cody. The Owners workflow, dispatched from #140's branch, read and checked all four owners with it.\n2. Every existing consumer now maps the secret. One PR per repo, each merged with its checks green, its head verified on main and its branch deleted: 6 under SisyphusMD, 6 under bryantserver and 2 under cody (the cody PRs close local issues, since their issue-link check cannot read this repo). No humblepixels repo calls the shared jobs yet.\n\nSince the bot is restricted, the visibility check lists each owner's repos signed out (what the world sees), and rule 21 says that is what it guarantees.\n\nNext: merge #140, run the proof per owner, and make the two Owners checks required.\n",
+    "created_at": "2026-11-26T21:49:29-08:00",
+    "id": 49356,
+    "updated_at": "2026-11-26T21:49:29-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Status: done. #140 merged (main 5ac366d); its head is verified on main and the branch is deleted. On main's push, the Owners checks and Tests passed.\n\nProof per owner: a throwaway PR under each of SisyphusMD, bryantserver, cody and humblepixels called the canonical callers from main. In each, Lint, Secrets and Review logged `owner manifest: <owner>/.project-rules <sha>`, the commit of that owner's current manifest. Lint and Secrets passed; the review ran on the manifest's model and returned findings. The throwaway repos are deleted.\n\nRead anonymously, the public proof's logs held no manifest value and no private repo name. They did name the runner's own internal hosts (the in-cluster git host in actions/checkout, the runner image mirror and the action mirror), as every public repo's job logs on this runner do. That belongs to #142, not to these jobs.\n\n`Owners / The owner manifests can be read and agree (pull_request_target)` and `Owners / Every repo follows its owner's visibility policy (pull_request_target)` are now required on main. The names follow the other checks' pattern; the next PR here will be the first to post them.\n",
+    "created_at": "2026-11-26T22:36:19-08:00",
+    "id": 49503,
+    "updated_at": "2026-11-26T22:36:19-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-26T20:34:41-08:00",
+  "kind": "issue",
+  "labels": [
+   "type:chore"
+  ],
+  "milestone": null,
+  "number": 143,
+  "state": "closed",
+  "title": "Map PROJECT_RULES_TOKEN in every caller before the shared jobs require it",
   "user": "cody"
  }
 ]

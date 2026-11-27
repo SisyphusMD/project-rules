@@ -139,9 +139,11 @@ Generated nightly from the primary Forgejo; do not edit. `json/` holds the full 
 | 133 | issue | open | [Adopt the project rules on the Humble Pixels Forgejo](items/0133-adopt-the-project-rules-on-the-humble-pixels-forgejo.md) |
 | 134 | issue | closed | [Owner manifest reader and schema check](items/0134-owner-manifest-reader-and-schema-check.md) |
 | 135 | pull | closed | [docs(contributing): name all four required Tests checks](items/0135-docs-contributing-name-all-four-required-tests-checks.md) |
-| 136 | issue | open | [Gate workflows read the owner's .project-rules manifest instead of house hosts](items/0136-gate-workflows-read-the-owner-s-project-rules-manifest-inste.md) |
+| 136 | issue | closed | [Gate workflows read the owner's .project-rules manifest instead of house hosts](items/0136-gate-workflows-read-the-owner-s-project-rules-manifest-inste.md) |
 | 137 | issue | closed | [Rules text: preview-branch rule and git host wording](items/0137-rules-text-preview-branch-rule-and-git-host-wording.md) |
 | 138 | pull | closed | [feat(gate): add the owner manifest reader and schema check](items/0138-feat-gate-add-the-owner-manifest-reader-and-schema-check.md) |
 | 139 | pull | closed | [docs(rules): add the preview-branch rule and say git host](items/0139-docs-rules-add-the-preview-branch-rule-and-say-git-host.md) |
-| 140 | pull | open | [feat(gate): read host settings from the owner's .project-rules manifest](items/0140-feat-gate-read-host-settings-from-the-owner-s-project-rules-.md) |
+| 140 | pull | closed | [feat(gate): read host and owner settings from the owner's private .project-rules manifest](items/0140-feat-gate-read-host-and-owner-settings-from-the-owner-s-priv.md) |
 | 141 | issue | open | [Scheduled drift check for copied files in house repos](items/0141-scheduled-drift-check-for-copied-files-in-house-repos.md) |
+| 142 | issue | open | [Keep private repo names and internal hosts out of public text and tracked files](items/0142-keep-private-repo-names-and-internal-hosts-out-of-public-tex.md) |
+| 143 | issue | closed | [Map PROJECT_RULES_TOKEN in every caller before the shared jobs require it](items/0143-map-project-rules-token-in-every-caller-before-the-shared-jo.md) |
