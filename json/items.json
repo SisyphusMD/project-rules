@@ -2196,7 +2196,7 @@
   "created_at": "2026-11-17T09:12:18-08:00",
   "kind": "issue",
   "labels": [
-   "status:blocked",
+   "status:ready",
    "type:feature"
   ],
   "milestone": null,
@@ -3922,6 +3922,27 @@
     "id": 49512,
     "updated_at": "2026-11-26T22:36:20-08:00",
     "user": "cody"
+   },
+   {
+    "body": "Status: step 3 is done on the second git host. It has a pull mirror of this repo, the action mirrors, its private owner manifest, a restricted reader bot and the PROJECT_RULES_TOKEN secret. Shared jobs now fetch project-rules with the job token (#152), which a host that requires sign-in needs. Next: step 4 (callers and mechanical files on that host's repos), owned by the Mac mini session.\n",
+    "created_at": "2026-11-27T15:08:42-08:00",
+    "id": 50627,
+    "updated_at": "2026-11-27T15:08:42-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Status, 2026-11-27 (session rotating): step 4 is next and owned by the orchestrator session that succeeds this one. It covers the mechanical files and callers on the second host's repos: generic labels, CONTRIBUTING, SECURITY with the owner's own contact, issue templates, callers byte-identical to main with the PROJECT_RULES_TOKEN mapping, the shared issue-archive caller, and a Renovate rule leaving project-rules unpinned where pinDigests is set (as bryantserver/annex#130). Then step 5 (CI pilot), step 6 (protection) and step 7 (AI review, later). No PRs open, nothing running.\n",
+    "created_at": "2026-11-27T15:47:55-08:00",
+    "id": 50711,
+    "updated_at": "2026-11-27T15:47:55-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Status, 2026-11-27: steps 4 and 5 are done on the second git host. The pilot repo proved every CI job on pull_request_target, a deliberate failure and recovery, the manifest read and the issue archive. AI review needed a read:issue token so the review job can read the owner-wide exemption issue: the reader bot now has one as the owner's ISSUE_READ_TOKEN, and its team grants issues read on the manifest repo only. All of that owner's non-content repos now carry the callers, CONTRIBUTING, SECURITY and templates. Its client content repos stay file-free by the owner's decision, with their checks to run from its pipeline repo (private tracker). Renovate does not detect the reusable-workflow callers, so the no-pin packageRule is a backstop. Next: step 6, protection, after each repo's proof runs. Details in the private tracker.",
+    "created_at": "2026-11-27T18:35:18-08:00",
+    "id": 50989,
+    "updated_at": "2026-11-27T18:35:18-08:00",
+    "user": "cody"
    }
   ],
   "created_at": "2026-11-26T06:40:59-08:00",
@@ -4142,7 +4163,7 @@
  {
   "assignees": [],
   "body": "Follow-up to #78, agreed there: a scheduled job here compares each house repo's copied files with this repo's main and reports a difference.\n\n## What it compares\nThe files docs/adopting.md has repos copy: `.forgejo/workflows/ci.yml`, `ai-review.yml`, `issue-archive.yml`, `.forgejo/scripts/issue-archive.py`, the issue templates, and `.github/workflows/mirror-lockdown.yml` for a public repo.\n\n## Baseline, 2026-11-26 (by hand, credential-store token)\n14 repos call the shared gate. 10 are byte-equal on every file. Left:\n- a private repo: bug, decision and feature templates reworded for a private repo (front matter `about` and the prose prompts).\n- a private repo: no issue templates at all (a missing house standard; its own issue and PR there).\n- several private repos: ci.yml and ai-review.yml are the allowed variant (own Lint and Secrets, no ISSUE_READ_TOKEN mapping).\n\n## Plan\n- Discovery, no names in this repo: every repo the token can read whose owner keeps a `.project-rules` manifest and whose ci.yml calls this repo's gate.yml. Host from `github.server_url`.\n- Callers are compared as parsed YAML against adopting.md's rule rather than bytes: same `name`, triggers and concurrency; every shared call present and equal, except a repo may drop the ISSUE_READ_TOKEN mapping and may drop `shared-lint` when it has its own `Lint` and `Secrets` jobs; other extra jobs are allowed. issue-archive.yml, issue-archive.py and mirror-lockdown.yml are byte-compared.\n- Issue templates: compared on front matter `name`, `title` and `labels` only, since a repo may reword the prompts for its own users (a private repo does).\n- Reporting: one issue here, opened when drift appears, commented only when the set of differences changes, closed when it clears. No red run per day (notification policy).\n- Read access: the job token cannot read other owners' private repos and ISSUE_READ_TOKEN is read:issue only, so it needs a new secret. Scope pending Cody's decision.\n- Tests with fixture repos for each case; workflow_dispatch so the branch run proves it before merge.\n\nDepends on nothing; runs alongside #136 (if #136 changes issue-archive.yml, repos drift until they update, which is what this check is for).",
-  "closed_at": null,
+  "closed_at": "2026-11-27T09:15:27-08:00",
   "comments": [
    {
     "body": "Technical call: The Copy drift read token (secret COPY_DRIFT_READ_TOKEN) is read:repository limited to the private repos the check reads (several private repos; several private repos); public repos need no token. A private repo that adopts the rules is added by re-minting the token (docs/adopting.md). Why: The other 27 private repos on the host do not copy these files, so the check never reads them; an account-wide token would expose them all for nothing (Cody, 2026-11-26: \"Those other 35 private repos don't need it?\").\n\nDecided by: Claude, 2026-11-26.",
@@ -4157,6 +4178,20 @@
     "id": 49806,
     "updated_at": "2026-11-27T06:38:25-08:00",
     "user": "cody"
+   },
+   {
+    "body": "Done: #146 merged (main 820f346) after the issue-archive rollout (#144) reached all 14 repos, so every repo starts green; the check passed live on #150. #149 (#150) adds the script to the main-fetch compile test. Open for later: whether Copies match becomes a required check (a rule-15 change, after it has run on real PRs).",
+    "created_at": "2026-11-27T09:49:12-08:00",
+    "id": 50337,
+    "updated_at": "2026-11-27T09:49:12-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Copies match is now a required check (#155, #156).",
+    "created_at": "2026-11-27T20:46:24-08:00",
+    "id": 51306,
+    "updated_at": "2026-11-27T20:46:24-08:00",
+    "user": "cody"
    }
   ],
   "created_at": "2026-11-26T09:55:19-08:00",
@@ -4167,7 +4202,7 @@
   ],
   "milestone": null,
   "number": 141,
-  "state": "open",
+  "state": "closed",
   "title": "Copies match: the shared gate checks each repo's copied files",
   "user": "cody"
  },
@@ -4234,8 +4269,23 @@
  {
   "assignees": [],
   "body": "Every repo copies issue-archive.yml and .forgejo/scripts/issue-archive.py, and the copies fall behind whenever main changes them: after #140 every consumer's two files differ from main. Make the job a reusable workflow here (called from main, script fetched from main like the gate scripts), so each repo keeps only a small caller with the schedule, concurrency and the PROJECT_RULES_TOKEN mapping, and drops its script copy. The job still pushes the calling repo's own issue-archive branch with that repo's job token. Prove it from a branch before merge, then roll out one PR per repo. Decided on #141 (Cody, 2026-11-27).",
-  "closed_at": null,
-  "comments": [],
+  "closed_at": "2026-11-27T07:00:37-08:00",
+  "comments": [
+   {
+    "body": "Merged in #145 (main a7a3b3e) and proven in a consumer: a dispatched Issue archive run in a repo using the new caller pushed its archive as the owner bot. Rollout PRs are open in the other 13 repos.",
+    "created_at": "2026-11-27T07:14:02-08:00",
+    "id": 49994,
+    "updated_at": "2026-11-27T07:14:02-08:00",
+    "user": "cody"
+   },
+   {
+    "body": "Rollout done: all 14 house repos now call archive.yml and no longer carry the script (one issue and PR in each, merged and verified on main; branches removed). No repo copies issue-archive.py any more.",
+    "created_at": "2026-11-27T08:25:49-08:00",
+    "id": 50203,
+    "updated_at": "2026-11-27T08:25:49-08:00",
+    "user": "cody"
+   }
+  ],
   "created_at": "2026-11-27T06:38:26-08:00",
   "kind": "issue",
   "labels": [
@@ -4244,8 +4294,320 @@
   ],
   "milestone": null,
   "number": 144,
-  "state": "open",
+  "state": "closed",
   "title": "issue-archive runs from project-rules main like the gate",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "base": "main",
+  "body": "issue-archive becomes a shared workflow like the gate. `archive.yml` here holds the job, and it runs `.forgejo/scripts/issue-archive.py` fetched from main. Each repo's `issue-archive.yml` shrinks to a caller: the schedule, the concurrency group and the `PROJECT_RULES_TOKEN` mapping. Repos no longer copy the script.\n\nWhy: after #140 every consumer's copies of both files differ from main. A copy only gets updated when someone remembers to re-copy it.\n\n- Tests: the archive job must use only the fetched script; its fetch and manifest-read steps match the proven ones; the caller maps only the manifest token; `tests.yml` now also compiles issue-archive.py, since a broken main copy would now break every repo's archive.\n- docs/adopting.md: the caller is copied and the script is not; a repo that still has the script deletes it.\n- The job is now named `Archive`, so its status context reads `Issue archive / Archive`. Nothing requires it.\n\nProof: run 487, dispatched from this branch with the caller temporarily pointing at the branch (that commit is reverted here). The called job fetched main's scripts, read SisyphusMD/.project-rules, and pushed this repo's issue-archive branch as the manifest's bot address.\n\nRollout after merge: one PR per repo that swaps in the new caller and deletes the script copy.\n\nCloses #144\n",
+  "closed_at": "2026-11-27T07:00:36-08:00",
+  "comments": [
+   {
+    "body": "<!-- ai-review -->\n**AI review** of `8264c2b249`: The PR correctly converts issue-archive into a shared workflow called from main, with the canonical caller now referencing @main (resolving F1). Tests, docs, and the changelog are updated consistently. No new issues found.\n\n### Resolved\n\n- **F1** (blocking, `.forgejo/workflows/issue-archive.yml:16`) Canonical caller references the feature branch, not main: The `uses` line now reads `SisyphusMD/project-rules/.forgejo/workflows/archive.yml@main`, matching the PR description's claim that the branch reference was reverted. The test `test_the_canonical_callers_call_main_and_hand_over_only_the_two_read_tokens` will pass.\n\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W3siaWQiOiAiRjEiLCAiZmlsZSI6ICIuZm9yZ2Vqby93b3JrZmxvd3MvaXNzdWUtYXJjaGl2ZS55bWwiLCAibGluZSI6IDE2LCAic2V2ZXJpdHkiOiAiYmxvY2tpbmciLCAic3RhdHVzIjogInJlc29sdmVkIiwgInRpdGxlIjogIkNhbm9uaWNhbCBjYWxsZXIgcmVmZXJlbmNlcyB0aGUgZmVhdHVyZSBicmFuY2gsIG5vdCBtYWluIiwgImRldGFpbCI6ICJUaGUgYHVzZXNgIGxpbmUgbm93IHJlYWRzIGBTaXN5cGh1c01EL3Byb2plY3QtcnVsZXMvLmZvcmdlam8vd29ya2Zsb3dzL2FyY2hpdmUueW1sQG1haW5gLCBtYXRjaGluZyB0aGUgUFIgZGVzY3JpcHRpb24ncyBjbGFpbSB0aGF0IHRoZSBicmFuY2ggcmVmZXJlbmNlIHdhcyByZXZlcnRlZC4gVGhlIHRlc3QgYHRlc3RfdGhlX2Nhbm9uaWNhbF9jYWxsZXJzX2NhbGxfbWFpbl9hbmRfaGFuZF9vdmVyX29ubHlfdGhlX3R3b19yZWFkX3Rva2Vuc2Agd2lsbCBwYXNzLiIsICJyZXNwb25zZSI6ICIifV0= -->",
+    "created_at": "2026-11-27T06:54:59-08:00",
+    "id": 49861,
+    "updated_at": "2026-11-27T06:59:40-08:00",
+    "user": "forgejo-actions"
+   }
+  ],
+  "created_at": "2026-11-27T06:53:57-08:00",
+  "head": "refs/pull/145/head",
+  "kind": "pull",
+  "labels": [],
+  "merge_commit_sha": "a7a3b3e43bcd1bc632e652f4825ee5db0b97db63",
+  "merged": true,
+  "milestone": null,
+  "number": 145,
+  "reviews": [],
+  "state": "closed",
+  "title": "feat(archive): run issue-archive from main as a shared workflow",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "base": "main",
+  "body": "Adds a `Copies match` job to the shared gate. On every PR it compares the repo's own copies with project-rules main and fails when one has fallen behind:\n\n- **The ci.yml, ai-review.yml and issue-archive.yml callers:** compared line by line, ignoring comments. Allowed differences, per docs/adopting.md: a dropped ISSUE_READ_TOKEN mapping, the repo's own Lint and Secrets in place of shared-lint, other jobs of its own, and one preview branch beside main in ci.yml.\n- **Issue templates:** the `name` and `labels` front matter must match; prompts may be reworded.\n- **`mirror-lockdown.yml`:** public repos only, byte for byte.\n- **Retired copies:** `.forgejo/scripts/issue-archive.py` must be gone.\n\nEach repo checks only its own checkout: no token, no other repo, nothing private in a public log. project-rules compares its PR head with itself. This replaces the nightly cross-repo job first planned on #141 (Cody's decision recorded there).\n\nNot required yet. Per docs/adopting.md it is proven on real PRs first, and making it required is a rule-15 change for its own issue.\n\nOrder: merge after the issue-archive caller rollout lands in every repo, so the check starts green. A dry run of the script against every house repo's main shows only the issue-archive swap that rollout makes.\n\nCloses #141\n",
+  "closed_at": "2026-11-27T09:15:27-08:00",
+  "comments": [
+   {
+    "body": "<!-- ai-review -->\n**AI review** of `8cde0bc2fa`: Well-implemented and thoroughly tested addition of a `Copies match` gate job that compares each repo's copied files against project-rules main. The script logic, fork guard, allowed-exception handling, and test coverage all look correct and complete.\n\nNo findings.\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W10= -->",
+    "created_at": "2026-11-27T07:33:54-08:00",
+    "id": 50036,
+    "updated_at": "2026-11-27T09:14:53-08:00",
+    "user": "forgejo-actions"
+   }
+  ],
+  "created_at": "2026-11-27T07:13:27-08:00",
+  "head": "refs/pull/146/head",
+  "kind": "pull",
+  "labels": [],
+  "merge_commit_sha": "820f346b252bbc3f4067505a070ba694325e8088",
+  "merged": true,
+  "milestone": null,
+  "number": 146,
+  "reviews": [],
+  "state": "closed",
+  "title": "feat(gate): add a Copies match check",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "The three gate jobs (Issue link, Tests with code, Diff size) get the PR description through `PR_BODY: ${{ github.event.pull_request.body }}`. Linux refuses any single environment string over 128 KB, so a longer body makes the step fail before the script runs: `exec /usr/bin/bash: argument list too long`, exit 255.\n\nSeen 2026-11-27 on Renovate PRs bumping uv across many releases: bodies of 181 KB and 214 KB, mostly release notes. Every repo whose Renovate PRs carry long changelogs hits it, and it blocks their automerge.\n\nFix: the scripts read the body from the event payload at `GITHUB_EVENT_PATH`, which the runner writes for every job, and the workflow stops passing it in the environment. `PR_BODY` stays as an override for the tests.\n",
+  "closed_at": "2026-11-27T08:47:22-08:00",
+  "comments": [
+   {
+    "body": "Fixed in #148, merged at fcfe0e3. The gate scripts read the PR description from the event payload; a proof run on the branch read a 138,853-byte body inside a called workflow with no PR_BODY set and passed. Next: none; the long Renovate PRs that hit this rerun on their next rebase.",
+    "created_at": "2026-11-27T08:48:07-08:00",
+    "id": 50242,
+    "updated_at": "2026-11-27T08:48:07-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-27T08:14:39-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:in-progress",
+   "type:bug"
+  ],
+  "milestone": null,
+  "number": 147,
+  "state": "closed",
+  "title": "Gate jobs fail on a PR body over 128 KB",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "base": "main",
+  "body": "Closes #147\n\nThe gate scripts read the PR description from the event payload at `GITHUB_EVENT_PATH` instead of a `PR_BODY` environment variable, which Linux refuses past 128 KB (`exec /usr/bin/bash: argument list too long`). `PR_BODY` still overrides, for the tests. A missing payload or a non-PR event now exits with a message saying so, rather than looking like an empty description.\n\nProof run, reverted before merge (the branch's tree equals the fix commit): a temporary workflow called from Tests ran this branch's `issue-link.py` with no `PR_BODY`, while this description was padded to 138,853 bytes. It read the whole body from the event payload inside the called workflow and passed. The gate jobs on that head, which run main's scripts, failed with `argument list too long`, the bug this fixes.\n\nFound on the way: Forgejo re-evaluates a caller job's `if:` inside the called workflow, where `github.event_name` is not `pull_request`, so an `event_name == 'pull_request'` clause on a `uses:` job skips it.\n",
+  "closed_at": "2026-11-27T08:47:22-08:00",
+  "comments": [
+   {
+    "body": "<!-- ai-review -->\n**AI review** of `924d9fd3c1`: Clean fix for #147: the three gate scripts now read the PR body from the event payload file instead of the environment, with PR_BODY kept as a test override. The new test file covers all branches of pr_body() (large body, empty/None, missing path, non-PR event, override) and guards the workflow against reintroducing free-text env vars. No issues found.\n\n### Resolved\n\n- **F1** (suggestion, `.forgejo/workflows/ci.yml:20`) Verify temporary branch references are reverted before merge: The diff as presented contains no @issue-147-pr-body-file or --branch issue-147-pr-body-file references; the PR states the temporary commit is removed before merge. The submitted diff is clean.\n  - Reviewer: The diff no longer contains the temporary branch references, so this is resolved for the code as submitted. The proof-147.yml workflow and its tests.yml caller are clearly labelled temporary and will be dropped before merge.\n\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W3siaWQiOiAiRjEiLCAiZmlsZSI6ICIuZm9yZ2Vqby93b3JrZmxvd3MvY2kueW1sIiwgImxpbmUiOiAyMCwgInNldmVyaXR5IjogInN1Z2dlc3Rpb24iLCAic3RhdHVzIjogInJlc29sdmVkIiwgInRpdGxlIjogIlZlcmlmeSB0ZW1wb3JhcnkgYnJhbmNoIHJlZmVyZW5jZXMgYXJlIHJldmVydGVkIGJlZm9yZSBtZXJnZSIsICJkZXRhaWwiOiAiVGhlIGRpZmYgYXMgcHJlc2VudGVkIGNvbnRhaW5zIG5vIEBpc3N1ZS0xNDctcHItYm9keS1maWxlIG9yIC0tYnJhbmNoIGlzc3VlLTE0Ny1wci1ib2R5LWZpbGUgcmVmZXJlbmNlczsgdGhlIFBSIHN0YXRlcyB0aGUgdGVtcG9yYXJ5IGNvbW1pdCBpcyByZW1vdmVkIGJlZm9yZSBtZXJnZS4gVGhlIHN1Ym1pdHRlZCBkaWZmIGlzIGNsZWFuLiIsICJyZXNwb25zZSI6ICJUaGUgZGlmZiBubyBsb25nZXIgY29udGFpbnMgdGhlIHRlbXBvcmFyeSBicmFuY2ggcmVmZXJlbmNlcywgc28gdGhpcyBpcyByZXNvbHZlZCBmb3IgdGhlIGNvZGUgYXMgc3VibWl0dGVkLiBUaGUgcHJvb2YtMTQ3LnltbCB3b3JrZmxvdyBhbmQgaXRzIHRlc3RzLnltbCBjYWxsZXIgYXJlIGNsZWFybHkgbGFiZWxsZWQgdGVtcG9yYXJ5IGFuZCB3aWxsIGJlIGRyb3BwZWQgYmVmb3JlIG1lcmdlLiJ9XQ== -->",
+    "created_at": "2026-11-27T08:29:29-08:00",
+    "id": 50205,
+    "updated_at": "2026-11-27T08:46:24-08:00",
+    "user": "forgejo-actions"
+   }
+  ],
+  "created_at": "2026-11-27T08:23:57-08:00",
+  "head": "refs/pull/148/head",
+  "kind": "pull",
+  "labels": [],
+  "merge_commit_sha": "fcfe0e3f4cc54ca99ff8a4c2af09c8904241d2dd",
+  "merged": true,
+  "milestone": null,
+  "number": 148,
+  "reviews": [],
+  "state": "closed",
+  "title": "fix(gate): read the PR description from the event payload",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "The Tests job \"The gate scripts can be fetched\" compiles every gate script fetched from main. copies-match.py (#146) cannot join that list until it is on main, since the job reads main, not the PR. After #146 merges, add copies-match to the list in .forgejo/workflows/tests.yml, so a broken main copy of the script fails a Tests check before it fails the Copies match check in every repo.\n\nDepends on #141.",
+  "closed_at": "2026-11-27T09:48:47-08:00",
+  "comments": [
+   {
+    "body": "Done in #150 (main e019857).",
+    "created_at": "2026-11-27T09:49:13-08:00",
+    "id": 50342,
+    "updated_at": "2026-11-27T09:49:13-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-27T08:29:50-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:in-progress",
+   "type:chore"
+  ],
+  "milestone": null,
+  "number": 149,
+  "state": "closed",
+  "title": "Compile copies-match.py in the gate-fetch test once it is on main",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "base": "main",
+  "body": "copies-match.py is on main since #146, so the Tests job that fetches main now compiles it with the other gate scripts. A broken main copy then fails a Tests check here before it fails Copies match in every repo.\n\nCloses #149\n",
+  "closed_at": "2026-11-27T09:48:47-08:00",
+  "comments": [
+   {
+    "body": "<!-- ai-review -->\n**AI review** of `0463b16f3a`: Clean, minimal change that adds copies-match to the gate-script compile list in the Tests workflow, exactly as issue #149 specifies. The stale comment is correctly removed, the list stays alphabetical, and the CHANGELOG is updated.\n\nNo findings.\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W10= -->",
+    "created_at": "2026-11-27T09:47:17-08:00",
+    "id": 50329,
+    "updated_at": "2026-11-27T09:47:17-08:00",
+    "user": "forgejo-actions"
+   }
+  ],
+  "created_at": "2026-11-27T09:20:28-08:00",
+  "head": "refs/pull/150/head",
+  "kind": "pull",
+  "labels": [],
+  "merge_commit_sha": "e01985724c326d3c5eea25a36fac15190e7643cb",
+  "merged": true,
+  "milestone": null,
+  "number": 150,
+  "reviews": [],
+  "state": "closed",
+  "title": "ci(tests): compile copies-match.py in the gate-fetch test",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "The shared jobs fetch project-rules anonymously, which fails on a git host that requires sign-in to view.\n\nEvery \"Fetch the gate scripts\" step (gate.yml, gate-lint.yml, review.yml, archive.yml, and the copy tests.yml proves) runs `git clone $FORGEJO_URL/SisyphusMD/project-rules.git` with no credentials. On a Forgejo instance with `REQUIRE_SIGNIN_VIEW=true`, that clone fails with \"could not read Username\", so every required check and the nightly archive fail before they start. The same clone with the job token works.\n\nPlan: give the step the job token and send it as an `http.extraHeader` on that one command, so it never lands in the clone URL, the log or `.git/config`. Hosts that allow anonymous reads keep working, since the token can read a public repo. The tests that hold every copy of the step equal cover the new copies too, including gate-lint.yml's.",
+  "closed_at": "2026-11-27T11:39:53-08:00",
+  "comments": [
+   {
+    "body": "Status 2026-11-27: done. #152 merged as 5c63dec; every \"Fetch the gate scripts\" step now clones with the job token, passed through `git --config-env` so it stays out of argv, the log and `.git/config`.\n\nProof after the merge:\n- A normal PR run on another repo passed, and every gate job logged `gate scripts: project-rules 5c63dec12c9aa60b160ded29037f4f082818eef4` (Issue link, Tests with code, Diff size, Copies match, Lint, Secrets).\n- A workflow_dispatch of \"Issue archive\" on another repo succeeded and pushed its issue-archive branch (d5d1a36 to 680dbf8), logging the same `gate scripts:` line.\n- The pull mirror on the sign-in-required host shows the same main head (5c63dec).\n\nReview: `cx review` saw the first version of the diff. Its two findings (the header in argv shows up in git's trace output; the file:// test never proved a server got the header) led to the `--config-env` change and a local `git http-backend` test that refuses an anonymous clone. That rework was covered by CI and the AI review only.\n\nNext: nothing here. Whether the shared jobs actually run on the sign-in-required host is still blocked on that host's action resolution, which is tracked there.",
+    "created_at": "2026-11-27T12:03:45-08:00",
+    "id": 50428,
+    "updated_at": "2026-11-27T12:03:45-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-27T11:31:47-08:00",
+  "kind": "issue",
+  "labels": [
+   "type:bug"
+  ],
+  "milestone": null,
+  "number": 151,
+  "state": "closed",
+  "title": "Shared jobs fetch project-rules anonymously, which fails on a git host that requires sign-in to view",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "base": "main",
+  "body": "Closes #151\n\nEvery \"Fetch the gate scripts\" step now clones project-rules with the job token. The header comes from the environment through `git --config-env`, so it stays out of the clone URL, argv (which `GIT_TRACE2` records), the log and `.git/config`. The step fails with a plain message if no job token is set. Hosts that allow anonymous reads keep working, since the token can read a public repo.\n\n- gate.yml (all four jobs, Copies match included), gate-lint.yml (Lint and Secrets), review.yml, archive.yml and the tests.yml copy change together. owners.yml has no fetch step.\n- test_gate_fetch.py now holds the gate-lint copies equal too. It clones over smart HTTP from a local `git http-backend` that refuses a request without the right header, and it checks that neither the token nor its encoded form shows up in the output, git's trace or the clone's config.\n- archive.yml's push step is unchanged: it still sets its own header for the caller's issue-archive branch.\n\nReview: `cx review` flagged the `-c` argv being visible in git trace output, and that the file:// test never proved the header reached a server. Both are fixed here.\n",
+  "closed_at": "2026-11-27T11:39:52-08:00",
+  "comments": [
+   {
+    "body": "<!-- ai-review -->\n**AI review** of `fd2f0f9fa4`: Clean, well-scoped fix for #151: every 'Fetch the gate scripts' step now authenticates with the job token via `git --config-env` so the credential stays out of argv, the clone URL, logs, and `.git/config`. The test suite is upgraded from a `file://` clone to a real smart-HTTP server that rejects requests without the correct header, and it asserts the token never leaks into output, trace, or config. All copies are held equal, including the newly added gate-lint ones.\n\nNo findings.\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W10= -->",
+    "created_at": "2026-11-27T11:39:16-08:00",
+    "id": 50409,
+    "updated_at": "2026-11-27T11:39:16-08:00",
+    "user": "forgejo-actions"
+   }
+  ],
+  "created_at": "2026-11-27T11:35:51-08:00",
+  "head": "refs/pull/152/head",
+  "kind": "pull",
+  "labels": [],
+  "merge_commit_sha": "5c63dec12c9aa60b160ded29037f4f082818eef4",
+  "merged": true,
+  "milestone": null,
+  "number": 152,
+  "reviews": [],
+  "state": "closed",
+  "title": "fix(gate): fetch project-rules with the job token",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "A Renovate group PR whose description carried about 1 MB of release notes failed AI review in about a second: \"Review could not run: HTTPError\", logged as \"review failed closed: HTTP Error 400: Bad Request\". The prompt includes the whole PR description unbounded, while the diff, replies and linked issues are each bounded, so the request passes the model's context. Fix: clip the description like a reply (keep its start and end, where Renovate puts the issue reference) to a fixed bound; keep reading issue references from the whole description.",
+  "closed_at": "2026-11-27T19:23:29-08:00",
+  "comments": [
+   {
+    "body": "Done in #154 (merged at 2e986757): the description is clipped to 20,000 characters and the linked issues to 40,000, references still come from the whole description, and a refused model request shows its HTTP code and message in the check. No copied file changed. Proof pending: the re-run review on the 1 MB Renovate PR that hit this.",
+    "created_at": "2026-11-27T19:23:54-08:00",
+    "id": 51065,
+    "updated_at": "2026-11-27T19:23:54-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-27T19:16:48-08:00",
+  "kind": "issue",
+  "labels": [
+   "status:in-progress",
+   "type:bug"
+  ],
+  "milestone": null,
+  "number": 153,
+  "state": "closed",
+  "title": "AI review fails on a pull request whose description is huge",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "base": "main",
+  "body": "Closes #153\n\nA Renovate group PR carried about 1 MB of release notes in its description. The review put all of it into the prompt, and the model refused the request with HTTP 400 before reviewing.\n\n- The description is clipped to 20,000 characters, keeping its start and end, the same way each reply is clipped. Issue references are still read from the whole description, and a test holds that.\n- The linked issues are capped at 40,000 characters in total. Each issue was already bounded, but the number of issues was not.\n- When the model refuses a request, the check now shows the HTTP code and the start of the server's message, instead of only `HTTPError`.\n\n`tests/test_ai_review_model.py` and `test_ai_review_context.py` pass (109 tests).\n",
+  "closed_at": "2026-11-27T19:23:29-08:00",
+  "comments": [
+   {
+    "body": "<!-- ai-review -->\n**AI review** of `621c24b07e`: Clean, well-scoped fix for #153: bounds the PR description and linked-issues text in the prompt, and surfaces the HTTP code and server message on a model refusal. Tests cover all three new behaviours and confirm issue references are still read from the unclipped body.\n\nNo findings.\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W10= -->",
+    "created_at": "2026-11-27T19:22:35-08:00",
+    "id": 51058,
+    "updated_at": "2026-11-27T19:22:35-08:00",
+    "user": "forgejo-actions"
+   }
+  ],
+  "created_at": "2026-11-27T19:22:03-08:00",
+  "head": "refs/pull/154/head",
+  "kind": "pull",
+  "labels": [],
+  "merge_commit_sha": "2e986757eb576afcbb696f3ef86bd951c8a939f4",
+  "merged": true,
+  "milestone": null,
+  "number": 154,
+  "reviews": [],
+  "state": "closed",
+  "title": "fix(ai-review): bound the PR description and linked issues in the prompt",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "body": "Cody decided (2026-11-27): \"skip it, make it required\". An automatic re-copy job is not worth building, since copied files should now change only a few times a year. Instead: add `Copies match` to rule 15's required checks, and a change to a copied file ships with its rollout (a re-copy PR in every repo, merged right after it), because a required Copies match blocks every PR in a repo whose copies are behind. Proven per adopting.md step 5: a passing run on #150 and a real failure on a consumer PR that pinned the callers. Then add the check to each repo's protected main.",
+  "closed_at": "2026-11-27T20:45:38-08:00",
+  "comments": [
+   {
+    "body": "Done: #156 merged (main a216b50). `CI / Copies match (pull_request_target)` is now required on main in the ten house repos that already required the gate checks; every one passed Copies match on main first. The repos that do not yet require the gate checks are tracked separately.",
+    "created_at": "2026-11-27T20:46:24-08:00",
+    "id": 51304,
+    "updated_at": "2026-11-27T20:46:24-08:00",
+    "user": "cody"
+   }
+  ],
+  "created_at": "2026-11-27T20:39:21-08:00",
+  "kind": "issue",
+  "labels": [
+   "type:chore"
+  ],
+  "milestone": null,
+  "number": 155,
+  "state": "closed",
+  "title": "Make Copies match a required check",
+  "user": "cody"
+ },
+ {
+  "assignees": [],
+  "base": "main",
+  "body": "Adds `Copies match` to the required checks in rule 15, and says in adopting.md that a change to a copied file ships with its rollout to every repo, since the required check blocks PRs in a repo whose copies are behind. The check has a passing run (#150) and a real failure on a consumer PR, as step 5 asks. Protection in each repo follows after this merges.\n\nCloses #155\n",
+  "closed_at": "2026-11-27T20:45:38-08:00",
+  "comments": [
+   {
+    "body": "<!-- ai-review -->\n**AI review** of `0fe8e3ff97`: Small, focused documentation change adding `Copies match` to the required-checks list in rule 15 and explaining the rollout obligation in adopting.md, consistent with the decision recorded on #155. No code changes, no test-coverage impact, diff well under 400 lines.\n\nNo findings.\n\nDisagree? Reply on this PR with your reasoning; the reviewer re-reads every reply.\n<!-- ai-review-state W10= -->",
+    "created_at": "2026-11-27T20:44:52-08:00",
+    "id": 51295,
+    "updated_at": "2026-11-27T20:44:52-08:00",
+    "user": "forgejo-actions"
+   }
+  ],
+  "created_at": "2026-11-27T20:44:29-08:00",
+  "head": "refs/pull/156/head",
+  "kind": "pull",
+  "labels": [],
+  "merge_commit_sha": "a216b50c3d875397b6e35b9c4af7c2d1da86ba71",
+  "merged": true,
+  "milestone": null,
+  "number": 156,
+  "reviews": [],
+  "state": "closed",
+  "title": "docs(rules): require Copies match",
   "user": "cody"
  }
 ]

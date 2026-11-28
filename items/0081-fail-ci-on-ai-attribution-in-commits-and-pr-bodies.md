@@ -1,7 +1,7 @@
 # #81 Fail CI on AI attribution in commits and PR bodies
 
 - Kind: issue, state: open, by cody, created 2026-11-17T09:12:18-08:00
-- Labels: status:blocked, type:feature; milestone: none
+- Labels: status:ready, type:feature; milestone: none
 
 Rule 9 (#80) bans AI attribution in commit messages, PR titles and descriptions. Nothing enforces it: the AI review can only block on a file and line in the diff, and commit messages and the PR body are not in the diff, so an attribution line can only ever be a suggestion.
 

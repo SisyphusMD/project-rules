@@ -144,7 +144,19 @@ Generated nightly from the primary Forgejo; do not edit. `json/` holds the full 
 | 138 | pull | closed | [feat(gate): add the owner manifest reader and schema check](items/0138-feat-gate-add-the-owner-manifest-reader-and-schema-check.md) |
 | 139 | pull | closed | [docs(rules): add the preview-branch rule and say git host](items/0139-docs-rules-add-the-preview-branch-rule-and-say-git-host.md) |
 | 140 | pull | closed | [feat(gate): read host and owner settings from the owner's private .project-rules manifest](items/0140-feat-gate-read-host-and-owner-settings-from-the-owner-s-priv.md) |
-| 141 | issue | open | [Copies match: the shared gate checks each repo's copied files](items/0141-copies-match-the-shared-gate-checks-each-repo-s-copied-files.md) |
+| 141 | issue | closed | [Copies match: the shared gate checks each repo's copied files](items/0141-copies-match-the-shared-gate-checks-each-repo-s-copied-files.md) |
 | 142 | issue | open | [Keep private repo names and internal hosts out of public text and tracked files](items/0142-keep-private-repo-names-and-internal-hosts-out-of-public-tex.md) |
 | 143 | issue | closed | [Map PROJECT_RULES_TOKEN in every caller before the shared jobs require it](items/0143-map-project-rules-token-in-every-caller-before-the-shared-jo.md) |
-| 144 | issue | open | [issue-archive runs from project-rules main like the gate](items/0144-issue-archive-runs-from-project-rules-main-like-the-gate.md) |
+| 144 | issue | closed | [issue-archive runs from project-rules main like the gate](items/0144-issue-archive-runs-from-project-rules-main-like-the-gate.md) |
+| 145 | pull | closed | [feat(archive): run issue-archive from main as a shared workflow](items/0145-feat-archive-run-issue-archive-from-main-as-a-shared-workflo.md) |
+| 146 | pull | closed | [feat(gate): add a Copies match check](items/0146-feat-gate-add-a-copies-match-check.md) |
+| 147 | issue | closed | [Gate jobs fail on a PR body over 128 KB](items/0147-gate-jobs-fail-on-a-pr-body-over-128-kb.md) |
+| 148 | pull | closed | [fix(gate): read the PR description from the event payload](items/0148-fix-gate-read-the-pr-description-from-the-event-payload.md) |
+| 149 | issue | closed | [Compile copies-match.py in the gate-fetch test once it is on main](items/0149-compile-copies-match-py-in-the-gate-fetch-test-once-it-is-on.md) |
+| 150 | pull | closed | [ci(tests): compile copies-match.py in the gate-fetch test](items/0150-ci-tests-compile-copies-match-py-in-the-gate-fetch-test.md) |
+| 151 | issue | closed | [Shared jobs fetch project-rules anonymously, which fails on a git host that requires sign-in to view](items/0151-shared-jobs-fetch-project-rules-anonymously-which-fails-on-a.md) |
+| 152 | pull | closed | [fix(gate): fetch project-rules with the job token](items/0152-fix-gate-fetch-project-rules-with-the-job-token.md) |
+| 153 | issue | closed | [AI review fails on a pull request whose description is huge](items/0153-ai-review-fails-on-a-pull-request-whose-description-is-huge.md) |
+| 154 | pull | closed | [fix(ai-review): bound the PR description and linked issues in the prompt](items/0154-fix-ai-review-bound-the-pr-description-and-linked-issues-in-.md) |
+| 155 | issue | closed | [Make Copies match a required check](items/0155-make-copies-match-a-required-check.md) |
+| 156 | pull | closed | [docs(rules): require Copies match](items/0156-docs-rules-require-copies-match.md) |

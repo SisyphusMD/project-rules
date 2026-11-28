@@ -1,6 +1,6 @@
 # #141 Copies match: the shared gate checks each repo's copied files
 
-- Kind: issue, state: open, by cody, created 2026-11-26T09:55:19-08:00
+- Kind: issue, state: closed, by cody, created 2026-11-26T09:55:19-08:00
 - Labels: status:needs-decision, type:feature; milestone: none
 
 Follow-up to #78, agreed there: a scheduled job here compares each house repo's copied files with this repo's main and reports a difference.
@@ -35,3 +35,11 @@ Decided by: Claude, 2026-11-26.
 Decision: Drop the nightly drift job. Instead the shared gate gets a "Copies match" job: on every PR, the repo compares its own copied files (ci.yml and ai-review.yml callers, issue templates) with this repo's main. issue-archive becomes a shared workflow with a small caller, so its script is no longer copied (own issue). Why: Each repo checks only itself in its own CI: no cross-repo read token, and nothing private appears in a public repo's log or issues (rule 23). The callers matter only when a PR runs, which is when the check runs. Cody: "Sure", 2026-11-27, to dropping the nightly job for this.
 
 Decided by: Cody, 2026-11-27.
+
+## cody, 2026-11-27T09:49:12-08:00
+
+Done: #146 merged (main 820f346) after the issue-archive rollout (#144) reached all 14 repos, so every repo starts green; the check passed live on #150. #149 (#150) adds the script to the main-fetch compile test. Open for later: whether Copies match becomes a required check (a rule-15 change, after it has run on real PRs).
+
+## cody, 2026-11-27T20:46:24-08:00
+
+Copies match is now a required check (#155, #156).

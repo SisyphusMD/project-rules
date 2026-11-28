@@ -123,3 +123,17 @@ Status: step 1 continues in #140 (reworked for private manifests read by a reade
 ## cody, 2026-11-26T22:36:20-08:00
 
 Status: step 1 is merged (#140, with #143 for the bot, its secrets and every consumer mapping them; a proof per owner is on #143), and step 2 holds four private manifests (SisyphusMD, bryantserver, cody, humblepixels) with owner and host keys. Still open: backup-host mirrors of the manifest repos, waiting on the refused backup-host admin token; the visibility check cannot see a private repo under a public owner; and runner infrastructure hostnames in public job logs (#142).
+
+## cody, 2026-11-27T15:08:42-08:00
+
+Status: step 3 is done on the second git host. It has a pull mirror of this repo, the action mirrors, its private owner manifest, a restricted reader bot and the PROJECT_RULES_TOKEN secret. Shared jobs now fetch project-rules with the job token (#152), which a host that requires sign-in needs. Next: step 4 (callers and mechanical files on that host's repos), owned by the Mac mini session.
+
+
+## cody, 2026-11-27T15:47:55-08:00
+
+Status, 2026-11-27 (session rotating): step 4 is next and owned by the orchestrator session that succeeds this one. It covers the mechanical files and callers on the second host's repos: generic labels, CONTRIBUTING, SECURITY with the owner's own contact, issue templates, callers byte-identical to main with the PROJECT_RULES_TOKEN mapping, the shared issue-archive caller, and a Renovate rule leaving project-rules unpinned where pinDigests is set (as bryantserver/annex#130). Then step 5 (CI pilot), step 6 (protection) and step 7 (AI review, later). No PRs open, nothing running.
+
+
+## cody, 2026-11-27T18:35:18-08:00
+
+Status, 2026-11-27: steps 4 and 5 are done on the second git host. The pilot repo proved every CI job on pull_request_target, a deliberate failure and recovery, the manifest read and the issue archive. AI review needed a read:issue token so the review job can read the owner-wide exemption issue: the reader bot now has one as the owner's ISSUE_READ_TOKEN, and its team grants issues read on the manifest repo only. All of that owner's non-content repos now carry the callers, CONTRIBUTING, SECURITY and templates. Its client content repos stay file-free by the owner's decision, with their checks to run from its pipeline repo (private tracker). Renovate does not detect the reusable-workflow callers, so the no-pin packageRule is a backstop. Next: step 6, protection, after each repo's proof runs. Details in the private tracker.
