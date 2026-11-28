@@ -49,7 +49,9 @@
    match apart from comments, the allowances below and one preview branch beside `main` in
    `ci.yml` (their name, triggers, schedule and concurrency are fixed), the issue templates may
    reword their prompts but keep `name` and `labels`, and a public repo's `mirror-lockdown.yml`
-   matches byte for byte. When main changes a copied file, every repo copies it again. `ci.yml`, `ai-review.yml` and `issue-archive.yml` are only callers: their
+   matches byte for byte. When main changes a copied file, every repo copies it again, and the
+   change ships with that rollout: a re-copy PR is ready in every repo and merges right after it,
+   because the required check blocks every PR in a repo whose copies are behind. `ci.yml`, `ai-review.yml` and `issue-archive.yml` are only callers: their
    jobs run from this repo's `main` (`gate.yml`, `gate-lint.yml`, `review.yml`, `archive.yml`), and
    so do the gate scripts, `.forgejo/scripts/issue-archive.py` and the `RULES.md` the AI review reads; the
    jobs take the package

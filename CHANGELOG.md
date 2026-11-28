@@ -6,6 +6,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- `Copies match` is a required check, and a change to a copied file ships with its rollout to every repo (#155).
 - The AI review clips the PR description to 20,000 characters, keeping its start and end, as it already does each reply. A Renovate group PR with a megabyte of release notes overran the model's context and failed the review with HTTP 400 before it began. Issue references are still read from the whole description; the linked issues together are capped at 40,000, however many it names; and a refused model request now names its HTTP code and the server's message in the check (#153).
 - Every `Fetch the gate scripts` step clones project-rules with the job token, sent as a header on that one command so it stays out of the URL, the log and `.git/config`. The anonymous clone failed on a git host that requires sign-in to view, before any check could start (#151).
 - The Tests workflow compiles main's copies-match.py with the other gate scripts (#149).
