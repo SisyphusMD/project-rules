@@ -831,6 +831,41 @@ class MainBoundsReplies(unittest.TestCase):
         self.assertLess(len(section), ai_review.MAX_REPLIES_CHARS + 500)
 
 
+class MainBoundsTheDescription(unittest.TestCase):
+    run_main = MainReasks.run_main
+
+    def test_a_megabyte_description_is_clipped_and_keeps_its_end(self):
+        body = "release notes " + "n" * 1_000_000 + " closing line"
+        with mock.patch.dict(PR, {"body": body}):
+            code, _, _, asked = self.run_main([answer(GOOD)])
+        self.assertEqual(code, 0)
+        prompt = asked[0][1]["content"]
+        section = prompt.split("PR #7: t\n\n", 1)[1].split("\n\nLinked issues", 1)[0]
+        self.assertLess(len(section), ai_review.MAX_BODY_CHARS + 50)
+        self.assertTrue(section.startswith("release notes "))
+        self.assertTrue(section.endswith(" closing line"))
+        self.assertIn("[...]", section)
+
+    def test_issue_references_are_read_from_the_whole_description(self):
+        body = "n" * 1_000_000 + " Refs #9"
+        seen = []
+        with (mock.patch.dict(PR, {"body": body}),
+              mock.patch.object(ai_review, "linked_issues", lambda b: seen.append(b) or "none named")):
+            code, _, _, _ = self.run_main([answer(GOOD)])
+        self.assertEqual(code, 0)
+        self.assertEqual(seen, [body])
+
+    def test_an_http_refusal_names_its_code_and_message_in_the_status(self):
+        refusal = urllib.error.HTTPError("http://model/v1", 400, "Bad Request", {},
+                                         io.BytesIO(b'{"error": "context length exceeded"}'))
+        code, statuses, _, _ = self.run_main([refusal])
+        self.assertEqual(code, "review failed closed: HTTP Error 400: Bad Request")
+        state, description = statuses[-1][1], statuses[-1][2]
+        self.assertEqual(state, "error")
+        self.assertIn("HTTP 400", description)
+        self.assertIn("context length exceeded", description)
+
+
 class ReviewWorkflow(unittest.TestCase):
     # The job repos call (#78); their ai-review.yml only calls it.
     TEXT = (SCRIPT.parents[1] / "workflows/review.yml").read_text()

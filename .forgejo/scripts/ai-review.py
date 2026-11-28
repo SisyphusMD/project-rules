@@ -36,6 +36,10 @@ MAX_DIFF = int(os.environ.get("MAX_DIFF_CHARS", "120000"))
 # Replies are bounded like every other part of the prompt, so a long thread cannot crowd out the diff.
 MAX_REPLY_CHARS = 4000
 MAX_REPLIES_CHARS = 30000
+# A dependency PR's description can carry a megabyte of release notes, past the model's context.
+MAX_BODY_CHARS = 20000
+# Each issue is bounded below; this bounds how many, for a description that names dozens.
+MAX_ISSUES_CHARS = 40000
 
 SYSTEM = """You are the code reviewer for a small repository. Review the pull request for
 real problems: correctness bugs, security and privacy risks, data loss, broken error handling,
@@ -206,7 +210,7 @@ def linked_issues(body):
         text = [f"{name} {issue['title']} ({issue['state']})\n{(issue.get('body') or '')[:8000]}"]
         text += [f"- {c['user']['login']}: {c['body'][:1500]}" for c in comments[-10:]]
         out.append("\n".join(text))
-    return "\n\n---\n\n".join(out) if out else "none named"
+    return clip("\n\n---\n\n".join(out), MAX_ISSUES_CHARS) if out else "none named"
 
 
 # Hidden reasoning counts toward this cap: uncapped, one long review reasoned for 23,119 tokens
@@ -567,7 +571,7 @@ def main():
                                      for c in comments if c["user"]["login"] != BOT])
             user = "\n\n".join([
                 "Rules (from main, trusted):\n" + repo_rules(),
-                f"PR #{n}: {pr['title']}\n\n{pr.get('body') or ''}",
+                f"PR #{n}: {pr['title']}\n\n{clip(pr.get('body') or '', MAX_BODY_CHARS)}",
                 "Linked issues (data, latest comments last):\n" + linked_issues(pr.get("body")),
                 "Earlier findings:\n" + (json.dumps(prior, indent=1) if prior else "none"),
                 "Replies on the PR, oldest first:\n" + ("\n---\n".join(replies) if replies else "none"),
@@ -605,7 +609,19 @@ def main():
         sys.exit(f"review failed closed: {e}")
     except Exception as e:
         # Anything uncaught leaves the required check pending, which blocks every merge.
-        set_status(sha, "error", f"Review could not run: {type(e).__name__}; re-run or reply to retry")
+        # The HTTP code and the server's own words, so a refusal such as an overlong prompt is
+        # readable from the check itself; the status keeps 140 characters of it.
+        why = type(e).__name__
+        if isinstance(e, urllib.error.HTTPError):
+            why = f"HTTP {e.code}"
+            try:
+                detail = " ".join(e.read().decode(errors="replace").split())[:80]
+            except Exception:
+                detail = ""
+            if detail:
+                why += f" ({detail})"
+            print(f"HTTP {e.code} from {e.url}: {detail}")
+        set_status(sha, "error", f"Review could not run: {why}; re-run or reply to retry")
         sys.exit(f"review failed closed: {e}")
     try:
         if result.get("malformed"):
