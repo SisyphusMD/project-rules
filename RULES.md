@@ -72,8 +72,8 @@ and nowhere else. How code, tests and docs are written is in [conventions/][conv
 
 ## Review and merge
 
-15. **Required checks**: `Issue link`, `Tests with code`, `Diff size`, `Lint`, `Secrets` and
-    `AI review`, plus the repo's own tests and coverage. They run the workflow on the
+15. **Required checks**: `Issue link`, `Tests with code`, `Diff size`, `Copies match`, `Lint`,
+    `Secrets` and `AI review`, plus the repo's own tests and coverage. They run the workflow on the
     protected branch the PR targets (`pull_request_target`) and the gate scripts on
     project-rules' `main`, never run the PR's code, and fail closed, so a PR cannot weaken the
     check that judges it. `AI review` is required unless the owner's manifest exempts it citing
